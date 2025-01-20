@@ -14,10 +14,11 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "strict": true,
-    "moduleResolution": "node",
     "declaration": true,
     "declarationMap": true,
     "module": "ESNext",
+    "moduleResolution": "node",
+    "target": "ESNext",
     "types": ["node"]
   },
   "include": ["src/**/*.ts"],
