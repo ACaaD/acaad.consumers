@@ -22,7 +22,7 @@
     "@tsconfig/node20": "~20.1.4",
     "@types/node": "~22.10.7",
     "@rushstack/heft-typescript-plugin": "~0.6.6",
-    "@rushstack/heft": "0.68.13",
+    "@rushstack/heft": "~0.68.13",
     "tslib": "~2.8.1",
     "eslint": "^8.57.0",
     "@acaad/toolchain": "workspace:*"
