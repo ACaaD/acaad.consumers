@@ -52,7 +52,7 @@ export class HubConnectionWrapper {
       return;
     }
 
-    this.logger.logTrace(`Attempting to reconnect to '${this.host.friendlyName}'.`);
+    this.logger.logTrace(`Attempting to reconnect to '${this.host.friendlyName}' ...`);
     yield* Effect.either(this.startEff);
   });
 

@@ -1,0 +1,10 @@
+{
+  "changes": [
+    {
+      "packageName": "@acaad/core",
+      "comment": "Change to .ts file\"",
+      "type": "none"
+    }
+  ],
+  "packageName": "@acaad/core"
+}

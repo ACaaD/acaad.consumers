@@ -1,15 +1,16 @@
 {
   "extends": "@tsconfig/node20/tsconfig.json",
-  "importHelpers": true,
   "compilerOptions": {
-    "noEmit": true,
+    "importHelpers": true,
     "allowJs": true,
     "checkJs": true,
-    "noEmitOnError": true,
-    "outDir": "./build/",
+    "noEmitOnError": false,
+    "outDir": "./dist/esnext",
+    "rootDirs": ["src/"],
     "removeComments": false,
     "resolveJsonModule": true,
     "sourceMap": true,
+    "inlineSources": true,
     "inlineSourceMap": false,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
@@ -18,8 +19,9 @@
     "declaration": true,
     "declarationMap": true,
     "module": "ESNext",
-    "types": ["node"]
+    "types": ["node"],
+    "esModuleInterop": true
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["build/**", "node_modules/**", "widgets/**"]
+  "exclude": ["build/**", "node_modules/**", "widgets/**", "lib"]
 }

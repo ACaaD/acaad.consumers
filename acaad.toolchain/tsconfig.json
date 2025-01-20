@@ -1,7 +1,7 @@
 {
   "extends": "@tsconfig/node20/tsconfig.json",
-  "importHelpers": true,
   "compilerOptions": {
+    "importHelpers": true,
     "noEmit": true,
     "allowJs": true,
     "checkJs": true,

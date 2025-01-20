@@ -8,7 +8,7 @@ import { AcaadEvent, AcaadPopulatedEvent } from './model/events/AcaadEvent';
 import { inject, injectable } from 'tsyringe';
 import { DependencyInjectionTokens } from './model/DependencyInjectionTokens';
 import { ICsLogger } from './interfaces/IConnectedServiceContext';
-import ConnectionManager from './ConnectionManager';
+import { ConnectionManager } from './ConnectionManager';
 import { AcaadError } from './errors/AcaadError';
 import {
   Cause,
@@ -102,7 +102,7 @@ export class ComponentModel implements IComponentModel {
 
 // noinspection JSPotentiallyInvalidUsageOfClassThis
 @injectable()
-export default class ComponentManager {
+export class ComponentManager {
   private _serviceAdapter: IConnectedServiceAdapter;
   private _abortController: AbortController;
   private _connectionManager: ConnectionManager;

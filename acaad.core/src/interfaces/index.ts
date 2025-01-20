@@ -1,2 +1,6 @@
-export * from './IConnectedServiceAdapter';
-export * from './IConnectedServiceContext';
+export {
+  IConnectedServiceAdapter,
+  OutboundStateChangeCallback,
+  ChangeType
+} from './IConnectedServiceAdapter';
+export { IConnectedServiceContext, ICsLogger } from './IConnectedServiceContext';

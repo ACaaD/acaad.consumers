@@ -27,7 +27,7 @@ class AxiosSvc extends Context.Tag('axios')<AxiosSvc, { readonly instance: Axios
 
 // noinspection JSPotentiallyInvalidUsageOfClassThis
 @injectable()
-export default class ConnectionManager {
+export class ConnectionManager {
   private readonly _openApiEndpoint = 'openapi/v1.json';
 
   private readonly axiosInstance: AxiosInstance;

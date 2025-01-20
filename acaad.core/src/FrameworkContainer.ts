@@ -9,8 +9,8 @@ import {
   registry,
   InjectionToken
 } from 'tsyringe';
-import ComponentManager, { ComponentModel } from './ComponentManager';
-import ConnectionManager from './ConnectionManager';
+import { ComponentManager, ComponentModel } from './ComponentManager';
+import { ConnectionManager } from './ConnectionManager';
 import { DependencyInjectionTokens } from './model/DependencyInjectionTokens';
 import { IConnectedServiceContext } from './interfaces';
 import { InMemoryTokenCache } from './services/InMemoryTokenCache';
