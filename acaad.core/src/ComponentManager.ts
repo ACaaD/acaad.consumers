@@ -467,7 +467,10 @@ export class ComponentManager {
     this.listenerFiber = yield* Effect.forkDaemon(
       // TODO: Use error handler (potentially sharable with comp. model creation)
       this.runEventListener.pipe(
-        Effect.onError(Console.error),
+        Effect.onError((err) => {
+          this._logger.logError(err, undefined, 'An error occurred processing event.');
+          return Effect.void;
+        }),
         Effect.either,
         Effect.repeat(Schedule.forever)
       )

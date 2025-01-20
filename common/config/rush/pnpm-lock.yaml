@@ -90,8 +90,8 @@ importers:
   ../../ioBroker.acaad:
     dependencies:
       '@acaad/core':
-        specifier: ^0.0.1
-        version: 0.0.1
+        specifier: ^0.0.2-1
+        version: 0.0.2-1
       '@iobroker/adapter-core':
         specifier: ~3.2.3
         version: 3.2.3(@iobroker/types@7.0.6)
@@ -109,8 +109,8 @@ importers:
         version: 4.8.0
     devDependencies:
       '@acaad/toolchain':
-        specifier: ^0.0.1
-        version: 0.0.1
+        specifier: ^0.0.2-1
+        version: 0.0.2-1
       '@fakehost/signalr':
         specifier: ~1.0.0-beta.3
         version: 1.0.0-beta.3
@@ -198,8 +198,8 @@ importers:
 
 packages:
 
-  /@acaad/core@0.0.1:
-    resolution: {integrity: sha512-R3vqJBUciT0wYGS5UeZvzT7yQQM5mmSLTBpW/URVrmqgr1szeTw0YyEAq04SnnZUmGMKe1zpE4LQhZ6X/+1UmQ==}
+  /@acaad/core@0.0.2-1:
+    resolution: {integrity: sha512-okttiHADE7NaBw98KpbWg2hVicfx3hLuhCwUzHXC4ybx5LIfUOnHf86QZ0kDNeTEx8nswzk9VggTiJvkS48Fag==}
     dependencies:
       '@microsoft/signalr': 8.0.7
       axios: 1.7.9
@@ -213,8 +213,8 @@ packages:
       - utf-8-validate
     dev: false
 
-  /@acaad/toolchain@0.0.1:
-    resolution: {integrity: sha512-PkPzYvJOk1R10gSok2SuSkujUgljDLnnL4mPmnLvM72zrGyuyFOGnvwXAFUluzWNYOveCGv/Xr/b6IhmT0hq0A==}
+  /@acaad/toolchain@0.0.2-1:
+    resolution: {integrity: sha512-QOWtMhvrXiN2kgkZ6OtpEiFhRxgymPOq2PeHU+jM5lGqP22tMKUJu6fT61zGZZB3rXMRjG6apWJRN9oQfm6m0A==}
     dev: true
 
   /@ampproject/remapping@2.3.0:

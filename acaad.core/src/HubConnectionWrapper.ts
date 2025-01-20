@@ -1,4 +1,9 @@
-import { HubConnection, HubConnectionBuilder, HubConnectionState } from '@microsoft/signalr';
+import {
+  HttpTransportType,
+  HubConnection,
+  HubConnectionBuilder,
+  HubConnectionState
+} from '@microsoft/signalr';
 import { AcaadPopulatedEvent } from './model/events/AcaadEvent';
 import { AcaadHost } from './model/connection/AcaadHost';
 import { Effect, Exit, Fiber, Option, Queue, Schedule } from 'effect';
@@ -33,13 +38,25 @@ export class HubConnectionWrapper {
   ) {
     const signalrUrl = host.appendSignalR(CONST.EVENT_HUB_PATH);
 
-    const hubConnection = new HubConnectionBuilder().withUrl(signalrUrl).build();
+    const hubConnection = new HubConnectionBuilder()
+      .withUrl(signalrUrl, {
+        skipNegotiation: true,
+        transport: HttpTransportType.WebSockets
+      })
+      .build();
 
     hubConnection.on(CONST.RECEIVE_EVENTS_METHOD, this.buildEventCallback(host));
-    hubConnection.onclose(() => Effect.runSync(this.raiseHubStoppedEvent(host)));
+    hubConnection.onclose((err) => {
+      if (err !== undefined) {
+        this.logger.logError(undefined, err, `An error occurred in hub connection ${host.friendlyName}.`);
+      }
+
+      Effect.runSync(this.raiseHubStoppedEvent(host));
+    });
 
     this.hubConnection = hubConnection;
 
+    this.logger.logDebug(`Hub connection to ${host.friendlyName} created.`);
     const reconnectEff = this.tryReconnectEff.pipe(Effect.repeat(Schedule.fixed(5_000)));
     this.reconnectFiber = Effect.runSync(Effect.forkDaemon(reconnectEff));
   }
@@ -53,7 +70,7 @@ export class HubConnectionWrapper {
     }
 
     this.logger.logTrace(`Attempting to reconnect to '${this.host.friendlyName}' ...`);
-    yield* Effect.either(this.startEff);
+    const res = yield* Effect.either(this.startEff);
   });
 
   public startEff = Effect.gen(this, function* () {
@@ -62,6 +79,8 @@ export class HubConnectionWrapper {
         await this.hubConnection.start();
       },
       catch: (err) => {
+        this.logger.logError(undefined, undefined, (err as any).toString());
+
         if (isServerUnavailable(err)) {
           return new AcaadServerUnreachableError(this.host, err);
         }
