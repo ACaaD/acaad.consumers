@@ -14,8 +14,10 @@ jobs:
       - name: Git config user
         uses: snow-actions/git-config-user@v1.0.0
         with:
-          name: Rush CI
+          name: Acaad.CI
           email: dev@ollimart.in
+      - name: Authenticate with GitHub
+        run: echo "${{ secrets.SERVICE_ACCOUNT_TOKEN }}" | gh auth login --with-token
       - uses: actions/setup-node@v3
         with:
           node-version: 16
