@@ -21,15 +21,15 @@
 
       // This will invoke common/autoinstallers/rush-prettier/node_modules/.bin/pretty-quick
       "shellCommand": "pretty-quick --staged"
-    }
-    // {
+    },
+    {
     //   /**
     //    * (Required) Determines the type of custom command.
     //    * Rush's "bulk" commands are invoked separately for each project.  By default, the command will run for
     //    * every project in the repo, according to the dependency graph (similar to how "rush build" works).
     //    * The set of projects can be restricted e.g. using the "--to" or "--from" parameters.
     //    */
-    //   "commandKind": "bulk",
+       "commandKind": "bulk",
     // 
     //   /**
     //    * (Required) The name that will be typed as part of the command line.  This is also the name
@@ -42,7 +42,7 @@
     //    * Note that if the "rebuild" command is overridden here, it becomes separated from the "build" command
     //    * and will call the "rebuild" script instead of the "build" script.
     //    */
-    //   "name": "my-bulk-command",
+       "name": "build",
     // 
     //   /**
     //    * (Required) A short summary of the custom command to be shown when printing command line
@@ -122,7 +122,7 @@
     //    *
     //    * Note: The default value is false. In Rush 5.7.x and earlier, the default value was true.
     //    */
-    //   "allowWarningsInSuccessfulBuild": false,
+       "allowWarningsInSuccessfulBuild": true
     // 
     //   /**
     //    * If true then this command will be incremental like the built-in "build" command
@@ -185,7 +185,7 @@
     //    * invoking the "shellCommand".
     //    */
     //   // "autoinstallerName": "my-task"
-    // }
+    }
   ],
 
   /**
