@@ -80,7 +80,7 @@ class Acaad extends utils.Adapter {
         })
       );
     } finally {
-      this._fwkContainer.dispose();
+      await this._fwkContainer.dispose();
       callback();
     }
   }

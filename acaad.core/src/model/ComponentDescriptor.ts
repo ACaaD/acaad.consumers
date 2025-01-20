@@ -1,7 +1,7 @@
 export class ComponentDescriptor {
-  name: string;
+  public name: string;
 
-  constructor(name: string) {
+  public constructor(name: string) {
     this.name = name;
   }
 

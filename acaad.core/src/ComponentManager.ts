@@ -58,7 +58,7 @@ interface IComponentModel {
 export class ComponentModel implements IComponentModel {
   private _meta = new Map<AcaadServerMetadata, Chunk.Chunk<Component>>();
 
-  constructor() {
+  public constructor() {
     this.clearServerMetadata = this.clearServerMetadata.bind(this);
     this.populateServerMetadata = this.populateServerMetadata.bind(this);
     this.getComponentsByServer = this.getComponentsByServer.bind(this);
@@ -103,29 +103,31 @@ export class ComponentModel implements IComponentModel {
 // noinspection JSPotentiallyInvalidUsageOfClassThis
 @injectable()
 export default class ComponentManager {
-  private serviceAdapter: IConnectedServiceAdapter;
-  private abortController: AbortController;
-  private connectionManager: ConnectionManager;
-  private componentModel: IComponentModel;
+  private _serviceAdapter: IConnectedServiceAdapter;
+  private _abortController: AbortController;
+  private _connectionManager: ConnectionManager;
+  private _componentModel: IComponentModel;
 
   private _metadataByComponent: MetadataByComponent[] = [];
 
   private _logger: ICsLogger;
+  private _eventQueue: Queue.Queue<AcaadPopulatedEvent>;
 
-  constructor(
+  public constructor(
     @inject(DependencyInjectionTokens.ConnectedServiceAdapter) serviceAdapter: IConnectedServiceAdapter,
     @inject(DependencyInjectionTokens.ConnectionManager) connectionManager: ConnectionManager,
     @inject(DependencyInjectionTokens.Logger) logger: ICsLogger,
-    @inject(DependencyInjectionTokens.EventQueue) private eventQueue: Queue.Queue<AcaadPopulatedEvent>,
+    @inject(DependencyInjectionTokens.EventQueue) eventQueue: Queue.Queue<AcaadPopulatedEvent>,
     @inject(DependencyInjectionTokens.ComponentModel) componentModel: IComponentModel
   ) {
-    this.abortController = new AbortController();
+    this._abortController = new AbortController();
 
-    this.connectionManager = connectionManager;
-    this.serviceAdapter = serviceAdapter;
-    this.componentModel = componentModel;
+    this._connectionManager = connectionManager;
+    this._serviceAdapter = serviceAdapter;
+    this._componentModel = componentModel;
 
     this._logger = logger;
+    this._eventQueue = eventQueue;
 
     this.handleOutboundStateChangeAsync = this.handleOutboundStateChangeAsync.bind(this);
     this.processComponentsByServer = this.processComponentsByServer.bind(this);
@@ -212,7 +214,7 @@ export default class ComponentManager {
 
   private getServerMetadata(host: AcaadHost): Effect.Effect<Either.Either<AcaadServerMetadata, AcaadError>> {
     return Effect.gen(this, function* () {
-      const metadata = yield* this.connectionManager.queryComponentConfigurationAsync(host);
+      const metadata = yield* this._connectionManager.queryComponentConfigurationAsync(host);
 
       return Either.map(
         metadata,
@@ -227,8 +229,8 @@ export default class ComponentManager {
   }
 
   readonly queryComponentConfigurations = Effect.gen(this, function* () {
-    const configuredServers: AcaadHost[] = yield* this.serviceAdapter.getConnectedServersAsync();
-    const concurrency = this.serviceAdapter.getAllowedConcurrency();
+    const configuredServers: AcaadHost[] = yield* this._serviceAdapter.getConnectedServersAsync();
+    const concurrency = this._serviceAdapter.getAllowedConcurrency();
 
     return Stream.fromIterable(configuredServers).pipe(
       Stream.mapEffect(this.getServerMetadata, {
@@ -254,13 +256,13 @@ export default class ComponentManager {
   private reloadComponentMetadataModel(serverMetadata: Stream.Stream<AcaadServerMetadata>) {
     return Effect.gen(this, function* () {
       const tmp = serverMetadata.pipe(
-        Stream.tap(this.componentModel.clearServerMetadata),
+        Stream.tap(this._componentModel.clearServerMetadata),
         Stream.flatMap(getAcaadMetadata),
         this.createComponentHierarchy,
         Stream.filter((cOpt) => Option.isSome(cOpt)),
         Stream.map((cSome) => cSome.value),
         Stream.groupByKey((c) => c.serverMetadata),
-        GroupBy.evaluate(this.componentModel.populateServerMetadata)
+        GroupBy.evaluate(this._componentModel.populateServerMetadata)
       );
 
       return yield* Stream.runCollect(tmp);
@@ -268,10 +270,10 @@ export default class ComponentManager {
   }
 
   private updateConnectedServiceModel = Effect.gen(this, function* () {
-    const sem = yield* Effect.makeSemaphore(this.serviceAdapter.getAllowedConcurrency());
+    const sem = yield* Effect.makeSemaphore(this._serviceAdapter.getAllowedConcurrency());
 
     const start = Date.now();
-    const stream = this.componentModel.getComponentsByServer().pipe(
+    const stream = this._componentModel.getComponentsByServer().pipe(
       GroupBy.evaluate((server, components) =>
         Effect.gen(this, function* () {
           yield* this.processServerWithSemaphore(server, sem);
@@ -297,7 +299,7 @@ export default class ComponentManager {
     return Effect.gen(this, function* () {
       yield* sem.take(1);
       const eff = Effect.tryPromise({
-        try: () => this.serviceAdapter.createServerModelAsync(server),
+        try: () => this._serviceAdapter.createServerModelAsync(server),
         catch: (error) => new CalloutError(error) as AcaadError
       });
       yield* sem.release(1);
@@ -329,7 +331,7 @@ export default class ComponentManager {
   private processSingleComponent(cmp: Component): Effect.Effect<string, AcaadError> {
     return Effect.gen(this, function* () {
       yield* Effect.tryPromise({
-        try: () => this.serviceAdapter.createComponentModelAsync(cmp),
+        try: () => this._serviceAdapter.createComponentModelAsync(cmp),
         catch: (error) => new CalloutError(error)
       });
 
@@ -352,7 +354,7 @@ export default class ComponentManager {
 
     const result = await Effect.runPromiseExit(
       this.getMetadataToExecuteOpt(potentialMetadata).pipe(
-        Effect.andThen((m) => this.connectionManager.updateComponentStateAsync(m))
+        Effect.andThen((m) => this._connectionManager.updateComponentStateAsync(m))
       )
     );
 
@@ -384,13 +386,13 @@ export default class ComponentManager {
         `Received event '${event.name}::${event.component.name}' from host ${event.host.friendlyName}`
       );
 
-      const component = this.componentModel.getComponentByMetadata(event.host, event.component);
+      const component = this._componentModel.getComponentByMetadata(event.host, event.component);
 
       if (Option.isSome(component)) {
-        const cd = this.serviceAdapter.getComponentDescriptorByComponent(component.value);
+        const cd = this._serviceAdapter.getComponentDescriptorByComponent(component.value);
 
         yield* Effect.tryPromise({
-          try: () => this.serviceAdapter.updateComponentStateAsync(cd, event.outcome),
+          try: () => this._serviceAdapter.updateComponentStateAsync(cd, event.outcome),
           catch: (error) => new CalloutError('An error occurred updating component state..', error)
         });
       } else {
@@ -407,7 +409,7 @@ export default class ComponentManager {
     return Effect.gen(this, function* () {
       const metadata = yield* Stream.runCollect(stream);
 
-      if (metadata.length == 0) {
+      if (metadata.length === 0) {
         const msg = 'No executable metadata/endpoint information found for component.';
         this._logger.logWarning(msg);
         return yield* Effect.fail(new CalloutError(msg));
@@ -440,11 +442,11 @@ export default class ComponentManager {
 
     const startEff = pipe(
       this.startEventListener,
-      Effect.andThen(this.connectionManager.startMissingHubConnections),
+      Effect.andThen(this._connectionManager.startMissingHubConnections),
       Effect.andThen(
         Effect.tryPromise({
           try: (as) =>
-            this.serviceAdapter.registerStateChangeCallbackAsync(this.handleOutboundStateChangeAsync, as),
+            this._serviceAdapter.registerStateChangeCallbackAsync(this.handleOutboundStateChangeAsync, as),
           catch: (error) => new CalloutError('An error occurred registering state change callback.', error)
         })
       )
@@ -473,7 +475,7 @@ export default class ComponentManager {
   });
 
   private runEventListener = Effect.gen(this, function* () {
-    const event = yield* Queue.take(this.eventQueue);
+    const event = yield* Queue.take(this._eventQueue);
 
     if (event.name === 'ComponentCommandOutcomeEvent') {
       return yield* this.handleInboundStateChangeAsync(event);
@@ -482,7 +484,7 @@ export default class ComponentManager {
     // TODO: Wrong error raised
     if (event.name === AcaadServerConnectedEvent.Tag) {
       return yield* Effect.tryPromise({
-        try: () => this.serviceAdapter.onServerConnectedAsync(event.host),
+        try: () => this._serviceAdapter.onServerConnectedAsync(event.host),
         catch: (error) => new CalloutError('An error occurred handling server connected event.', error)
       });
     }
@@ -490,7 +492,7 @@ export default class ComponentManager {
     // TODO: Wrong error raised
     if (event.name === AcaadServerDisconnectedEvent.Tag) {
       return yield* Effect.tryPromise({
-        try: () => this.serviceAdapter.onServerDisconnectedAsync(event.host),
+        try: () => this._serviceAdapter.onServerDisconnectedAsync(event.host),
         catch: (error) => new CalloutError('An error occurred handling server connected event.', error)
       });
     }
@@ -500,14 +502,14 @@ export default class ComponentManager {
   });
 
   private shutdownEventQueue = Effect.gen(this, function* () {
-    yield* Queue.shutdown(this.eventQueue);
+    yield* Queue.shutdown(this._eventQueue);
   });
 
   async shutdownAsync(): Promise<void> {
     this._logger.logInformation('Stopping component manager.');
 
     const stopEff = pipe(
-      this.connectionManager.stopHubConnections,
+      this._connectionManager.stopHubConnections,
       Effect.andThen(this.shutdownEventQueue),
       Effect.andThen(this.listenerFiber !== null ? Fiber.interrupt(this.listenerFiber) : Effect.void)
     );

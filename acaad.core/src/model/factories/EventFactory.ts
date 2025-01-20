@@ -47,7 +47,7 @@ export class EventFactory {
     return Effect.gen(function* () {
       if (
         !EventFactory.isAcaadEvent(event) ||
-        (event.name != 'ComponentCommandOutcomeEvent' && event.name != 'ComponentCommandExecutionSucceeded')
+        (event.name !== 'ComponentCommandOutcomeEvent' && event.name !== 'ComponentCommandExecutionSucceeded')
       ) {
         return Option.none();
       }

@@ -24,6 +24,7 @@
     "@rushstack/heft-typescript-plugin": "~0.6.6",
     "@rushstack/heft": "0.68.13",
     "tslib": "~2.8.1",
-    "acaad.toolchain": "workspace:*"
+    "acaad.toolchain": "workspace:*",
+    "eslint": "^8.57.0"
   }
 }
