@@ -1,8 +1,8 @@
 export class AcaadComponentMetadata {
-    type: string;
-    name: string;
+    public type: string;
+    public name: string;
 
-    constructor(type: string, name: string) {
+    public constructor(type: string, name: string) {
         this.type = type;
         this.name = name;
     }

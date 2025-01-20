@@ -1,5 +1,4 @@
 import { ComponentType } from "./ComponentType";
-import { AcaadMetadata } from "./AcaadMetadata";
 import { Chunk, Data, Schema } from "effect";
 import { Option, some, none } from "effect/Option";
 import { AcaadPopulatedMetadata, AcaadServerMetadata } from "./open-api/OpenApiDefinition";
@@ -36,7 +35,7 @@ export class Component extends Data.Class<{
 }
 
 export class ButtonComponent extends Component {
-    constructor(name: string, serverMetadata: AcaadServerMetadata, metadata: Chunk.Chunk<AcaadPopulatedMetadata>) {
+    public constructor(name: string, serverMetadata: AcaadServerMetadata, metadata: Chunk.Chunk<AcaadPopulatedMetadata>) {
         super({ type: ComponentType.Button, name, serverMetadata, metadata });
     }
 
@@ -50,7 +49,7 @@ export class ButtonComponent extends Component {
 }
 
 export class SensorComponent extends Component {
-    constructor(name: string, serverMetadata: AcaadServerMetadata, metadata: Chunk.Chunk<AcaadPopulatedMetadata>) {
+    public constructor(name: string, serverMetadata: AcaadServerMetadata, metadata: Chunk.Chunk<AcaadPopulatedMetadata>) {
         super({ type: ComponentType.Sensor, name, serverMetadata, metadata });
     }
 
@@ -64,7 +63,7 @@ export class SensorComponent extends Component {
 }
 
 export class SwitchComponent extends Component {
-    constructor(name: string, serverMetadata: AcaadServerMetadata, metadata: Chunk.Chunk<AcaadPopulatedMetadata>) {
+    public constructor(name: string, serverMetadata: AcaadServerMetadata, metadata: Chunk.Chunk<AcaadPopulatedMetadata>) {
         super({ type: ComponentType.Switch, name, serverMetadata, metadata });
     }
 

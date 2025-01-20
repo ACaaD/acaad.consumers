@@ -9,7 +9,7 @@ export class AcaadOutcome {
     public success: boolean;
     public outcomeRaw?: string;
 
-    constructor(fromSchema: Schema.Schema.Type<typeof AcaadOutcomeSchema>) {
+    public constructor(fromSchema: Schema.Schema.Type<typeof AcaadOutcomeSchema>) {
         this.success = fromSchema.success;
         this.outcomeRaw = fromSchema.outcomeRaw;
     }

@@ -15,10 +15,10 @@ export const ComponentCommandExecutionSucceededSchema = Schema.Struct({
 });
 
 export class ComponentCommandExecutionSucceeded extends AcaadEvent {
-    outcome: AcaadOutcome;
-    commandsToExecute: number;
+    public outcome: AcaadOutcome;
+    public commandsToExecute: number;
 
-    constructor(fromSchema: Schema.Schema.Type<typeof ComponentCommandExecutionSucceededSchema>) {
+    public constructor(fromSchema: Schema.Schema.Type<typeof ComponentCommandExecutionSucceededSchema>) {
         super("Events", "Scheduling", "ComponentCommandExecutionSucceeded");
         this.outcome = new AcaadOutcome(fromSchema.outcome);
         this.commandsToExecute = fromSchema.commandsToExecute;

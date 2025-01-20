@@ -1,27 +1,27 @@
 import { AcaadAuthentication } from "../auth/AcaadAuthentication";
 
 export class AcaadHost {
-    friendlyName: string;
-    host: string;
-    port: number;
-    signalrPort: number;
+    public friendlyName: string;
+    public host: string;
+    public port: number;
+    public signalrPort: number;
 
-    authentication: AcaadAuthentication | undefined;
+    public authentication: AcaadAuthentication | undefined;
 
-    protocol: string = "http";
+    public protocol: string = "http";
 
     private _restBase: string | undefined = undefined;
     private _signalrBase: string | undefined = undefined;
 
-    restBase(): string {
+    public restBase(): string {
         return (this._restBase ??= `${this.protocol}://${this.host}:${this.port}`);
     }
 
-    signalrBase(): string {
+    public signalrBase(): string {
         return (this._signalrBase ??= `${this.protocol}://${this.host}:${this.signalrPort}`);
     }
 
-    append(relative: string): string {
+    public append(relative: string): string {
         if (relative.startsWith("/")) {
             return `${this.restBase()}${relative}`;
         }
@@ -29,7 +29,7 @@ export class AcaadHost {
         return `${this.restBase()}/${relative}`;
     }
 
-    appendSignalR(relative: string): string {
+    public appendSignalR(relative: string): string {
         if (relative.startsWith("/")) {
             return `${this.signalrBase()}${relative}`;
         }
@@ -38,7 +38,7 @@ export class AcaadHost {
     }
 
     // TODO: Reorder parameters (auth last)
-    constructor(
+    public constructor(
         friendlyName: string,
         host: string,
         port: number,

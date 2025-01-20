@@ -26,7 +26,7 @@ export class AcaadMetadata {
     public idempotent?: boolean;
     public forValue: Option.Option<unknown>;
 
-    constructor(
+    public constructor(
         path: string,
         method: string,
         component: AcaadComponentMetadata,
@@ -61,7 +61,7 @@ export class AcaadMetadata {
         );
     }
 
-    with(): AcaadMetadata {
+    public with(): AcaadMetadata {
         return this;
     }
 }

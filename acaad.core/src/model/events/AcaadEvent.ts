@@ -9,11 +9,11 @@ export const AcaadEventSchema = Schema.Struct({
 
 // TODO: Make abstract
 export class AcaadEvent {
-    topic: string;
-    type: string;
-    name: string;
+    public topic: string;
+    public type: string;
+    public name: string;
 
-    constructor(topic: string, type: string, name: string) {
+    public constructor(topic: string, type: string, name: string) {
         this.topic = topic;
         this.type = type;
         this.name = name;

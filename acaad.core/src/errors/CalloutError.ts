@@ -1,12 +1,12 @@
 import { AcaadError } from "./AcaadError";
 
 export class CalloutError extends AcaadError {
-    public _tag = "CalloutError";
+    public _tag: string = "CalloutError";
 
-    RequestError: any;
-    CaughtError: unknown;
+    public RequestError: any;
+    public CaughtError: unknown;
 
-    constructor(requestError: any, caughtError?: unknown) {
+    public constructor(requestError: any, caughtError?: unknown) {
         super(null);
         this.RequestError = requestError;
         this.CaughtError = caughtError;
