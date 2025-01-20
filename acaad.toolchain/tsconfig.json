@@ -20,12 +20,6 @@
     "module": "commonjs",
     "types": ["node"]
   },
-  "include": [
-    "src/**/*.ts"
-  ],
-  "exclude": [
-    "build/**",
-    "node_modules/**",
-    "widgets/**"
-  ]
+  "include": ["src/**/*.ts"],
+  "exclude": ["build/**", "node_modules/**", "widgets/**"]
 }
