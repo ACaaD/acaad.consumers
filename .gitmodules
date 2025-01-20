@@ -1,0 +1,3 @@
+[submodule "ioBroker.acaad"]
+	path = ioBroker.acaad
+	url = https://github.com/OlliMartin/ioBroker.acaad.git
