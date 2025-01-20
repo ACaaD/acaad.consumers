@@ -30,7 +30,7 @@ importers:
         specifier: workspace:*
         version: link:../acaad.toolchain
       '@rushstack/heft':
-        specifier: 0.68.13
+        specifier: ~0.68.13
         version: 0.68.13(@types/node@22.10.7)
       '@rushstack/heft-typescript-plugin':
         specifier: ~0.6.6
@@ -121,7 +121,7 @@ importers:
         specifier: ~1000.0.3
         version: 1000.0.3
       '@rushstack/heft':
-        specifier: 0.68.13
+        specifier: ~0.68.13
         version: 0.68.13(@types/node@22.10.7)
       '@rushstack/heft-typescript-plugin':
         specifier: ~0.6.6

@@ -332,17 +332,20 @@
   "projects": [
     {
       "packageName": "@acaad/toolchain",
-      "projectFolder": "acaad.toolchain"
+      "projectFolder": "acaad.toolchain",
+      "versionPolicyName": "acaad.public"
     },
     {
       "packageName": "@acaad/core",
-      "projectFolder": "acaad.core"
+      "projectFolder": "acaad.core",
+      "versionPolicyName": "acaad.public"
     },
     {
       "packageName": "iobroker.acaad",
       "projectFolder": "ioBroker.acaad",
       "reviewCategory": "production",
-      "decoupledLocalDependencies": ["@acaad/toolchain", "@acaad/core"]
+      "decoupledLocalDependencies": ["@acaad/toolchain", "@acaad/core"],
+      "versionPolicyName": "acaad.public"
     }
     // {
     //   /**
