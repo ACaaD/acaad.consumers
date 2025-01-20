@@ -90,10 +90,7 @@ importers:
   ../../ioBroker.acaad:
     dependencies:
       '@acaad/core':
-        specifier: ~0.0.1-dev.3
-        version: 0.0.1-dev.3
-      '@acaad/toolchain':
-        specifier: ~0.0.1-dev.3
+        specifier: '*'
         version: 0.0.1-dev.3
       '@iobroker/adapter-core':
         specifier: ~3.2.3
@@ -108,6 +105,9 @@ importers:
         specifier: ~4.8.0
         version: 4.8.0
     devDependencies:
+      '@acaad/toolchain':
+        specifier: '*'
+        version: 0.0.1-dev.3
       '@fakehost/signalr':
         specifier: ~1.0.0-beta.3
         version: 1.0.0-beta.3
@@ -203,7 +203,7 @@ packages:
 
   /@acaad/toolchain@0.0.1-dev.3:
     resolution: {integrity: sha512-fYwXnwEeU89/4jLT+0Ayxn5ZUzx08zQsLotrLkumJUlHldy9LLv+A83Fbcv0TWEMH4j/m7eZRpHbmFJSonQiBA==}
-    dev: false
+    dev: true
 
   /@ampproject/remapping@2.3.0:
     resolution: {integrity: sha512-30iZtAPgz+LTIYoeivqYo853f02jBYSd5uGnGpkFV0M3xOt9aN73erkgYAmZU43x4VfqcnLxW9Kpg3R5LC4YYw==}

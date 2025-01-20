@@ -1,0 +1,10 @@
+{
+  "changes": [
+    {
+      "packageName": "@acaad/core",
+      "comment": "Testing rush for change tracking",
+      "type": "none"
+    }
+  ],
+  "packageName": "@acaad/core"
+}
