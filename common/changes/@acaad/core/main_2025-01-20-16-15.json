@@ -1,0 +1,10 @@
+{
+  "changes": [
+    {
+      "packageName": "@acaad/core",
+      "comment": "Add lint task",
+      "type": "none"
+    }
+  ],
+  "packageName": "@acaad/core"
+}
