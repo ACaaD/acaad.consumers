@@ -2,7 +2,7 @@ import IConnectedServiceAdapter, { ChangeType } from "./interfaces/IConnectedSer
 import { AcaadPopulatedMetadata, AcaadServerMetadata, getAcaadMetadata } from "./model/open-api/OpenApiDefinition";
 import { AcaadEvent, AcaadPopulatedEvent } from "./model/events/AcaadEvent";
 import { inject, injectable } from "tsyringe";
-import DependencyInjectionTokens from "./model/DependencyInjectionTokens";
+import { DependencyInjectionTokens } from "./model/DependencyInjectionTokens";
 import { ICsLogger } from "./interfaces/IConnectedServiceContext";
 import ConnectionManager from "./ConnectionManager";
 import { AcaadError } from "./errors/AcaadError";

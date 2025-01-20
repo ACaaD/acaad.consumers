@@ -337,8 +337,17 @@
    */
   "projects": [
       {
-        "packageName": "acaad.core",
+        "packageName": "acaad.toolchain",
+        "projectFolder": "acaad.toolchain"
+      },
+      {
+        "packageName": "acaad-core",
         "projectFolder": "acaad.core"
+      },
+      {
+        "packageName": "iobroker.acaad",
+        "projectFolder": "ioBroker.acaad",
+        "reviewCategory": "production"
       }
     // {
     //   /**

@@ -6,7 +6,7 @@ import { OAuth2Token } from "./model/auth/OAuth2Token";
 import { ITokenCache } from "./interfaces/ITokenCache";
 import { ICsLogger } from "./interfaces/IConnectedServiceContext";
 import { inject, injectable } from "tsyringe";
-import DependencyInjectionTokens from "./model/DependencyInjectionTokens";
+import { DependencyInjectionTokens } from "./model/DependencyInjectionTokens";
 
 import { AcaadError } from "./errors/AcaadError";
 import { Context, Effect, Either, pipe, Queue, Schema, Stream } from "effect";

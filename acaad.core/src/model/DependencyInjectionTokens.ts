@@ -1,4 +1,4 @@
-export default {
+export const DependencyInjectionTokens = {
     ConnectionManager: "connection-manager",
     ComponentModel: "component-model",
     TokenCache: "token-cache",

@@ -1,5 +1,6 @@
 {
   "extends": "@tsconfig/node20/tsconfig.json",
+  "importHelpers": true,
   "compilerOptions": {
     "noEmit": true,
     "allowJs": true,
@@ -13,12 +14,14 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "strict": true,
-    "module": "ESNext",
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "declaration": true,
+    "declarationMap": true,
+    "module": "commonjs",
+    "types": ["node"]
   },
   "include": [
-    "src/**/*.ts",
-    "test/**/*.ts"
+    "src/**/*.ts"
   ],
   "exclude": [
     "build/**",
