@@ -89,6 +89,12 @@ importers:
 
   ../../ioBroker.acaad:
     dependencies:
+      '@acaad/core':
+        specifier: ~0.0.1-dev.3
+        version: 0.0.1-dev.3
+      '@acaad/toolchain':
+        specifier: ~0.0.1-dev.3
+        version: 0.0.1-dev.3
       '@iobroker/adapter-core':
         specifier: ~3.2.3
         version: 3.2.3(@iobroker/types@7.0.6)
@@ -179,6 +185,25 @@ importers:
         version: 5.7.3
 
 packages:
+
+  /@acaad/core@0.0.1-dev.3:
+    resolution: {integrity: sha512-kK8jsxgx+UJdu7CDRbjXiUODpeocf1zLySEXAYksJgKfPziCXgMjV76QctuzOQkO576i+9eKZcakZXhiRb36YQ==}
+    dependencies:
+      '@microsoft/signalr': 8.0.7
+      axios: 1.7.9
+      effect: 3.12.5
+      reflect-metadata: 0.2.2
+      tsyringe: 4.8.0
+    transitivePeerDependencies:
+      - bufferutil
+      - debug
+      - encoding
+      - utf-8-validate
+    dev: false
+
+  /@acaad/toolchain@0.0.1-dev.3:
+    resolution: {integrity: sha512-fYwXnwEeU89/4jLT+0Ayxn5ZUzx08zQsLotrLkumJUlHldy9LLv+A83Fbcv0TWEMH4j/m7eZRpHbmFJSonQiBA==}
+    dev: false
 
   /@ampproject/remapping@2.3.0:
     resolution: {integrity: sha512-30iZtAPgz+LTIYoeivqYo853f02jBYSd5uGnGpkFV0M3xOt9aN73erkgYAmZU43x4VfqcnLxW9Kpg3R5LC4YYw==}
