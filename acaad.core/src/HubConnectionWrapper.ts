@@ -41,7 +41,8 @@ export class HubConnectionWrapper {
     const hubConnection = new HubConnectionBuilder()
       .withUrl(signalrUrl, {
         skipNegotiation: true,
-        transport: HttpTransportType.WebSockets
+        transport: HttpTransportType.WebSockets,
+        withCredentials: false // TODO: Obvious..
       })
       .build();
 
