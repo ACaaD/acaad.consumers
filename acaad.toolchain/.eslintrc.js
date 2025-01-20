@@ -8,7 +8,6 @@ module.exports = {
     '@typescript-eslint/member-ordering': 'off',
     '@typescript-eslint/naming-convention': 'off',
     '@typescript-eslint/explicit-member-accessibility': 'off',
-    '@rushstack/typedef-var': 'off',
     '@typescript-eslint/no-unused-vars': 'off',
     '@typescript-eslint/parameter-properties': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
@@ -16,6 +15,7 @@ module.exports = {
     '@typescript-eslint/typedef': 'off',
     '@typescript-eslint/consistent-type-definitions': 'off',
     '@typescript-eslint/explicit-function-return-type': 'off',
+    '@rushstack/typedef-var': 'off',
     '@rushstack/no-new-null': 'off'
   }
 };
