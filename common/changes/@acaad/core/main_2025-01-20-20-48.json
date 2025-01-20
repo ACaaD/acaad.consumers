@@ -1,0 +1,10 @@
+{
+  "changes": [
+    {
+      "packageName": "@acaad/core",
+      "comment": "no credentials",
+      "type": "none"
+    }
+  ],
+  "packageName": "@acaad/core"
+}

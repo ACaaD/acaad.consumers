@@ -1,0 +1,10 @@
+{
+  "changes": [
+    {
+      "packageName": "@acaad/core",
+      "comment": "Force websockets for signalR connection",
+      "type": "none"
+    }
+  ],
+  "packageName": "@acaad/core"
+}
