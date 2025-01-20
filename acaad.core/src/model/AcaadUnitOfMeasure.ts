@@ -1,5 +1,5 @@
 export enum AcaadUnitOfMeasure {
-    Celsius,
-    DeciBel,
-    // Others
+  Celsius,
+  DeciBel
+  // Others
 }

@@ -1,16 +1,16 @@
-import { Schema } from "effect";
+import { Schema } from 'effect';
 
 export const AcaadOutcomeSchema = Schema.Struct({
-    success: Schema.Boolean,
-    outcomeRaw: Schema.UndefinedOr(Schema.String),
+  success: Schema.Boolean,
+  outcomeRaw: Schema.UndefinedOr(Schema.String)
 });
 
 export class AcaadOutcome {
-    public success: boolean;
-    public outcomeRaw?: string;
+  public success: boolean;
+  public outcomeRaw?: string;
 
-    public constructor(fromSchema: Schema.Schema.Type<typeof AcaadOutcomeSchema>) {
-        this.success = fromSchema.success;
-        this.outcomeRaw = fromSchema.outcomeRaw;
-    }
+  public constructor(fromSchema: Schema.Schema.Type<typeof AcaadOutcomeSchema>) {
+    this.success = fromSchema.success;
+    this.outcomeRaw = fromSchema.outcomeRaw;
+  }
 }

@@ -1,59 +1,59 @@
-import { AcaadAuthentication } from "../auth/AcaadAuthentication";
+import { AcaadAuthentication } from '../auth/AcaadAuthentication';
 
 export class AcaadHost {
-    public friendlyName: string;
-    public host: string;
-    public port: number;
-    public signalrPort: number;
+  public friendlyName: string;
+  public host: string;
+  public port: number;
+  public signalrPort: number;
 
-    public authentication: AcaadAuthentication | undefined;
+  public authentication: AcaadAuthentication | undefined;
 
-    public protocol: string = "http";
+  public protocol: string = 'http';
 
-    private _restBase: string | undefined = undefined;
-    private _signalrBase: string | undefined = undefined;
+  private _restBase: string | undefined = undefined;
+  private _signalrBase: string | undefined = undefined;
 
-    public restBase(): string {
-        return (this._restBase ??= `${this.protocol}://${this.host}:${this.port}`);
+  public restBase(): string {
+    return (this._restBase ??= `${this.protocol}://${this.host}:${this.port}`);
+  }
+
+  public signalrBase(): string {
+    return (this._signalrBase ??= `${this.protocol}://${this.host}:${this.signalrPort}`);
+  }
+
+  public append(relative: string): string {
+    if (relative.startsWith('/')) {
+      return `${this.restBase()}${relative}`;
     }
 
-    public signalrBase(): string {
-        return (this._signalrBase ??= `${this.protocol}://${this.host}:${this.signalrPort}`);
+    return `${this.restBase()}/${relative}`;
+  }
+
+  public appendSignalR(relative: string): string {
+    if (relative.startsWith('/')) {
+      return `${this.signalrBase()}${relative}`;
     }
 
-    public append(relative: string): string {
-        if (relative.startsWith("/")) {
-            return `${this.restBase()}${relative}`;
-        }
+    return `${this.signalrBase()}/${relative}`;
+  }
 
-        return `${this.restBase()}/${relative}`;
+  // TODO: Reorder parameters (auth last)
+  public constructor(
+    friendlyName: string,
+    host: string,
+    port: number,
+    authentication: AcaadAuthentication | undefined,
+    signalrPort: number | undefined
+  ) {
+    this.friendlyName = friendlyName;
+    this.host = host;
+    this.port = port;
+    this.authentication = authentication;
+
+    if (signalrPort) {
+      this.signalrPort = signalrPort;
+    } else {
+      this.signalrPort = port;
     }
-
-    public appendSignalR(relative: string): string {
-        if (relative.startsWith("/")) {
-            return `${this.signalrBase()}${relative}`;
-        }
-
-        return `${this.signalrBase()}/${relative}`;
-    }
-
-    // TODO: Reorder parameters (auth last)
-    public constructor(
-        friendlyName: string,
-        host: string,
-        port: number,
-        authentication: AcaadAuthentication | undefined,
-        signalrPort: number | undefined,
-    ) {
-        this.friendlyName = friendlyName;
-        this.host = host;
-        this.port = port;
-        this.authentication = authentication;
-
-        if (signalrPort) {
-            this.signalrPort = signalrPort;
-        } else {
-            this.signalrPort = port;
-        }
-    }
+  }
 }

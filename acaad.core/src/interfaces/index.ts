@@ -1,2 +1,2 @@
-export * from "./IConnectedServiceAdapter";
-export * from "./IConnectedServiceContext";
+export * from './IConnectedServiceAdapter';
+export * from './IConnectedServiceContext';

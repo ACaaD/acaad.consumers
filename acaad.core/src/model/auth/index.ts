@@ -1,1 +1,1 @@
-export { AcaadAuthentication } from "./AcaadAuthentication";
+export { AcaadAuthentication } from './AcaadAuthentication';

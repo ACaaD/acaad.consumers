@@ -1,9 +1,9 @@
-import { AcaadUnitOfMeasure } from "./AcaadUnitOfMeasure";
+import { AcaadUnitOfMeasure } from './AcaadUnitOfMeasure';
 
 export class AcaadDataMetadata {
-    public unitOfMeasureHint?: AcaadUnitOfMeasure;
+  public unitOfMeasureHint?: AcaadUnitOfMeasure;
 
-    public constructor(unitOfMeasureHint?: AcaadUnitOfMeasure) {
-        this.unitOfMeasureHint = unitOfMeasureHint;
-    }
+  public constructor(unitOfMeasureHint?: AcaadUnitOfMeasure) {
+    this.unitOfMeasureHint = unitOfMeasureHint;
+  }
 }

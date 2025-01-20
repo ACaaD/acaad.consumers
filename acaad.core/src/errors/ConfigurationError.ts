@@ -1,9 +1,9 @@
-import { AcaadError } from "./AcaadError";
+import { AcaadError } from './AcaadError';
 
 export class ConfigurationError extends AcaadError {
-    _tag: string = "ConfigurationError";
+  _tag: string = 'ConfigurationError';
 
-    constructor(message: string) {
-        super(message);
-    }
+  constructor(message: string) {
+    super(message);
+  }
 }
