@@ -1,6 +1,6 @@
 {
   "name": "@acaad/core",
-  "version": "0.0.1-dev.12",
+  "version": "0.0.1",
   "description": "acaad",
   "main": "dist/cjs/index.js",
   "module": "./dist/esnext/index.js",
@@ -11,7 +11,7 @@
     "email": "dev@ollimart.in"
   },
   "homepage": "https://github.com/OlliMartin/ioBroker.acaad",
-  "license": "AGPL-3.0",
+  "license": "Apache-2.0",
   "scripts": {
     "build": "heft build --clean",
     "_phase:build": "heft run --only build -- --clean",

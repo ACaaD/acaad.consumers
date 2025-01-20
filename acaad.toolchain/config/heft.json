@@ -18,6 +18,16 @@
       }
     },
 
+    "lint": {
+      "tasksByName": {
+        "lint": {
+          "taskPlugin": {
+            "pluginPackage": "@rushstack/heft-lint-plugin"
+          }
+        }
+      }
+    },
+
     "test": {
       "phaseDependencies": ["build"],
       "tasksByName": {
