@@ -1,0 +1,10 @@
+{
+  "changes": [
+    {
+      "packageName": "@acaad/toolchain",
+      "comment": "Simulated patch version change",
+      "type": "none"
+    }
+  ],
+  "packageName": "@acaad/toolchain"
+}
