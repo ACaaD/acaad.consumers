@@ -1,14 +1,18 @@
 {
   "name": "@acaad/core",
   "version": "0.0.1-dev.4",
-  "description": "",
+  "description": "acaad",
+  "author": {
+    "name": "OlliMartin",
+    "email": "dev@ollimart.in"
+  },
+  "homepage": "https://github.com/OlliMartin/ioBroker.acaad",
+  "license": "AGPL-3.0",
   "main": "src/index.d.ts",
   "scripts": {
     "build": "heft build --clean"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "@microsoft/signalr": "~8.0.7",
     "effect": "~3.12.5",

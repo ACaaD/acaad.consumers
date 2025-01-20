@@ -1,14 +1,18 @@
 {
   "name": "@acaad/toolchain",
   "version": "0.0.1-dev.4",
-  "description": "",
+  "description": "acaad",
+  "author": {
+    "name": "OlliMartin",
+    "email": "dev@ollimart.in"
+  },
+  "homepage": "https://github.com/OlliMartin/ioBroker.acaad",
+  "license": "AGPL-3.0",
   "main": "index.js",
   "scripts": {
     "build": "heft build --clean"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
   "devDependencies": {
     "@tsconfig/node20": "~20.1.4",
     "@rushstack/heft": "~0.68.13",
