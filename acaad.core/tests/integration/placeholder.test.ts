@@ -110,11 +110,31 @@ describe('integration tests', () => {
     console.log('Testing something.');
   });
 
-  it('should sync components', async () => {
+  it('should create server model', async () => {
     const result = await instance.createMissingComponentsAsync();
     expect(result).toBe(true);
 
-    expect(serviceAdapterMock.createServerModelAsync).toHaveBeenCalledTimes(2);
+    expect(serviceAdapterMock.createServerModelAsync).toHaveBeenCalledTimes(1);
+  });
+
+  it('should sync sensor component', async () => {
+    const result = await instance.createMissingComponentsAsync();
+    expect(result).toBe(true);
+
+    expect(serviceAdapterMock.createComponentModelAsync).toHaveBeenCalledTimes(1);
+  });
+
+  it('should sync switch component', async () => {
+    const result = await instance.createMissingComponentsAsync();
+    expect(result).toBe(true);
+
+    expect(serviceAdapterMock.createComponentModelAsync).toHaveBeenCalledTimes(1);
+  });
+
+  it('should sync button component', async () => {
+    const result = await instance.createMissingComponentsAsync();
+    expect(result).toBe(true);
+
     expect(serviceAdapterMock.createComponentModelAsync).toHaveBeenCalledTimes(1);
   });
 

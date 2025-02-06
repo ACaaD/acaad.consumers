@@ -21,6 +21,10 @@ export class AcaadHost {
     return (this._signalrBase ??= `${this.protocol}://${this.host}:${this.signalrPort}`);
   }
 
+  public equals(other: AcaadHost): boolean {
+    return this.host === other.host && this.port === other.port && this.signalrPort === other.signalrPort;
+  }
+
   public append(relative: string): string {
     if (relative.startsWith('/')) {
       return `${this.restBase()}${relative}`;

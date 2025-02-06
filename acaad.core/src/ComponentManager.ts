@@ -65,7 +65,14 @@ export class ComponentModel implements IComponentModel {
   }
 
   public clearServerMetadata(server: AcaadServerMetadata): Effect.Effect<boolean> {
-    return Effect.succeed(this._meta.delete(server));
+    const fountServerOpt = Array.from(this._meta.keys()).find((sm) => sm.host.equals(server.host));
+
+    if (fountServerOpt) {
+      this._meta.delete(fountServerOpt);
+      return Effect.succeed(true);
+    }
+
+    return Effect.succeed(false);
   }
 
   public getComponentByMetadata(
