@@ -19,7 +19,7 @@
     "declaration": true,
     "declarationMap": true,
     "module": "ESNext",
-    "types": ["node"],
+    "types": ["heft-jest", "node"],
     "esModuleInterop": true
   },
   "include": ["src/**/*.ts"],

@@ -1,0 +1,3 @@
+{
+  "extends": "../node_modules/@acaad/toolchain/config/jest.config.json"
+}
