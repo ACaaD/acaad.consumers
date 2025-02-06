@@ -37,6 +37,19 @@
           }
         }
       }
+    },
+    "integration-test": {
+      "phaseDependencies": ["build"],
+      "tasksByName": {
+        "jest": {
+          "taskPlugin": {
+            "pluginPackage": "@rushstack/heft-jest-plugin",
+            "options": {
+              "configurationPath": "./config/jest.integration-test.config.json"
+            }
+          }
+        }
+      }
     }
   }
 }
