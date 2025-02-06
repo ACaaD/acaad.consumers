@@ -34,8 +34,7 @@ export interface IConnectedServiceAdapter {
 
   updateComponentStateAsync(cd: ComponentDescriptor, obj: unknown): Promise<void>;
 
-  // TODO: Change to promise (keep the effect-ts stuff internal)
-  getConnectedServersAsync(): Effect.Effect<AcaadHost[], AcaadError>;
+  getConnectedServersAsync(as: AbortSignal): Promise<AcaadHost[]>;
 
   getAllowedConcurrency(): number;
 }

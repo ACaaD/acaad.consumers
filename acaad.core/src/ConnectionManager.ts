@@ -49,8 +49,12 @@ export class ConnectionManager {
     this.queryComponentConfigurationAsync = this.queryComponentConfigurationAsync.bind(this);
   }
 
-  private getHosts = Effect.gen(this, function* () {
-    return yield* this.connectedServiceAdapter.getConnectedServersAsync();
+  public getHosts = Effect.gen(this, function* () {
+    return yield* Effect.tryPromise({
+      try: (as) => this.connectedServiceAdapter.getConnectedServersAsync(as),
+      // TODO: Error handling
+      catch: (unknown) => new CalloutError(unknown)
+    });
   });
 
   private async retrieveAuthenticationAsync(): Promise<OAuth2Token> {
@@ -108,8 +112,7 @@ export class ConnectionManager {
       Effect.andThen(ConnectionManager.verifyResponsePayload),
       Effect.tap((res) =>
         this.logger.logTrace(`Received acaad configuration with ${res.paths.length} paths.`)
-      ),
-      Effect.andThen((res) => res)
+      )
     );
 
     return Effect.provideService(result, AxiosSvc, {

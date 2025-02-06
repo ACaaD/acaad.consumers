@@ -2,15 +2,15 @@
   "name": "@acaad/core",
   "version": "0.0.2-3",
   "description": "acaad",
-  "main": "dist/cjs/index.js",
-  "module": "./dist/esnext/index.js",
-  "es2015": "./dist/esm2015/index.js",
-  "typings": "./dist/esnext/index.d.ts",
+  "main": "dist/cjs/src/index.js",
+  "module": "./dist/esnext/src/index.js",
+  "es2015": "./dist/esm2015/src/index.js",
+  "typings": "./dist/esnext/src/index.d.ts",
   "author": {
     "name": "OlliMartin",
     "email": "dev@ollimart.in"
   },
-  "homepage": "https://github.com/OlliMartin/ioBroker.acaad",
+  "homepage": "https://github.com/OlliMartin/acaad.ts",
   "license": "Apache-2.0",
   "scripts": {
     "build": "heft build --clean",
@@ -37,6 +37,8 @@
     "tslib": "~2.8.1",
     "eslint": "^8.57.0",
     "@acaad/toolchain": "workspace:*",
-    "@types/heft-jest": "~1.0.6"
+    "@types/heft-jest": "~1.0.6",
+    "ts-jest-mocker": "~1.2.0",
+    "@acaad/testing": "workspace:*"
   }
 }
