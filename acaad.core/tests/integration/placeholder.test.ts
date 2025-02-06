@@ -113,6 +113,9 @@ describe('integration tests', () => {
   it('should sync components', async () => {
     const result = await instance.createMissingComponentsAsync();
     expect(result).toBe(true);
+
+    expect(serviceAdapterMock.createServerModelAsync).toHaveBeenCalledTimes(2);
+    expect(serviceAdapterMock.createComponentModelAsync).toHaveBeenCalledTimes(1);
   });
 
   it('should ignore unreachable server', async () => {
