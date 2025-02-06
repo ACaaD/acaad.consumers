@@ -4,5 +4,7 @@
     "<rootDir>/dist/cjs/tests/jest-global-setup.js",
     "<rootDir>/dist/cjs/tests/ts-jest-mocker.setup.js"
   ],
-  "verbose": true
+  "verbose": false,
+  "clearMocks": true,
+  "coverageDirectory": "<rootDir>/coverage"
 }
