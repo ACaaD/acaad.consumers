@@ -22,6 +22,6 @@
     "types": ["heft-jest", "node"],
     "esModuleInterop": true
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "tests/**/*.ts"],
   "exclude": ["build/**", "node_modules/**", "widgets/**", "lib"]
 }
