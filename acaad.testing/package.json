@@ -1,0 +1,36 @@
+{
+  "name": "@acaad/testing",
+  "version": "0.0.2-3",
+  "description": "acaad",
+  "main": "dist/cjs/index.js",
+  "module": "./dist/esnext/index.js",
+  "es2015": "./dist/esm2015/index.js",
+  "typings": "./dist/esnext/index.d.ts",
+  "scripts": {
+    "build": "heft build --clean",
+    "_phase:build": "heft run --only build -- --clean"
+  },
+  "keywords": [],
+  "author": {
+    "name": "OlliMartin",
+    "email": "dev@ollimart.in"
+  },
+  "homepage": "https://github.com/OlliMartin/acaad.ts",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@mocks-server/main": "~4.1.0",
+    "portfinder": "~1.0.32"
+  },
+  "devDependencies": {
+    "typescript": "~5.6.0",
+    "tsx": "~4.19.2",
+    "@tsconfig/node20": "~20.1.4",
+    "@types/node": "~22.13.1",
+    "@rushstack/heft-typescript-plugin": "~0.6.8",
+    "@rushstack/heft": "~0.68.15",
+    "tslib": "~2.8.1",
+    "eslint": "^8.57.0",
+    "@acaad/toolchain": "workspace:*",
+    "@types/heft-jest": "~1.0.6"
+  }
+}

@@ -7,7 +7,10 @@ import {
   DependencyContainer,
   RegistrationOptions,
   registry,
-  InjectionToken
+  InjectionToken,
+  Provider,
+  TokenProvider,
+  ValueProvider
 } from 'tsyringe';
 import { ComponentManager, ComponentModel } from './ComponentManager';
 import { ConnectionManager } from './ConnectionManager';
@@ -45,11 +48,19 @@ export class FrameworkContainer {
   }
 
   public static CreateCsContainer<T>(
-    provider: ClassProvider<T>,
+    classProvider?: ClassProvider<T>,
+    valueProvider?: ValueProvider<T>,
     options?: RegistrationOptions
   ): FrameworkContainer {
     const childContainer = FrameworkContainer.Container.createChildContainer();
-    childContainer.register<T>(DependencyInjectionTokens.ConnectedServiceAdapter, provider, options);
+
+    if (classProvider) {
+      childContainer.register<T>(DependencyInjectionTokens.ConnectedServiceAdapter, classProvider, options);
+    } else if (valueProvider) {
+      childContainer.register(DependencyInjectionTokens.ConnectedServiceAdapter, valueProvider);
+    } else {
+      throw new Error('Either classProvider or valueProvider must be provided');
+    }
 
     return new FrameworkContainer(childContainer);
   }

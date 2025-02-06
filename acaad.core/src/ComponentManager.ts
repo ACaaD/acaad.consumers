@@ -202,7 +202,7 @@ export class ComponentManager {
 
     return Exit.match(result, {
       onFailure: (cause) => {
-        this._logger.logWarning(`Exited with failure state: ${Cause.pretty(cause)}`);
+        this._logger.logWarning(`Exited with failure state: ${Cause.pretty(cause)}`, cause.toJSON());
         return false;
       },
       onSuccess: (res) => {
@@ -229,7 +229,7 @@ export class ComponentManager {
   }
 
   readonly queryComponentConfigurations = Effect.gen(this, function* () {
-    const configuredServers: AcaadHost[] = yield* this._serviceAdapter.getConnectedServersAsync();
+    const configuredServers: AcaadHost[] = yield* this._connectionManager.getHosts;
     const concurrency = this._serviceAdapter.getAllowedConcurrency();
 
     return Stream.fromIterable(configuredServers).pipe(
