@@ -16,7 +16,7 @@ import {
 import { mock, Mock } from 'ts-jest-mocker';
 import { DependencyContainer } from 'tsyringe';
 import { Cause } from 'effect';
-import { IAcaadApiServer, AcaadApiServer } from '@acaad/testing';
+import { IAcaadApiServer, AcaadApiServer, AcaadSignalRServer, IAcaadSignalRServer } from '@acaad/testing';
 
 class MockConnectedServiceContext implements IConnectedServiceContext {
   logger: ICsLogger = {} as any;
@@ -59,7 +59,8 @@ describe('integration tests', () => {
   let serviceContextMock: Mock<IConnectedServiceContext>;
   let loggerMock: Mock<ICsLogger>;
 
-  let acaadServer: IAcaadApiServer;
+  let acaadApiServer: IAcaadApiServer;
+  let acaadSignalRServer: IAcaadSignalRServer;
 
   let fwkContainer: DependencyContainer;
 
@@ -69,13 +70,16 @@ describe('integration tests', () => {
     serviceAdapterMock = mock<IConnectedServiceAdapter>();
     serviceContextMock = mock<IConnectedServiceContext>();
     loggerMock = mock(MockCsLogger);
-    serviceContextMock.logger = new MockCsLogger();
+    serviceContextMock.logger = loggerMock;
 
-    acaadServer = await AcaadApiServer.createMockServerAsync();
-    await acaadServer.startAsync();
+    acaadApiServer = await AcaadApiServer.createMockServerAsync();
+    await acaadApiServer.startAsync();
+
+    acaadSignalRServer = await AcaadSignalRServer.createMockServerAsync();
+    await acaadSignalRServer.startAsync();
 
     serviceAdapterMock.getConnectedServersAsync.mockResolvedValue([
-      new AcaadHost('mock-server', 'localhost', acaadServer.port, undefined, 1337)
+      new AcaadHost('mock-server', 'localhost', acaadApiServer.port, undefined, acaadSignalRServer.port)
     ]);
 
     serviceAdapterMock.registerStateChangeCallbackAsync.mockResolvedValue();
@@ -108,8 +112,11 @@ describe('integration tests', () => {
     await fwkContainer.dispose();
     console.log('Disposed framework container.');
 
-    await acaadServer.disposeAsync();
-    console.log('Disposed mock server.');
+    await acaadApiServer.disposeAsync();
+    console.log('Disposed mock api server.');
+
+    await acaadSignalRServer.disposeAsync();
+    console.log('Disposed mock signalR server.');
   });
 
   it('should start', () => {
@@ -148,4 +155,14 @@ describe('integration tests', () => {
     const result = await instance.createMissingComponentsAsync();
     expect(result).toBe(true);
   });
+
+  it('should not raise any errors', async () => {
+    const result = await instance.createMissingComponentsAsync();
+    expect(result).toBe(true);
+    expect(loggerMock.logError).not.toHaveBeenCalled();
+  });
+
+  // it('should raise signalr server connected event', async () => {
+  //   expect(serviceAdapterMock.onServerConnectedAsync).toHaveBeenCalledTimes(1);
+  // });
 });

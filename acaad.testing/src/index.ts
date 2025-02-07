@@ -1,1 +1,1 @@
-export { AcaadApiServer, IAcaadApiServer } from './api';
+export { AcaadApiServer, IAcaadApiServer, AcaadSignalRServer, IAcaadSignalRServer } from './api';
