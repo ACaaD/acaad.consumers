@@ -1,0 +1,10 @@
+{
+  "changes": [
+    {
+      "packageName": "@acaad/testing",
+      "comment": "Introduce project to consolidate test mocks (api/signalR)",
+      "type": "none"
+    }
+  ],
+  "packageName": "@acaad/testing"
+}

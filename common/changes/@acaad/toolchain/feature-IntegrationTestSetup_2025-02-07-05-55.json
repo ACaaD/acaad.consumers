@@ -1,0 +1,10 @@
+{
+  "changes": [
+    {
+      "packageName": "@acaad/toolchain",
+      "comment": "Extend jest configuration, add int-test and coverage phase",
+      "type": "none"
+    }
+  ],
+  "packageName": "@acaad/toolchain"
+}

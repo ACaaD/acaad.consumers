@@ -1,0 +1,10 @@
+{
+  "changes": [
+    {
+      "packageName": "@acaad/core",
+      "comment": "Add integration test setup, minimal adjustments to shutdown handling",
+      "type": "none"
+    }
+  ],
+  "packageName": "@acaad/core"
+}
