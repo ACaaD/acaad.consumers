@@ -1,5 +1,7 @@
 {
   "extends": "@rushstack/heft-jest-plugin/includes/jest-shared.config.json",
   "roots": ["<rootDir>/dist/cjs/tests/integration"],
-  "testMatch": ["<rootDir>/dist/cjs/tests/integration/**/*.test.{cjs,js}"]
+  "testMatch": ["<rootDir>/dist/cjs/tests/integration/**/*.test.{cjs,js}"],
+  "verbose": false,
+  "clearMocks": true
 }

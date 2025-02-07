@@ -160,6 +160,7 @@ export class ConnectionManager {
     const startedHosts = Stream.fromIterable(hosts).pipe(
       Stream.filter((host) => this.hubConnections.find((hc) => hc.host === host) === undefined),
       Stream.map((host) => new HubConnectionWrapper(host, this.eventQueue, this.logger)),
+      Stream.tap((hc) => Effect.succeed(this.hubConnections.push(hc))),
       Stream.mapEffect((hc) => hc.startEff),
       Stream.either,
       Stream.runCollect
@@ -169,6 +170,8 @@ export class ConnectionManager {
   });
 
   public stopHubConnections = Effect.gen(this, function* () {
+    this.logger.logTrace(`Stopping ${this.hubConnections.length} hub connections.`);
+
     const stopProcesses = Stream.fromIterable(this.hubConnections).pipe(
       Stream.mapEffect((hc) => hc.stopHubConnection),
       Stream.either,
