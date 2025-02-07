@@ -63,10 +63,7 @@ export class HubConnectionWrapper {
   }
 
   private tryReconnectEff = Effect.gen(this, function* () {
-    if (
-      this.hubConnection.state === HubConnectionState.Connected ||
-      this.hubConnection.state === HubConnectionState.Connecting
-    ) {
+    if (this.hubConnection.state !== HubConnectionState.Disconnected) {
       return;
     }
 
@@ -75,6 +72,10 @@ export class HubConnectionWrapper {
   });
 
   public startEff = Effect.gen(this, function* () {
+    if (this.hubConnection.state !== HubConnectionState.Disconnected) {
+      return;
+    }
+
     yield* Effect.tryPromise({
       try: async (_) => {
         await this.hubConnection.start();
@@ -120,6 +121,7 @@ export class HubConnectionWrapper {
   }
 
   private raiseHubStartedEvent(host: AcaadHost): Effect.Effect<boolean> {
+    this.logger.logDebug(`Hub connection to ${host.friendlyName} started.`);
     return this.eventQueue.offer(new AcaadServerConnectedEvent(host));
   }
 
