@@ -71,6 +71,9 @@ importers:
       '@mocks-server/main':
         specifier: ~4.1.0
         version: 4.1.0
+      effect:
+        specifier: ~3.12.10
+        version: 3.12.10
       portfinder:
         specifier: ~1.0.32
         version: 1.0.32
@@ -4282,6 +4285,12 @@ packages:
 
   /ee-first@1.1.1:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
+
+  /effect@3.12.10:
+    resolution: {integrity: sha512-fGg3sEN+l1rffWJvXICBTqyyzpa4y1uNo3aI/JLezJDmDk0Qj/WHiy6wVe0cecdr0eFU0XkZcFu2TWpgV8kBiw==}
+    dependencies:
+      fast-check: 3.23.2
+    dev: false
 
   /effect@3.12.9:
     resolution: {integrity: sha512-u3PsO0KWtCTO56yGGYaa8RLOccE6Kbeb4UotS/ArAG/tqAyf0x3JF3WaaklhnxJtt67P6SktLmwRPT4hiuhKEA==}

@@ -1,12 +1,9 @@
-import portfinder from 'portfinder';
 import { createServer } from '@mocks-server/main';
 import openApi from './routes/open-api';
 import collections from './collections';
 import { FakeSignalrHub } from '@fakehost/signalr';
 import { createServerSignalr } from '@fakehost/signalr/server';
-import { URL } from 'url';
-
-const asyncDisposables = [];
+import { getNextPortAsync } from '../utility';
 
 export interface IAcaadServer {
   startAsync(): Promise<void>;
@@ -59,8 +56,8 @@ export class AcaadApiServer implements IAcaadApiServer {
   }
 
   public static createMockServerAsync = async (selectedCollection = 'positive') => {
-    const nextFreePort = await portfinder.getPortPromise({ port: 8_000 });
-    const adminPort = await portfinder.getPortPromise({ port: 20_000 });
+    const nextFreePort = await getNextPortAsync();
+    const adminPort = await getNextPortAsync();
 
     return new AcaadApiServer(nextFreePort, adminPort, selectedCollection);
   };
@@ -90,7 +87,7 @@ export class AcaadSignalRServer implements IAcaadSignalRServer {
   }
 
   public static createMockServerAsync: () => Promise<IAcaadSignalRServer> = async () => {
-    const nextFreePort = await portfinder.getPortPromise({ port: 18_000 });
+    const nextFreePort = await getNextPortAsync();
 
     const server: SignalRServer = await createServerSignalr<EventService>({
       port: nextFreePort,
