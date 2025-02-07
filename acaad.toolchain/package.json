@@ -17,11 +17,11 @@
     "@tsconfig/node20": "~20.1.4",
     "@rushstack/heft": "~0.68.15",
     "@rushstack/heft-typescript-plugin": "~0.6.8",
-    "@rushstack/heft-node-rig": "~2.6.51",
+    "@rushstack/heft-node-rig": "~2.6.52",
     "@types/node": "~22.13.1",
     "typescript": "~5.6.0",
     "@rushstack/heft-lint-plugin": "~0.5.14",
-    "@rushstack/heft-jest-plugin": "~0.14.5",
+    "@rushstack/heft-jest-plugin": "~0.14.6",
     "eslint": "^8.57.0",
     "@rushstack/eslint-config": "~4.1.1",
     "@types/heft-jest": "~1.0.6"

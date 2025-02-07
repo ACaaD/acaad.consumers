@@ -212,8 +212,8 @@ export class ComponentManager {
         this._logger.logWarning(`Exited with failure state: ${Cause.pretty(cause)}`, cause.toJSON());
         return false;
       },
-      onSuccess: (res) => {
-        this._logger.logInformation('Successfully created missing components.', res);
+      onSuccess: (_) => {
+        this._logger.logInformation('Successfully created missing components.');
         return true;
       }
     });
@@ -475,6 +475,13 @@ export class ComponentManager {
       // TODO: Use error handler (potentially sharable with comp. model creation)
       this.runEventListener.pipe(
         Effect.onError((err) => {
+          if (Cause.isInterruptType(err)) {
+            this._logger.logDebug(
+              'Event listener fiber was interrupted. This is normal in a graceful shutdown.'
+            );
+            return Effect.void;
+          }
+
           this._logger.logError(err, undefined, 'An error occurred processing event.');
           return Effect.void;
         }),
@@ -515,15 +522,26 @@ export class ComponentManager {
     yield* Queue.shutdown(this._eventQueue);
   });
 
+  private stopEff = Effect.gen(this, function* () {
+    const connections = yield* this._connectionManager.stopHubConnections;
+    const eventQueue = yield* this.shutdownEventQueue;
+
+    if (this.listenerFiber !== null) {
+      yield* Fiber.interrupt(this.listenerFiber);
+    }
+  });
+
   async shutdownAsync(): Promise<void> {
     this._logger.logInformation('Stopping component manager.');
 
-    const stopEff = pipe(
-      this._connectionManager.stopHubConnections,
-      Effect.andThen(this.shutdownEventQueue),
-      Effect.andThen(this.listenerFiber !== null ? Fiber.interrupt(this.listenerFiber) : Effect.void)
-    );
+    const exit = await Effect.runPromiseExit(this.stopEff);
 
-    await Effect.runPromiseExit(stopEff);
+    Exit.match(exit, {
+      onFailure: (cause) =>
+        this._logger.logError(cause, undefined, `An error occurred stopping component manager.`),
+      onSuccess: (_) => {
+        this._logger.logInformation(`Successfully stopped component manager.`);
+      }
+    });
   }
 }

@@ -50,7 +50,7 @@ class MockCsLogger implements ICsLogger {
   }
 
   private log(level: string, ...data: any[]): void {
-    console.log(`[${level}]`, ...data);
+    console.log(`[${level.padStart(5, ' ')}][${Date.now()}]`, ...data);
   }
 }
 
@@ -103,7 +103,13 @@ describe('integration tests', () => {
 
   afterAll(async () => {
     await instance.shutdownAsync();
+    console.log('Shutdown complete.');
+
     await fwkContainer.dispose();
+    console.log('Disposed framework container.');
+
+    await acaadServer.disposeAsync();
+    console.log('Disposed mock server.');
   });
 
   it('should start', () => {
