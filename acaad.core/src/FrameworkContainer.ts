@@ -18,12 +18,19 @@ import { InMemoryTokenCache } from './services/InMemoryTokenCache';
 import { Effect, Layer, Queue } from 'effect';
 import { AcaadPopulatedEvent } from './model/events/AcaadEvent';
 import { NodeSdk } from '@effect/opentelemetry';
-import { BatchSpanProcessor, SimpleSpanProcessor, SpanProcessor } from '@opentelemetry/sdk-trace-base';
+import {
+  BatchSpanProcessor,
+  ConsoleSpanExporter,
+  SimpleSpanProcessor,
+  SpanProcessor
+} from '@opentelemetry/sdk-trace-base';
 import { SpanExporter } from '@opentelemetry/sdk-trace-base/build/src/export/SpanExporter';
 import { ReadableSpan } from '@opentelemetry/sdk-trace-base/build/src/export/ReadableSpan';
 import { ExportResult, ExportResultCode } from '@opentelemetry/core';
 import { ComponentModel } from './ComponentModel';
 import { Configuration } from '@effect/opentelemetry/src/NodeSdk';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-grpc';
+import { OTLPTraceExporter as OtlpHttp } from '@opentelemetry/exporter-trace-otlp-http';
 
 interface IDisposableProcessor extends SpanProcessor, Disposable {
   spanProcessor: SpanProcessor;
@@ -50,14 +57,18 @@ interface IOpenTelemetryLayer {
     useValue: Effect.runSync(Queue.unbounded<AcaadPopulatedEvent>()) // TODO: Define drop-strategy and set bound for capacity
   },
   { token: DependencyInjectionTokens.ComponentModel, useClass: ComponentModel },
-  { token: DependencyInjectionTokens.OpenTelExporter, useFactory: (_) => new TestSpanExporter() },
+  {
+    token: DependencyInjectionTokens.OpenTelExporter,
+    useFactory: (_) =>
+      new OTLPTraceExporter({
+        url: 'http://localhost:4317'
+      })
+  },
   {
     token: DependencyInjectionTokens.OpenTelProcessor,
     useFactory: (container) => {
       const exporter = container.resolve(DependencyInjectionTokens.OpenTelExporter) as SpanExporter;
-      return new SimpleSpanProcessor(exporter);
-      // TODO: Use batch in prod
-      // return new BatchSpanProcessor(exporter);
+      return new BatchSpanProcessor(exporter);
     }
   },
   {
@@ -69,7 +80,21 @@ interface IOpenTelemetryLayer {
         resource: { serviceName: 'acaad' },
         spanProcessor: processor
       };
-      return NodeSdk.layer(() => layer);
+
+      const layerLayer = NodeSdk.layer(() => layer);
+      return layerLayer.pipe(
+        Layer.catchAll((err) => {
+          console.log('An error with the open-tel layer occurred');
+          console.error(err);
+
+          const layerFallback: Configuration = {
+            resource: { serviceName: 'acaad' },
+            spanProcessor: new BatchSpanProcessor(new ConsoleSpanExporter())
+          };
+
+          return NodeSdk.layer(() => layerFallback);
+        })
+      );
     }
   }
 ])
