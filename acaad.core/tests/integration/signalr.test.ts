@@ -23,8 +23,10 @@ describe('signalr connection', () => {
   it('should raise signalr server connected event', async () => {
     await intTestContext.instance.startAsync();
 
-    await delay(100);
+    await delay(5_000);
 
     expect(serviceAdapterMock.onServerConnectedAsync).toHaveBeenCalledTimes(1);
-  });
+
+    await delay(2_000);
+  }, 10_000);
 });

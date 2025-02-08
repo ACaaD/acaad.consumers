@@ -5,20 +5,34 @@ import {
   ClassProvider,
   container,
   DependencyContainer,
+  InjectionToken,
   RegistrationOptions,
   registry,
-  InjectionToken,
-  Provider,
-  TokenProvider,
   ValueProvider
 } from 'tsyringe';
-import { ComponentManager, ComponentModel } from './ComponentManager';
+import { ComponentManager } from './ComponentManager';
 import { ConnectionManager } from './ConnectionManager';
 import { DependencyInjectionTokens } from './model/DependencyInjectionTokens';
 import { IConnectedServiceContext } from './interfaces';
 import { InMemoryTokenCache } from './services/InMemoryTokenCache';
 import { Effect, Queue } from 'effect';
-import { AcaadEvent, AcaadPopulatedEvent } from './model/events/AcaadEvent';
+import { AcaadPopulatedEvent } from './model/events/AcaadEvent';
+import { NodeSdk } from '@effect/opentelemetry';
+import { BatchSpanProcessor, SpanProcessor } from '@opentelemetry/sdk-trace-base';
+import { SpanExporter } from '@opentelemetry/sdk-trace-base/build/src/export/SpanExporter';
+import { ReadableSpan } from '@opentelemetry/sdk-trace-base/build/src/export/ReadableSpan';
+import { ExportResult, ExportResultCode } from '@opentelemetry/core';
+import { ComponentModel } from './ComponentModel';
+import { Configuration } from '@effect/opentelemetry/src/NodeSdk';
+
+interface IDisposableProcessor extends SpanProcessor, Disposable {
+  spanProcessor: SpanProcessor;
+}
+
+interface IOpenTelemetryLayer {
+  resource: string;
+  spanProcessor: SpanProcessor;
+}
 
 @registry([
   { token: ComponentManager, useClass: ComponentManager },
@@ -35,7 +49,27 @@ import { AcaadEvent, AcaadPopulatedEvent } from './model/events/AcaadEvent';
     token: DependencyInjectionTokens.EventQueue,
     useValue: Effect.runSync(Queue.unbounded<AcaadPopulatedEvent>()) // TODO: Define drop-strategy and set bound for capacity
   },
-  { token: DependencyInjectionTokens.ComponentModel, useClass: ComponentModel }
+  { token: DependencyInjectionTokens.ComponentModel, useClass: ComponentModel },
+  { token: DependencyInjectionTokens.OpenTelExporter, useFactory: (_) => new TestSpanExporter() },
+  {
+    token: DependencyInjectionTokens.OpenTelProcessor,
+    useFactory: (container) => {
+      const exporter = container.resolve(DependencyInjectionTokens.OpenTelExporter) as SpanExporter;
+      return new BatchSpanProcessor(exporter);
+    }
+  },
+  {
+    token: DependencyInjectionTokens.OpenTelLayer,
+    useFactory: (container) => {
+      const processor = container.resolve(DependencyInjectionTokens.OpenTelProcessor) as SpanProcessor;
+
+      const layer: Configuration = {
+        resource: { serviceName: 'acaad' },
+        spanProcessor: processor
+      };
+      return NodeSdk.layer(() => layer);
+    }
+  }
 ])
 export class FrameworkContainer {
   private static Container: DependencyContainer = container;
@@ -88,5 +122,28 @@ export class FrameworkContainer {
     if (this._isBuilt) {
       throw new Error('Container has already been built');
     }
+  }
+}
+
+class TestSpanExporter implements SpanExporter {
+  export(spans: ReadableSpan[], resultCallback: (result: ExportResult) => void): void {
+    console.log(
+      spans.map((span) => ({
+        spanId: span.spanContext().spanId,
+        parent: span.parentSpanId,
+        name: span.name,
+        durations: span.duration,
+        tags: span.attributes
+      }))
+    );
+    resultCallback({ code: ExportResultCode.SUCCESS });
+  }
+
+  shutdown(): Promise<void> {
+    console.log('IMPORTANT: Shutdown called on SpanExporter.');
+    return Promise.resolve();
+  }
+  forceFlush?(): Promise<void> {
+    return Promise.resolve();
   }
 }
