@@ -140,7 +140,7 @@ export class ComponentManager {
               })
             )
           )
-        );
+        ).pipe(Effect.withSpan('acaad:sync:run-collect'));
       })
     );
 
