@@ -85,7 +85,7 @@ export class ComponentManager {
 
   private flowEff = Effect.gen(this, function* () {
     const serverMetadata: Stream.Stream<Either.Either<AcaadServerMetadata, AcaadError>> =
-      yield* this.queryComponentConfigurations;
+      yield* this.queryComponentConfigurations.pipe(Effect.withSpan('acaad:sync:query'));
 
     // TODO: Partition by OpenApiDefinition, ResponseSchemaError, ConnectionRefused (or whatever Axios returns)
     // Then continue processing only OpenApiDefinition.
@@ -97,9 +97,13 @@ export class ComponentManager {
 
         const availableServers = openApiDefinitions.pipe(Stream.map((r) => r.right));
 
-        yield* this.reloadComponentMetadataModel(availableServers);
+        yield* this.reloadComponentMetadataModel(availableServers).pipe(
+          Effect.withSpan('acaad:sync:refresh-metadata')
+        );
 
-        const createRes = yield* this.updateConnectedServiceModel;
+        const createRes = yield* this.updateConnectedServiceModel.pipe(
+          Effect.withSpan('acaad:sync:cs:refresh-metadata')
+        );
 
         yield* Stream.runCollect(
           failed.pipe(
@@ -146,7 +150,9 @@ export class ComponentManager {
   public async createMissingComponentsAsync(): Promise<boolean> {
     this._logger.logInformation('Syncing components from ACAAD servers.');
 
-    const result = await Effect.runPromiseExit(this.flowEff);
+    const result = await Effect.runPromiseExit(
+      this.flowEff.pipe(Effect.withSpan('acaad:sync'), Effect.provide(this._openTelLayer()))
+    );
 
     return Exit.match(result, {
       onFailure: (cause) => {
@@ -162,7 +168,13 @@ export class ComponentManager {
 
   private getServerMetadata(host: AcaadHost): Effect.Effect<Either.Either<AcaadServerMetadata, AcaadError>> {
     return Effect.gen(this, function* () {
-      const metadata = yield* this._connectionManager.queryComponentConfigurationAsync(host);
+      const metadata = yield* this._connectionManager.queryComponentConfigurationAsync(host).pipe(
+        Effect.withSpan('acaad:sync:query:api', {
+          attributes: {
+            host: host.friendlyName
+          }
+        })
+      );
 
       return Either.map(
         metadata,
@@ -249,18 +261,28 @@ export class ComponentManager {
       const eff = Effect.tryPromise({
         try: () => this._serviceAdapter.createServerModelAsync(server),
         catch: (error) => new CalloutError(error) as AcaadError
-      });
+      }).pipe(
+        Effect.withSpan('acaad:sync:cs:server-metadata', {
+          attributes: {
+            server: server.host.friendlyName
+          }
+        })
+      );
       yield* sem.release(1);
 
       return yield* eff;
     });
   }
 
-  private processComponentsWithSemaphore(key: string, stream: Stream.Stream<Component>, sem: Semaphore) {
+  private processComponentsWithSemaphore(
+    friendlyName: string,
+    stream: Stream.Stream<Component>,
+    sem: Semaphore
+  ) {
     return Effect.gen(this, function* () {
       yield* sem.take(1);
-      this._logger.logDebug(`Processing components for server: '${key}'.`);
-      const res = this.processComponentsByServer(key, stream);
+      this._logger.logDebug(`Processing components for server: '${friendlyName}'.`);
+      const res = this.processComponentsByServer(friendlyName, stream);
       yield* sem.release(1);
 
       return yield* res;
@@ -268,11 +290,17 @@ export class ComponentManager {
   }
 
   private processComponentsByServer(
-    key: string,
+    friendlyName: string,
     stream: Stream.Stream<Component>
   ): Effect.Effect<Chunk.Chunk<string>, AcaadError> {
     return Effect.gen(this, function* () {
-      return yield* Stream.runCollect(stream.pipe(Stream.mapEffect(this.processSingleComponent)));
+      return yield* Stream.runCollect(stream.pipe(Stream.mapEffect(this.processSingleComponent))).pipe(
+        Effect.withSpan('acaad:sync:cs:component-metadata', {
+          attributes: {
+            server: friendlyName
+          }
+        })
+      );
     });
   }
 
