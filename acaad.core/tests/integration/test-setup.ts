@@ -73,7 +73,7 @@ export async function createIntegrationTestContext() {
   const serviceContextMock: Mock<IConnectedServiceContext> = mock<IConnectedServiceContext>();
 
   const loggerMock: Mock<ICsLogger> = mock(MockCsLogger);
-  serviceContextMock.logger = loggerMock;
+  serviceContextMock.logger = new MockCsLogger();
 
   const acaadApiServer: IAcaadApiServer = await AcaadApiServer.createMockServerAsync();
   const acaadSignalRServer: IAcaadSignalRServer = await AcaadSignalRServer.createMockServerAsync();
@@ -98,10 +98,14 @@ export async function createIntegrationTestContext() {
     serviceAdapterMock: serviceAdapterMock,
     loggerMock: loggerMock,
     async disposeAsync(): Promise<void> {
+      console.log('[ACAAD-TEST-FWK] shutting down instance.');
       await this.instance.shutdownAsync();
+      console.log('[ACAAD-TEST-FWK] disposing framework container.');
       await this.fwkContainer.dispose();
+      console.log('[ACAAD-TEST-FWK] dispose done');
 
       await Promise.all([this.apiMock.disposeAsync(), this.signalrMock.disposeAsync()]);
+      console.log('[ACAAD-TEST-FWK] servers stopped');
     },
     async startMockServersAsync(): Promise<void> {
       await Promise.all([this.apiMock.startAsync(), this.signalrMock.startAsync()]);

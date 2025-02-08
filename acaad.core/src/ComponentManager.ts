@@ -13,13 +13,13 @@ import { AcaadError } from './errors/AcaadError';
 import {
   Cause,
   Chunk,
-  Console,
   Data,
   Effect,
   Either,
   Exit,
   Fiber,
   GroupBy,
+  Layer,
   Option,
   pipe,
   Queue,
@@ -35,77 +35,15 @@ import { RuntimeFiber } from 'effect/Fiber';
 import { AcaadHost } from './model/connection/AcaadHost';
 import { AcaadServerUnreachableError } from './errors/AcaadServerUnreachableError';
 import { ComponentCommandOutcomeEvent } from './model/events/ComponentCommandOutcomeEvent';
-import { AcaadComponentMetadata } from './model/AcaadComponentManager';
 import { AcaadServerConnectedEvent } from './model/events/AcaadServerConnectedEvent';
 import { AcaadServerDisconnectedEvent } from './model/events/AcaadServerDisconnectedEvent';
+import { IComponentModel } from './ComponentModel';
+import { Resource } from 'effect/Resource';
+import { Configuration } from '@effect/opentelemetry/src/NodeSdk';
+import { SpanExporter } from '@opentelemetry/sdk-trace-base/build/src/export/SpanExporter';
+import { SpanProcessor } from '@opentelemetry/sdk-trace-base';
 
 class MetadataByComponent extends Data.Class<{ component: Component; metadata: AcaadMetadata[] }> {}
-
-interface IComponentModel {
-  clearServerMetadata(server: AcaadServerMetadata): Effect.Effect<void>;
-
-  populateServerMetadata(
-    server: AcaadServerMetadata,
-    components: Stream.Stream<Component>
-  ): Effect.Effect<void>;
-
-  getComponentsByServer(): GroupBy.GroupBy<AcaadServerMetadata, Component>;
-
-  getComponentByMetadata(host: AcaadHost, component: AcaadComponentMetadata): Option.Option<Component>;
-}
-
-// noinspection JSPotentiallyInvalidUsageOfClassThis
-export class ComponentModel implements IComponentModel {
-  private _meta = new Map<AcaadServerMetadata, Chunk.Chunk<Component>>();
-
-  public constructor() {
-    this.clearServerMetadata = this.clearServerMetadata.bind(this);
-    this.populateServerMetadata = this.populateServerMetadata.bind(this);
-    this.getComponentsByServer = this.getComponentsByServer.bind(this);
-  }
-
-  public clearServerMetadata(server: AcaadServerMetadata): Effect.Effect<boolean> {
-    const fountServerOpt = Array.from(this._meta.keys()).find((sm) => sm.host.equals(server.host));
-
-    if (fountServerOpt) {
-      this._meta.delete(fountServerOpt);
-      return Effect.succeed(true);
-    }
-
-    return Effect.succeed(false);
-  }
-
-  public getComponentByMetadata(
-    host: AcaadHost,
-    component: AcaadComponentMetadata
-  ): Option.Option<Component> {
-    const stream = Stream.fromIterable(this._meta.entries()).pipe(
-      Stream.filter(([server, _]) => server.host.host === host.host && server.host.port === host.port),
-      Stream.flatMap(([_, components]) => Stream.fromChunk(components)),
-      Stream.filter((c) => c.name === component.name && c.type === component.type),
-      Stream.runCollect
-    );
-
-    return Chunk.get(Effect.runSync(stream), 0);
-  }
-
-  public populateServerMetadata(
-    server: AcaadServerMetadata,
-    components: Stream.Stream<Component>
-  ): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
-      const chunk = yield* Stream.runCollect(components);
-      this._meta.set(server, chunk);
-    });
-  }
-
-  public getComponentsByServer(): GroupBy.GroupBy<AcaadServerMetadata, Component> {
-    return Stream.fromIterable(this._meta.entries()).pipe(
-      Stream.flatMap(([_, components]) => Stream.fromChunk(components)),
-      Stream.groupByKey((c) => c.serverMetadata)
-    );
-  }
-}
 
 // noinspection JSPotentiallyInvalidUsageOfClassThis
 @injectable()
@@ -115,17 +53,19 @@ export class ComponentManager {
   private _connectionManager: ConnectionManager;
   private _componentModel: IComponentModel;
 
-  private _metadataByComponent: MetadataByComponent[] = [];
-
   private _logger: ICsLogger;
   private _eventQueue: Queue.Queue<AcaadPopulatedEvent>;
+  private _openTelLayer: Layer.Layer<Resource<Configuration>>;
+  private _openTelProcessor: SpanProcessor;
 
   public constructor(
     @inject(DependencyInjectionTokens.ConnectedServiceAdapter) serviceAdapter: IConnectedServiceAdapter,
     @inject(DependencyInjectionTokens.ConnectionManager) connectionManager: ConnectionManager,
     @inject(DependencyInjectionTokens.Logger) logger: ICsLogger,
     @inject(DependencyInjectionTokens.EventQueue) eventQueue: Queue.Queue<AcaadPopulatedEvent>,
-    @inject(DependencyInjectionTokens.ComponentModel) componentModel: IComponentModel
+    @inject(DependencyInjectionTokens.ComponentModel) componentModel: IComponentModel,
+    @inject(DependencyInjectionTokens.OpenTelLayer) openTelLayer: Layer.Layer<Resource<Configuration>>,
+    @inject(DependencyInjectionTokens.OpenTelProcessor) openTelProcessor: SpanProcessor
   ) {
     this._abortController = new AbortController();
 
@@ -135,6 +75,8 @@ export class ComponentManager {
 
     this._logger = logger;
     this._eventQueue = eventQueue;
+    this._openTelLayer = openTelLayer;
+    this._openTelProcessor = openTelProcessor;
 
     this.handleOutboundStateChangeAsync = this.handleOutboundStateChangeAsync.bind(this);
     this.processComponentsByServer = this.processComponentsByServer.bind(this);
@@ -448,15 +390,21 @@ export class ComponentManager {
     this._logger.logInformation('Starting component manager.');
 
     const startEff = pipe(
-      this.startEventListener,
-      Effect.andThen(this._connectionManager.startMissingHubConnections),
+      this.startEventListener.pipe(Effect.withSpan('acaad:startup:start-event-listener')),
+      Effect.andThen(
+        this._connectionManager.startMissingHubConnections.pipe(
+          Effect.withSpan('acaad:startup:start-hub-connections')
+        )
+      ),
       Effect.andThen(
         Effect.tryPromise({
           try: (as) =>
             this._serviceAdapter.registerStateChangeCallbackAsync(this.handleOutboundStateChangeAsync, as),
           catch: (error) => new CalloutError('An error occurred registering state change callback.', error)
-        })
-      )
+        }).pipe(Effect.withSpan('acaad:startup:cs:register-state-chance-callback'))
+      ),
+      Effect.withSpan('acaad:startup')
+      // Effect.provide(Layer.fresh(this._openTelLayer))
     );
     const result = await Effect.runPromiseExit(startEff);
 
@@ -486,49 +434,73 @@ export class ComponentManager {
           return Effect.void;
         }),
         Effect.either,
-        Effect.repeat(Schedule.forever)
+        Effect.repeat(Schedule.forever),
+        Effect.provide(Layer.fresh(this._openTelLayer))
       )
     );
   });
 
   private runEventListener = Effect.gen(this, function* () {
     const event = yield* Queue.take(this._eventQueue);
+    const instrumented = this.processEventWithSpan(event).pipe(Effect.withSpan('acaad:events:processing'));
 
-    if (event.name === 'ComponentCommandOutcomeEvent') {
-      return yield* this.handleInboundStateChangeAsync(event);
-    }
-
-    // TODO: Wrong error raised
-    if (event.name === AcaadServerConnectedEvent.Tag) {
-      return yield* Effect.tryPromise({
-        try: () => this._serviceAdapter.onServerConnectedAsync(event.host),
-        catch: (error) => new CalloutError('An error occurred handling server connected event.', error)
-      });
-    }
-
-    // TODO: Wrong error raised
-    if (event.name === AcaadServerDisconnectedEvent.Tag) {
-      return yield* Effect.tryPromise({
-        try: () => this._serviceAdapter.onServerDisconnectedAsync(event.host),
-        catch: (error) => new CalloutError('An error occurred handling server connected event.', error)
-      });
-    }
-
-    this._logger.logTrace(`Discarded unhandled event: '${event.name}'`);
-    return yield* Effect.void;
+    return yield* instrumented;
   });
+
+  private processEventWithSpan(event: AcaadPopulatedEvent) {
+    return Effect.gen(this, function* () {
+      yield* Effect.annotateCurrentSpan('event:name', event.name);
+
+      if (event.name === 'ComponentCommandOutcomeEvent') {
+        return yield* this.handleInboundStateChangeAsync(event);
+      }
+
+      // TODO: Wrong error raised
+      if (event.name === AcaadServerConnectedEvent.Tag) {
+        this._logger.logDebug(`Events: Server ${event.host.friendlyName} connected.`);
+
+        return yield* Effect.tryPromise({
+          try: () => this._serviceAdapter.onServerConnectedAsync(event.host),
+          catch: (error) => new CalloutError('An error occurred handling server connected event.', error)
+        }).pipe(Effect.withSpan('acaad:cs:onServerConnected'));
+      }
+
+      // TODO: Wrong error raised
+      if (event.name === AcaadServerDisconnectedEvent.Tag) {
+        return yield* Effect.tryPromise({
+          try: () => this._serviceAdapter.onServerDisconnectedAsync(event.host),
+          catch: (error) => new CalloutError('An error occurred handling server connected event.', error)
+        }).pipe(Effect.withSpan('acaad:cs:onServerDisconnected'));
+      }
+
+      this._logger.logTrace(`Discarded unhandled event: '${event.name}'`);
+      return yield* Effect.void;
+    });
+  }
 
   private shutdownEventQueue = Effect.gen(this, function* () {
     yield* Queue.shutdown(this._eventQueue);
   });
 
   private stopEff = Effect.gen(this, function* () {
-    const connections = yield* this._connectionManager.stopHubConnections;
-    const eventQueue = yield* this.shutdownEventQueue;
+    this._logger.logDebug('Stopping hub connections.');
+    const connections = yield* this._connectionManager.stopHubConnections.pipe(
+      Effect.withSpan('acaad:shutdown:stop-hub-connections')
+    );
 
+    this._logger.logDebug('Stopping event queue.');
+    const eventQueue = yield* this.shutdownEventQueue.pipe(
+      Effect.withSpan('acaad:shutdown:stop-event-queue')
+    );
+
+    this._logger.logDebug('Interrupting event listener fiber.');
     if (this.listenerFiber !== null) {
-      yield* Fiber.interrupt(this.listenerFiber);
+      yield* Fiber.interrupt(this.listenerFiber).pipe(
+        Effect.withSpan('acaad:shutdown:interrupt-listener-fiber')
+      );
     }
+
+    this._logger.logDebug('Shut down all concurrent processes.');
   });
 
   async shutdownAsync(): Promise<void> {
