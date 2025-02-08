@@ -15,10 +15,10 @@ import { ConnectionManager } from './ConnectionManager';
 import { DependencyInjectionTokens } from './model/DependencyInjectionTokens';
 import { IConnectedServiceContext } from './interfaces';
 import { InMemoryTokenCache } from './services/InMemoryTokenCache';
-import { Effect, Queue } from 'effect';
+import { Effect, Layer, Queue } from 'effect';
 import { AcaadPopulatedEvent } from './model/events/AcaadEvent';
 import { NodeSdk } from '@effect/opentelemetry';
-import { BatchSpanProcessor, SpanProcessor } from '@opentelemetry/sdk-trace-base';
+import { BatchSpanProcessor, SimpleSpanProcessor, SpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { SpanExporter } from '@opentelemetry/sdk-trace-base/build/src/export/SpanExporter';
 import { ReadableSpan } from '@opentelemetry/sdk-trace-base/build/src/export/ReadableSpan';
 import { ExportResult, ExportResultCode } from '@opentelemetry/core';
@@ -55,12 +55,14 @@ interface IOpenTelemetryLayer {
     token: DependencyInjectionTokens.OpenTelProcessor,
     useFactory: (container) => {
       const exporter = container.resolve(DependencyInjectionTokens.OpenTelExporter) as SpanExporter;
-      return new BatchSpanProcessor(exporter);
+      return new SimpleSpanProcessor(exporter);
+      // TODO: Use batch in prod
+      // return new BatchSpanProcessor(exporter);
     }
   },
   {
     token: DependencyInjectionTokens.OpenTelLayer,
-    useFactory: (container) => {
+    useFactory: (container) => () => {
       const processor = container.resolve(DependencyInjectionTokens.OpenTelProcessor) as SpanProcessor;
 
       const layer: Configuration = {
@@ -140,7 +142,7 @@ class TestSpanExporter implements SpanExporter {
   }
 
   shutdown(): Promise<void> {
-    console.log('IMPORTANT: Shutdown called on SpanExporter.');
+    console.log(`[T-FWK][${new Date().toISOString()}] IMPORTANT: Shutdown called on SpanExporter.`);
     return Promise.resolve();
   }
   forceFlush?(): Promise<void> {

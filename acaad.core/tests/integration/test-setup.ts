@@ -42,7 +42,7 @@ class MockCsLogger implements ICsLogger {
   }
 
   private log(level: string, ...data: any[]): void {
-    console.log(`[${level.padStart(5, ' ')}][${Date.now()}]`, ...data);
+    console.log(`[${level.padStart(5, ' ')}][${new Date().toISOString()}]`, ...data);
   }
 }
 
@@ -98,14 +98,14 @@ export async function createIntegrationTestContext() {
     serviceAdapterMock: serviceAdapterMock,
     loggerMock: loggerMock,
     async disposeAsync(): Promise<void> {
-      console.log('[ACAAD-TEST-FWK] shutting down instance.');
+      console.log(`[T-FWK][${new Date().toISOString()}] shutting down instance.`);
       await this.instance.shutdownAsync();
-      console.log('[ACAAD-TEST-FWK] disposing framework container.');
+      console.log(`[T-FWK][${new Date().toISOString()}] disposing framework container.`);
       await this.fwkContainer.dispose();
-      console.log('[ACAAD-TEST-FWK] dispose done');
+      console.log(`[T-FWK][${new Date().toISOString()}] dispose done`);
 
       await Promise.all([this.apiMock.disposeAsync(), this.signalrMock.disposeAsync()]);
-      console.log('[ACAAD-TEST-FWK] servers stopped');
+      console.log(`[T-FWK][${new Date().toISOString()}] servers stopped`);
     },
     async startMockServersAsync(): Promise<void> {
       await Promise.all([this.apiMock.startAsync(), this.signalrMock.startAsync()]);
