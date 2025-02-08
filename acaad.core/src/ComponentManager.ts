@@ -24,6 +24,7 @@ import {
   pipe,
   Queue,
   Schedule,
+  Scope,
   Stream
 } from 'effect';
 import { CalloutError } from './errors/CalloutError';
@@ -55,8 +56,7 @@ export class ComponentManager {
 
   private _logger: ICsLogger;
   private _eventQueue: Queue.Queue<AcaadPopulatedEvent>;
-  private _openTelLayer: Layer.Layer<Resource<Configuration>>;
-  private _openTelProcessor: SpanProcessor;
+  private _openTelLayer: () => Layer.Layer<Resource<Configuration>>;
 
   public constructor(
     @inject(DependencyInjectionTokens.ConnectedServiceAdapter) serviceAdapter: IConnectedServiceAdapter,
@@ -64,8 +64,7 @@ export class ComponentManager {
     @inject(DependencyInjectionTokens.Logger) logger: ICsLogger,
     @inject(DependencyInjectionTokens.EventQueue) eventQueue: Queue.Queue<AcaadPopulatedEvent>,
     @inject(DependencyInjectionTokens.ComponentModel) componentModel: IComponentModel,
-    @inject(DependencyInjectionTokens.OpenTelLayer) openTelLayer: Layer.Layer<Resource<Configuration>>,
-    @inject(DependencyInjectionTokens.OpenTelProcessor) openTelProcessor: SpanProcessor
+    @inject(DependencyInjectionTokens.OpenTelLayer) openTelLayer: () => Layer.Layer<Resource<Configuration>>
   ) {
     this._abortController = new AbortController();
 
@@ -76,7 +75,6 @@ export class ComponentManager {
     this._logger = logger;
     this._eventQueue = eventQueue;
     this._openTelLayer = openTelLayer;
-    this._openTelProcessor = openTelProcessor;
 
     this.handleOutboundStateChangeAsync = this.handleOutboundStateChangeAsync.bind(this);
     this.processComponentsByServer = this.processComponentsByServer.bind(this);
@@ -386,27 +384,27 @@ export class ComponentManager {
     }
   }
 
+  private startEff() {
+    return Effect.gen(this, function* () {
+      yield* this.startEventListener.pipe(Effect.withSpan('acaad:startup:start-event-listener'));
+      yield* this._connectionManager.startMissingHubConnections.pipe(
+        Effect.withSpan('acaad:startup:start-hub-connections')
+      );
+
+      yield* Effect.tryPromise({
+        try: (as) =>
+          this._serviceAdapter.registerStateChangeCallbackAsync(this.handleOutboundStateChangeAsync, as),
+        catch: (error) => new CalloutError('An error occurred registering state change callback.', error)
+      }).pipe(Effect.withSpan('acaad:startup:cs:register-state-chance-callback'));
+    });
+  }
+
   async startAsync(): Promise<void> {
     this._logger.logInformation('Starting component manager.');
 
-    const startEff = pipe(
-      this.startEventListener.pipe(Effect.withSpan('acaad:startup:start-event-listener')),
-      Effect.andThen(
-        this._connectionManager.startMissingHubConnections.pipe(
-          Effect.withSpan('acaad:startup:start-hub-connections')
-        )
-      ),
-      Effect.andThen(
-        Effect.tryPromise({
-          try: (as) =>
-            this._serviceAdapter.registerStateChangeCallbackAsync(this.handleOutboundStateChangeAsync, as),
-          catch: (error) => new CalloutError('An error occurred registering state change callback.', error)
-        }).pipe(Effect.withSpan('acaad:startup:cs:register-state-chance-callback'))
-      ),
-      Effect.withSpan('acaad:startup')
-      // Effect.provide(Layer.fresh(this._openTelLayer))
+    const result = await Effect.runPromiseExit(
+      this.startEff().pipe(Effect.withSpan('acaad:startup'), Effect.provide(this._openTelLayer()))
     );
-    const result = await Effect.runPromiseExit(startEff);
 
     Exit.match(result, {
       onFailure: (cause) =>
@@ -415,6 +413,8 @@ export class ComponentManager {
         this._logger.logInformation(`Started component manager. Listening for events..`);
       }
     });
+
+    this._logger.logInformation('Started.');
   }
 
   private listenerFiber: RuntimeFiber<void | number> | null = null;
@@ -435,7 +435,7 @@ export class ComponentManager {
         }),
         Effect.either,
         Effect.repeat(Schedule.forever),
-        Effect.provide(Layer.fresh(this._openTelLayer))
+        Effect.provide(Layer.fresh(this._openTelLayer()))
       )
     );
   });
@@ -506,7 +506,9 @@ export class ComponentManager {
   async shutdownAsync(): Promise<void> {
     this._logger.logInformation('Stopping component manager.');
 
-    const exit = await Effect.runPromiseExit(this.stopEff);
+    const exit = await Effect.runPromiseExit(
+      this.stopEff.pipe(Effect.withSpan('acaad:shutdown'), Effect.provide(Layer.fresh(this._openTelLayer())))
+    );
 
     Exit.match(exit, {
       onFailure: (cause) =>
