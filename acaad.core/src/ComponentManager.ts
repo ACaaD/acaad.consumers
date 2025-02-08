@@ -25,7 +25,8 @@ import {
   Queue,
   Schedule,
   Scope,
-  Stream
+  Stream,
+  Tracer
 } from 'effect';
 import { CalloutError } from './errors/CalloutError';
 import { Semaphore } from 'effect/Effect';
@@ -42,7 +43,7 @@ import { IComponentModel } from './ComponentModel';
 import { Resource } from 'effect/Resource';
 import { Configuration } from '@effect/opentelemetry/src/NodeSdk';
 import { SpanExporter } from '@opentelemetry/sdk-trace-base/build/src/export/SpanExporter';
-import { SpanProcessor } from '@opentelemetry/sdk-trace-base';
+import { Span, SpanProcessor } from '@opentelemetry/sdk-trace-base';
 
 class MetadataByComponent extends Data.Class<{ component: Component; metadata: AcaadMetadata[] }> {}
 
@@ -442,7 +443,12 @@ export class ComponentManager {
 
   private runEventListener = Effect.gen(this, function* () {
     const event = yield* Queue.take(this._eventQueue);
-    const instrumented = this.processEventWithSpan(event).pipe(Effect.withSpan('acaad:events:processing'));
+    const instrumented = this.processEventWithSpan(event).pipe(
+      Effect.withSpan('acaad:events', {
+        parent: undefined,
+        root: true
+      })
+    );
 
     return yield* instrumented;
   });
