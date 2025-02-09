@@ -12,7 +12,8 @@ import {
 import { DependencyContainer } from 'tsyringe';
 import { IAcaadApiServer, IAcaadSignalRServer, AcaadApiServer, AcaadSignalRServer } from '@acaad/testing';
 import { Cause } from 'effect';
-import { IAcaadIntegrationTestContext } from './types';
+import { AcaadIntegrationTestContext, IAcaadIntegrationTestContext } from './types';
+import { int } from 'effect/Schema';
 
 class MockCsLogger implements ICsLogger {
   logTrace(...data: any[]): void {
@@ -47,13 +48,11 @@ class MockCsLogger implements ICsLogger {
 }
 
 function setupConnectedServiceMock(intTestContext: IAcaadIntegrationTestContext) {
-  const { serviceAdapterMock, apiMock, signalrMock } = intTestContext;
+  const { serviceAdapterMock } = intTestContext;
 
   const authentication: AcaadAuthentication | undefined = undefined;
 
-  serviceAdapterMock.getConnectedServersAsync.mockResolvedValue([
-    new AcaadHost('mock-server', 'localhost', apiMock.port, authentication, signalrMock.port)
-  ]);
+  serviceAdapterMock.getConnectedServersAsync.mockResolvedValue(intTestContext.getHosts());
 
   serviceAdapterMock.registerStateChangeCallbackAsync.mockResolvedValue();
 
@@ -67,6 +66,8 @@ function setupConnectedServiceMock(intTestContext: IAcaadIntegrationTestContext)
     (c) => new ComponentDescriptor(c.name)
   );
 }
+
+export async function createPerformanceTestContext(serverCount: number, componentCountPerServer: number) {}
 
 export async function createIntegrationTestContext() {
   const serviceAdapterMock: Mock<IConnectedServiceAdapter> = mock<IConnectedServiceAdapter>();
@@ -89,32 +90,15 @@ export async function createIntegrationTestContext() {
 
   const instance: ComponentManager = fwkContainer.resolve(ComponentManager) as ComponentManager;
 
-  const intTestContext: IAcaadIntegrationTestContext = {
-    instance,
+  const intTestContext: IAcaadIntegrationTestContext = new AcaadIntegrationTestContext(
+    [acaadApiServer],
+    [acaadSignalRServer],
     fwkContainer,
-    apiMock: acaadApiServer,
-    signalrMock: acaadSignalRServer,
-    serviceContextMock: serviceContextMock,
-    serviceAdapterMock: serviceAdapterMock,
-    loggerMock: loggerMock,
-    async disposeAsync(): Promise<void> {
-      console.log(`[T-FWK][${new Date().toISOString()}] shutting down instance.`);
-      await this.instance.shutdownAsync();
-      console.log(`[T-FWK][${new Date().toISOString()}] disposing framework container.`);
-      await this.fwkContainer.dispose();
-      console.log(`[T-FWK][${new Date().toISOString()}] dispose done`);
-
-      await Promise.all([this.apiMock.disposeAsync(), this.signalrMock.disposeAsync()]);
-      console.log(`[T-FWK][${new Date().toISOString()}] servers stopped`);
-    },
-    async startMockServersAsync(): Promise<void> {
-      await Promise.all([this.apiMock.startAsync(), this.signalrMock.startAsync()]);
-    },
-    async startAllAsync(): Promise<void> {
-      await this.startMockServersAsync();
-      await this.instance.startAsync();
-    }
-  };
+    instance,
+    loggerMock,
+    serviceAdapterMock,
+    serviceContextMock
+  );
 
   setupConnectedServiceMock(intTestContext);
 

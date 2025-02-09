@@ -85,7 +85,7 @@ export class ComponentManager {
 
   private flowEff = Effect.gen(this, function* () {
     const serverMetadata: Stream.Stream<Either.Either<AcaadServerMetadata, AcaadError>> =
-      yield* this.queryComponentConfigurations.pipe(Effect.withSpan('acaad:sync:query'));
+      yield* this.queryComponentConfigurations;
 
     // TODO: Partition by OpenApiDefinition, ResponseSchemaError, ConnectionRefused (or whatever Axios returns)
     // Then continue processing only OpenApiDefinition.
@@ -257,7 +257,7 @@ export class ComponentManager {
     sem: Semaphore
   ): Effect.Effect<void, AcaadError> {
     return Effect.gen(this, function* () {
-      yield* sem.take(1);
+      yield* sem.take(1).pipe(Effect.withSpan('acaad:sem:wait'));
       const eff = Effect.tryPromise({
         try: () => this._serviceAdapter.createServerModelAsync(server),
         catch: (error) => new CalloutError(error) as AcaadError
@@ -280,7 +280,7 @@ export class ComponentManager {
     sem: Semaphore
   ) {
     return Effect.gen(this, function* () {
-      yield* sem.take(1);
+      yield* sem.take(1).pipe(Effect.withSpan('acaad:sem:wait'));
       this._logger.logDebug(`Processing components for server: '${friendlyName}'.`);
       const res = this.processComponentsByServer(friendlyName, stream);
       yield* sem.release(1);
