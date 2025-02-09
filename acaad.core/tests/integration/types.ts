@@ -9,6 +9,12 @@ import { IAcaadApiServer, IAcaadSignalRServer } from '@acaad/testing';
 import { Mock } from 'ts-jest-mocker';
 import { DependencyContainer } from 'tsyringe';
 
+export interface IStateObserver {
+  waitForSpanAsync(spanName: string): Promise<void>;
+
+  waitForSignalRClient(): Promise<void>;
+}
+
 export interface IAcaadIntegrationTestContext {
   apiMocks: IAcaadApiServer[];
   signalrMocks: IAcaadSignalRServer[];
@@ -19,6 +25,8 @@ export interface IAcaadIntegrationTestContext {
   loggerMock: Mock<ICsLogger>;
   serviceAdapterMock: Mock<IConnectedServiceAdapter>;
   serviceContextMock: Mock<IConnectedServiceContext>;
+
+  stateObserver: IStateObserver;
 
   getHosts(): AcaadHost[];
 
@@ -36,6 +44,8 @@ export class AcaadIntegrationTestContext implements IAcaadIntegrationTestContext
   public serviceAdapterMock: Mock<IConnectedServiceAdapter>;
   public serviceContextMock: Mock<IConnectedServiceContext>;
 
+  public stateObserver: IStateObserver;
+
   public constructor(
     apiMocks: IAcaadApiServer[],
     signalrMocks: IAcaadSignalRServer[],
@@ -43,7 +53,8 @@ export class AcaadIntegrationTestContext implements IAcaadIntegrationTestContext
     instance: ComponentManager,
     loggerMock: Mock<ICsLogger>,
     serviceAdapterMock: Mock<IConnectedServiceAdapter>,
-    serviceContextMock: Mock<IConnectedServiceContext>
+    serviceContextMock: Mock<IConnectedServiceContext>,
+    stateObserver: IStateObserver
   ) {
     this.apiMocks = apiMocks;
     this.signalrMocks = signalrMocks;
@@ -52,6 +63,7 @@ export class AcaadIntegrationTestContext implements IAcaadIntegrationTestContext
     this.loggerMock = loggerMock;
     this.serviceAdapterMock = serviceAdapterMock;
     this.serviceContextMock = serviceContextMock;
+    this.stateObserver = stateObserver;
   }
 
   getHosts(): AcaadHost[] {

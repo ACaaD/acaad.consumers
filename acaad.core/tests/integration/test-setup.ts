@@ -1,7 +1,6 @@
 import { mock, Mock } from 'ts-jest-mocker';
 import {
   AcaadAuthentication,
-  AcaadHost,
   ComponentDescriptor,
   ComponentManager,
   FrameworkContainer,
@@ -10,24 +9,29 @@ import {
   ICsLogger
 } from '../../src';
 import { DependencyContainer } from 'tsyringe';
-import { IAcaadApiServer, IAcaadSignalRServer, AcaadApiServer, AcaadSignalRServer } from '@acaad/testing';
+import { AcaadApiServer, AcaadSignalRServer } from '@acaad/testing';
 import { Cause } from 'effect';
-import { AcaadIntegrationTestContext, IAcaadIntegrationTestContext } from './types';
-import { int } from 'effect/Schema';
+import { AcaadIntegrationTestContext, IAcaadIntegrationTestContext, IStateObserver } from './types';
+import { ReadableSpan, SpanExporter } from '@opentelemetry/sdk-trace-base';
+import { ExportResult, ExportResultCode } from '@opentelemetry/core';
 
 class MockCsLogger implements ICsLogger {
   logTrace(...data: any[]): void {
     this.log('trace', ...data);
   }
+
   logDebug(...data: any[]): void {
     this.log('debug', ...data);
   }
+
   logInformation(...data: any[]): void {
     this.log('info', ...data);
   }
+
   logWarning(...data: any[]): void {
     this.log('warn', ...data);
   }
+
   logError(cause?: Cause.Cause<unknown>, error?: Error, ...data: any[]): void {
     if (cause) {
       console.error(Cause.pretty(cause), cause.toJSON(), ...data);
@@ -83,6 +87,7 @@ export async function createPerformanceTestContext(serverCount: number, componen
 
   const [apiServers, signalrServers] = await Promise.all([apiServerPromise, signalrServerPromise]);
 
+  const stateObserver = ObservableSpanExporter.Create();
   const fwkContainer: DependencyContainer = FrameworkContainer.CreateCsContainer<IConnectedServiceAdapter>(
     undefined,
     {
@@ -90,6 +95,7 @@ export async function createPerformanceTestContext(serverCount: number, componen
     }
   )
     .WithContext<IConnectedServiceContext>('mock-context', serviceContextMock)
+    .WithOpenTelemtry('single', (_) => stateObserver)
     .Build();
 
   const instance: ComponentManager = fwkContainer.resolve(ComponentManager) as ComponentManager;
@@ -101,12 +107,76 @@ export async function createPerformanceTestContext(serverCount: number, componen
     instance,
     loggerMock,
     serviceAdapterMock,
-    serviceContextMock
+    serviceContextMock,
+    stateObserver
   );
 
   setupConnectedServiceMock(intTestContext);
 
   return intTestContext;
+}
+
+class ObservableSpanExporter implements SpanExporter, IStateObserver {
+  private static instance: ObservableSpanExporter = new ObservableSpanExporter();
+
+  private trackedSpans: Map<string, () => void> = new Map<string, () => {}>();
+
+  private constructor() {
+    console.log(`Creating new span exporter. Ref: ${ObservableSpanExporter.instance}`);
+  }
+
+  private promise?: Promise<void>;
+
+  async waitForSignalRClient(): Promise<void> {
+    const startMs = Date.now();
+    await this.waitForSpanAsync('acaad:cs:onServerConnected');
+    console.log(`[T-FWK] SignalR client connected after ${Date.now() - startMs}ms.`);
+  }
+
+  waitForSpanAsync(spanName: string): Promise<void> {
+    const startWait = new Date();
+
+    let resolveFunc: ((value: void | PromiseLike<void>) => void) | undefined;
+
+    const promise = new Promise<void>(function (resolve, reject) {
+      resolveFunc = resolve;
+    });
+
+    if (!resolveFunc) {
+      throw new Error('An error occurred generating callback. This should _never_ happen.');
+    }
+
+    // TODO: Synchronization + Duplicate handling
+    this.trackedSpans.set(spanName, resolveFunc);
+
+    return promise;
+  }
+
+  export(spans: ReadableSpan[], resultCallback: (result: ExportResult) => void): void {
+    const toResolve = spans.filter((span) => this.trackedSpans.has(span.name));
+
+    if (toResolve.length > 0) {
+      console.log(`[T-FWK] Found ${toResolve.length} promises to resolve.`);
+      toResolve.forEach((span) => {
+        const resolveFunc = this.trackedSpans.get(span.name)!;
+        resolveFunc();
+      });
+
+      // TODO: Cleanup
+    }
+
+    resultCallback({
+      code: ExportResultCode.SUCCESS
+    });
+  }
+  shutdown(): Promise<void> {
+    console.log('[T-FWK] Shutting down observable span exporter');
+    return Promise.resolve();
+  }
+
+  public static Create(): ObservableSpanExporter {
+    return ObservableSpanExporter.instance;
+  }
 }
 
 export async function createIntegrationTestContext() {
