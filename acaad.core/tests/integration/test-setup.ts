@@ -56,7 +56,7 @@ function setupConnectedServiceMock(intTestContext: IAcaadIntegrationTestContext)
 
   serviceAdapterMock.registerStateChangeCallbackAsync.mockResolvedValue();
 
-  serviceAdapterMock.getAllowedConcurrency.mockReturnValue(1);
+  serviceAdapterMock.getAllowedConcurrency.mockReturnValue(16);
   serviceAdapterMock.createServerModelAsync.mockResolvedValue();
   serviceAdapterMock.createComponentModelAsync.mockResolvedValue();
   serviceAdapterMock.onServerConnectedAsync.mockResolvedValue();
@@ -67,17 +67,21 @@ function setupConnectedServiceMock(intTestContext: IAcaadIntegrationTestContext)
   );
 }
 
-export async function createPerformanceTestContext(serverCount: number, componentCountPerServer: number) {}
+export async function createPerformanceTestContext(serverCount: number, componentCountPerServer: number) {
+  const enumerable = Array.from({ length: serverCount });
 
-export async function createIntegrationTestContext() {
   const serviceAdapterMock: Mock<IConnectedServiceAdapter> = mock<IConnectedServiceAdapter>();
   const serviceContextMock: Mock<IConnectedServiceContext> = mock<IConnectedServiceContext>();
 
   const loggerMock: Mock<ICsLogger> = mock(MockCsLogger);
   serviceContextMock.logger = new MockCsLogger();
 
-  const acaadApiServer: IAcaadApiServer = await AcaadApiServer.createMockServerAsync();
-  const acaadSignalRServer: IAcaadSignalRServer = await AcaadSignalRServer.createMockServerAsync();
+  const apiServerPromise = Promise.all(
+    enumerable.map((_) => AcaadApiServer.createMockServerAsync(undefined, componentCountPerServer))
+  );
+  const signalrServerPromise = Promise.all(enumerable.map((_) => AcaadSignalRServer.createMockServerAsync()));
+
+  const [apiServers, signalrServers] = await Promise.all([apiServerPromise, signalrServerPromise]);
 
   const fwkContainer: DependencyContainer = FrameworkContainer.CreateCsContainer<IConnectedServiceAdapter>(
     undefined,
@@ -91,8 +95,8 @@ export async function createIntegrationTestContext() {
   const instance: ComponentManager = fwkContainer.resolve(ComponentManager) as ComponentManager;
 
   const intTestContext: IAcaadIntegrationTestContext = new AcaadIntegrationTestContext(
-    [acaadApiServer],
-    [acaadSignalRServer],
+    apiServers,
+    signalrServers,
     fwkContainer,
     instance,
     loggerMock,
@@ -103,4 +107,8 @@ export async function createIntegrationTestContext() {
   setupConnectedServiceMock(intTestContext);
 
   return intTestContext;
+}
+
+export async function createIntegrationTestContext() {
+  return await createPerformanceTestContext(1, 1);
 }

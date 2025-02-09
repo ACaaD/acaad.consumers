@@ -20,12 +20,20 @@ export interface IAcaadSignalRServer extends IAcaadServer {}
 export class AcaadApiServer implements IAcaadApiServer {
   server: any;
 
+  private componentCount: number;
   public port: number;
   public adminPort: number;
 
-  private constructor(port: number, adminPort: number, selectedCollection: string) {
+  private constructor(
+    port: number,
+    adminPort: number,
+    selectedCollection: string,
+    componentCount: number = 1
+  ) {
     this.port = port;
     this.adminPort = adminPort;
+
+    this.componentCount = componentCount;
 
     this.server = createServer({
       server: {
@@ -47,7 +55,7 @@ export class AcaadApiServer implements IAcaadApiServer {
   async startAsync(): Promise<void> {
     await this.server.start();
     const { loadRoutes, loadCollections } = this.server.mock.createLoaders();
-    loadRoutes(openApi);
+    loadRoutes(openApi(this.componentCount));
     loadCollections(collections);
   }
 
@@ -55,11 +63,14 @@ export class AcaadApiServer implements IAcaadApiServer {
     await this.server.stop();
   }
 
-  public static createMockServerAsync = async (selectedCollection = 'positive') => {
+  public static createMockServerAsync = async (
+    selectedCollection = 'positive',
+    componentCount: number = 1
+  ) => {
     const nextFreePort = await getNextPortAsync();
     const adminPort = await getNextPortAsync();
 
-    return new AcaadApiServer(nextFreePort, adminPort, selectedCollection);
+    return new AcaadApiServer(nextFreePort, adminPort, selectedCollection, componentCount);
   };
 }
 
