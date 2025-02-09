@@ -21,6 +21,7 @@ import { NodeSdk } from '@effect/opentelemetry';
 import {
   BatchSpanProcessor,
   ConsoleSpanExporter,
+  NoopSpanProcessor,
   SimpleSpanProcessor,
   SpanProcessor
 } from '@opentelemetry/sdk-trace-base';
@@ -32,13 +33,18 @@ import { Configuration } from '@effect/opentelemetry/src/NodeSdk';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-grpc';
 import { OTLPTraceExporter as OtlpHttp } from '@opentelemetry/exporter-trace-otlp-http';
 
-interface IDisposableProcessor extends SpanProcessor, Disposable {
-  spanProcessor: SpanProcessor;
+function noopExporterFactory(container: DependencyContainer): SpanProcessor {
+  return new NoopSpanProcessor();
 }
 
-interface IOpenTelemetryLayer {
-  resource: string;
-  spanProcessor: SpanProcessor;
+function singleExporterFactory(container: DependencyContainer): SpanProcessor {
+  const exporter = container.resolve(DependencyInjectionTokens.OpenTelExporter) as SpanExporter;
+  return new SimpleSpanProcessor(exporter);
+}
+
+function batchExporterFactory(container: DependencyContainer): SpanProcessor {
+  const exporter = container.resolve(DependencyInjectionTokens.OpenTelExporter) as SpanExporter;
+  return new BatchSpanProcessor(exporter);
 }
 
 @registry([
@@ -66,10 +72,7 @@ interface IOpenTelemetryLayer {
   },
   {
     token: DependencyInjectionTokens.OpenTelProcessor,
-    useFactory: (container) => {
-      const exporter = container.resolve(DependencyInjectionTokens.OpenTelExporter) as SpanExporter;
-      return new BatchSpanProcessor(exporter);
-    }
+    useFactory: batchExporterFactory
   },
   {
     token: DependencyInjectionTokens.OpenTelLayer,
@@ -136,6 +139,23 @@ export class FrameworkContainer {
       useValue: value
     });
     this._childContainer.register<T>(token, { useValue: value });
+
+    return this;
+  }
+
+  public WithOpenTelemtry(
+    processorType: 'single' | 'batch',
+    exporterFactory: (container: DependencyContainer) => SpanExporter
+  ): FrameworkContainer {
+    this.ThrowIffBuilt();
+
+    this._childContainer.register(DependencyInjectionTokens.OpenTelProcessor, {
+      useFactory: processorType === 'single' ? singleExporterFactory : batchExporterFactory
+    });
+
+    this._childContainer.register(DependencyInjectionTokens.OpenTelExporter, {
+      useFactory: exporterFactory
+    });
 
     return this;
   }
