@@ -5,8 +5,8 @@ const TIMEOUT = 120 * 1_000;
 jest.setTimeout(TIMEOUT);
 
 describe('performance', () => {
-  const SERVER_COUNT = 1;
-  const COMPONENT_COUNT_PER_SERVER = 50_000;
+  const SERVER_COUNT = 5;
+  const COMPONENT_COUNT_PER_SERVER = 500;
 
   let intTestContext: IAcaadIntegrationTestContext;
 

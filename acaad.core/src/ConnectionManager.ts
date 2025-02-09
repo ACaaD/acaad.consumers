@@ -107,9 +107,13 @@ export class ConnectionManager {
 
             return new CalloutError(unknown);
           }
-        });
+        }).pipe(Effect.withSpan('acaad:sync:query:api:request-wait'));
       }),
-      Effect.andThen(ConnectionManager.verifyResponsePayload),
+      Effect.andThen((res) =>
+        ConnectionManager.verifyResponsePayload(res).pipe(
+          Effect.withSpan('acaad:sync:query:api:request-parse')
+        )
+      ),
       Effect.tap((res) =>
         this.logger.logTrace(`Received acaad configuration with ${res.paths.length} paths.`)
       )
