@@ -89,13 +89,19 @@ export class ComponentManager {
 
     // TODO: Partition by OpenApiDefinition, ResponseSchemaError, ConnectionRefused (or whatever Axios returns)
     // Then continue processing only OpenApiDefinition.
-    const partition = serverMetadata.pipe(Stream.partition((e) => Either.isRight(e)));
+    const partition = serverMetadata.pipe(
+      Stream.partition((e) => Either.isRight(e)),
+      Effect.withSpan('acaad:sync:partition')
+    );
 
     const res = Effect.scoped(
       Effect.gen(this, function* () {
         const [failed, openApiDefinitions] = yield* partition;
 
-        const availableServers = openApiDefinitions.pipe(Stream.map((r) => r.right));
+        const availableServers = openApiDefinitions.pipe(
+          Stream.map((r) => r.right),
+          Stream.withSpan('acaad:sync:map-right')
+        );
 
         yield* this.reloadComponentMetadataModel(availableServers).pipe(
           Effect.withSpan('acaad:sync:refresh-metadata')
