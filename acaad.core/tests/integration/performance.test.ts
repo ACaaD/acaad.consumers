@@ -1,0 +1,32 @@
+import { IAcaadIntegrationTestContext } from './types';
+import { createIntegrationTestContext, createPerformanceTestContext } from './test-setup';
+
+const TIMEOUT = 120 * 1_000;
+jest.setTimeout(TIMEOUT);
+
+describe('performance', () => {
+  const SERVER_COUNT = 1;
+  const COMPONENT_COUNT_PER_SERVER = 50_000;
+
+  let intTestContext: IAcaadIntegrationTestContext;
+
+  beforeAll(async () => {
+    intTestContext = await createPerformanceTestContext(SERVER_COUNT, COMPONENT_COUNT_PER_SERVER);
+    await intTestContext.startAllAsync();
+  }, TIMEOUT);
+
+  afterAll(async () => {
+    await intTestContext.disposeAsync();
+  }, TIMEOUT);
+
+  it('should start successfully', async () => {
+    const { instance, serviceAdapterMock } = intTestContext;
+
+    const success = await instance.createMissingComponentsAsync();
+
+    expect(serviceAdapterMock.createServerModelAsync).toHaveBeenCalledTimes(SERVER_COUNT);
+    expect(serviceAdapterMock.createComponentModelAsync).toHaveBeenCalledTimes(
+      SERVER_COUNT * COMPONENT_COUNT_PER_SERVER
+    );
+  });
+});
