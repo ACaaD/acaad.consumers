@@ -86,15 +86,6 @@ export class AcaadSignalRServer implements IAcaadSignalRServer {
 
   public port: number;
 
-  async startAsync(): Promise<void> {
-    await this.controller.startAsync();
-  }
-
-  async disposeAsync(): Promise<void> {
-    await this.controller.disposeAsync();
-    await this.server.dispose();
-  }
-
   constructor(port: number, server: SignalRServer, eventHub: FakeSignalrHub<EventHub, IEventReceiver>) {
     this.port = port;
     this.server = server;
@@ -103,6 +94,15 @@ export class AcaadSignalRServer implements IAcaadSignalRServer {
     this.eventHub.register('pushEvent', pushEvent);
 
     this.controller = new AcaadSignalRController(port);
+  }
+
+  async startAsync(): Promise<void> {
+    await this.controller.startAsync();
+  }
+
+  async disposeAsync(): Promise<void> {
+    await this.controller.disposeAsync();
+    await this.server.dispose();
   }
 
   public pushEvent(event: unknown): Promise<void> {

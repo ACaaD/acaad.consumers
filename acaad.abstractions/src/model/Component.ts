@@ -1,7 +1,7 @@
 import { ComponentType } from './ComponentType';
 import { Chunk, Data, Schema } from 'effect';
 import { Option, some, none } from 'effect/Option';
-import { AcaadPopulatedMetadata, AcaadServerMetadata } from './open-api/OpenApiDefinition';
+import { AcaadPopulatedMetadata, AcaadServerMetadata } from './open-api';
 
 export type ComponentTypes = ButtonComponent | SensorComponent | SwitchComponent;
 

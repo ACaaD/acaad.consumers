@@ -1,5 +1,4 @@
-import { OAuth2Token } from '../model/auth/OAuth2Token';
-import { AcaadAuthentication } from '../model/auth/AcaadAuthentication';
+import { OAuth2Token, AcaadAuthentication } from '../model';
 import { Option } from 'effect';
 
 export interface ITokenCache {

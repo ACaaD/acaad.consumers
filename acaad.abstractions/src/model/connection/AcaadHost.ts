@@ -13,6 +13,26 @@ export class AcaadHost {
   private _restBase: string | undefined = undefined;
   private _signalrBase: string | undefined = undefined;
 
+  // TODO: Reorder parameters (auth last)
+  public constructor(
+    friendlyName: string,
+    host: string,
+    port: number,
+    authentication: AcaadAuthentication | undefined,
+    signalrPort: number | undefined
+  ) {
+    this.friendlyName = friendlyName;
+    this.host = host;
+    this.port = port;
+    this.authentication = authentication;
+
+    if (signalrPort) {
+      this.signalrPort = signalrPort;
+    } else {
+      this.signalrPort = port;
+    }
+  }
+
   public restBase(): string {
     return (this._restBase ??= `${this.protocol}://${this.host}:${this.port}`);
   }
@@ -39,25 +59,5 @@ export class AcaadHost {
     }
 
     return `${this.signalrBase()}/${relative}`;
-  }
-
-  // TODO: Reorder parameters (auth last)
-  public constructor(
-    friendlyName: string,
-    host: string,
-    port: number,
-    authentication: AcaadAuthentication | undefined,
-    signalrPort: number | undefined
-  ) {
-    this.friendlyName = friendlyName;
-    this.host = host;
-    this.port = port;
-    this.authentication = authentication;
-
-    if (signalrPort) {
-      this.signalrPort = signalrPort;
-    } else {
-      this.signalrPort = port;
-    }
   }
 }

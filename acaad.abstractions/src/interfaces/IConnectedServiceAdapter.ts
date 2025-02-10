@@ -1,15 +1,14 @@
-import { ComponentDescriptor } from '../model/ComponentDescriptor';
-import { AcaadComponentMetadata } from '../model/AcaadComponentMetadata';
-import { AcaadUnitOfMeasure } from '../model/AcaadUnitOfMeasure';
-import { Component } from '../model/Component';
-import { AcaadHost } from '../model/connection/AcaadHost';
+import {
+  ComponentDescriptor,
+  AcaadUnitOfMeasure,
+  Component,
+  AcaadHost,
+  AcaadServerMetadata,
+  ComponentCommandOutcomeEvent,
+  AcaadUnhandledEventReceivedEvent
+} from '../model';
 
-import { AcaadError } from '../errors/AcaadError';
-import { Effect } from 'effect';
 import { Option } from 'effect/Option';
-import { AcaadHostMapping, AcaadServerMetadata } from '../model/open-api/OpenApiDefinition';
-import { AcaadUnhandledEventReceivedEvent } from '../model/events/AcaadUnhandledEventReceivedEvent';
-import { ComponentCommandOutcomeEvent } from '../model/events/ComponentCommandOutcomeEvent';
 
 export type ChangeType = 'action' | 'query';
 

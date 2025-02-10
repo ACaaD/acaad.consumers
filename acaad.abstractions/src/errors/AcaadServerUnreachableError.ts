@@ -1,5 +1,5 @@
 import { CalloutError } from './CalloutError';
-import { AcaadHost } from '../model/connection/AcaadHost';
+import { AcaadHost } from '../model';
 
 export class AcaadServerUnreachableError extends CalloutError {
   public static Tag: string = 'AcaadServerUnreachableError';

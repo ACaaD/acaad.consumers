@@ -3,7 +3,7 @@ import { pipe, Schema, Stream } from 'effect';
 import { InfoObject, InfoObjectSchema } from './InfoObject';
 import { AcaadMetadata } from '../AcaadMetadata';
 import { OperationObject } from './OperationObject';
-import { AcaadHost } from '../connection/AcaadHost';
+import { AcaadHost } from '../connection';
 
 export const OpenApiDefinitionSchema = Schema.Struct({
   info: InfoObjectSchema,
