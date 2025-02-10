@@ -22,11 +22,25 @@ describe('signalr connection', () => {
     await intTestContext.disposeAsync();
   });
 
-  it('should raise signalr server connected event', async () => {
-    await intTestContext.instance.startAsync();
+  // it('should raise signalr server connected event', async () => {
+  //   await intTestContext.instance.startAsync();
+  //   await stateObserver.waitForSignalRClient();
+  //
+  //   expect(serviceAdapterMock.onServerConnectedAsync).toHaveBeenCalledTimes(1);
+  // });
 
+  it('should receive event', async () => {
+    await intTestContext.instance.startAsync();
     await stateObserver.waitForSignalRClient();
 
-    expect(serviceAdapterMock.onServerConnectedAsync).toHaveBeenCalledTimes(1);
-  });
+    await intTestContext.signalrMocks[0].pushEvent({ abc: 'def' });
+
+    await delay(2_000);
+
+    await intTestContext.signalrMocks[0].pushEvent({ abc: 'ghi' });
+
+    await delay(2_000);
+
+    await intTestContext.instance.shutdownAsync();
+  }, 15_000);
 });

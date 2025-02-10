@@ -422,6 +422,7 @@ export class ComponentManager {
   private startEff() {
     return Effect.gen(this, function* () {
       yield* this.startEventListener.pipe(Effect.withSpan('acaad:startup:start-event-listener'));
+
       yield* this._connectionManager.startMissingHubConnections.pipe(
         Effect.withSpan('acaad:startup:start-hub-connections')
       );
