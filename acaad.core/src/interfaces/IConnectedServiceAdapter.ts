@@ -14,7 +14,8 @@ import { ComponentCommandOutcomeEvent } from '../model/events/ComponentCommandOu
 export type ChangeType = 'action' | 'query';
 
 export type OutboundStateChangeCallback = (
-  component: Component,
+  host: AcaadHost,
+  componentDescriptor: ComponentDescriptor,
   type: ChangeType,
   value: Option<unknown>
 ) => Promise<boolean>;
