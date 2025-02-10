@@ -1,0 +1,10 @@
+{
+  "changes": [
+    {
+      "packageName": "@acaad/testing",
+      "comment": "Slit API and SignalR server mocks; Enable push-events for simulation",
+      "type": "none"
+    }
+  ],
+  "packageName": "@acaad/testing"
+}
