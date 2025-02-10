@@ -21,12 +21,9 @@ import {
   GroupBy,
   Layer,
   Option,
-  pipe,
   Queue,
   Schedule,
-  Scope,
-  Stream,
-  Tracer
+  Stream
 } from 'effect';
 import { CalloutError } from './errors/CalloutError';
 import { Semaphore } from 'effect/Effect';
@@ -42,9 +39,8 @@ import { AcaadServerDisconnectedEvent } from './model/events/AcaadServerDisconne
 import { IComponentModel } from './ComponentModel';
 import { Resource } from 'effect/Resource';
 import { Configuration } from '@effect/opentelemetry/src/NodeSdk';
-import { SpanExporter } from '@opentelemetry/sdk-trace-base/build/src/export/SpanExporter';
-import { Span, SpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { AcaadUnhandledEventReceivedEvent } from './model/events/AcaadUnhandledEventReceivedEvent';
+import { ComponentDescriptor } from './model';
 
 class MetadataByComponent extends Data.Class<{ component: Component; metadata: AcaadMetadata[] }> {}
 
@@ -323,10 +319,23 @@ export class ComponentManager {
   }
 
   async handleOutboundStateChangeAsync(
-    component: Component,
+    host: AcaadHost,
+    componentDescriptor: ComponentDescriptor,
     type: ChangeType,
     value: Option.Option<unknown>
   ): Promise<boolean> {
+    const componentOpt = this._componentModel.getComponentByDescriptor(host, componentDescriptor);
+
+    if (Option.isNone(componentOpt)) {
+      this._logger.logWarning(
+        `Could not find component by descriptor ${componentDescriptor.toIdentifier()}. This is either a problem in the connected service or the component is not yet synced.`
+      );
+
+      return Promise.resolve(false);
+    }
+
+    const component = componentOpt.value;
+
     this._logger.logDebug(
       `Handling outbound state (type=${type}) change for component ${component.name} and value ${value}.`
     );
