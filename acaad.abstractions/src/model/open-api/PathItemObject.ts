@@ -1,6 +1,5 @@
 import { OperationObject, OperationObjectSchema } from './OperationObject';
-import { AcaadMetadata } from '../AcaadMetadata';
-import { pipe, Schema, Stream } from 'effect';
+import { Schema } from 'effect';
 
 export const PathItemObjectSchema = Schema.Struct({
   get: Schema.UndefinedOr(OperationObjectSchema),
@@ -13,14 +12,14 @@ export class PathItemObject {
   public get?: OperationObject;
   public post?: OperationObject;
 
-  public operations(): OperationObject[] {
-    return [this.get, this.post].filter((op) => !!op);
-  }
-
   constructor(path: string, get?: OperationObject, post?: OperationObject) {
     this.path = path;
     this.get = get;
     this.post = post;
+  }
+
+  public operations(): OperationObject[] {
+    return [this.get, this.post].filter((op) => !!op);
   }
 
   public static fromSchema(

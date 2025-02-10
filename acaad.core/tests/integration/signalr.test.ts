@@ -1,15 +1,9 @@
 import { IAcaadIntegrationTestContext, IStateObserver } from './types';
 import { ComponentManager } from '../../src';
 import { createIntegrationTestContext } from './test-setup';
-import { delay } from '@acaad/testing';
 import { TestEventFactory } from './factories/test-event-factory';
 
-import {
-  AcaadOutcome,
-  ComponentType,
-  IConnectedServiceAdapter,
-  ComponentCommandOutcomeEvent
-} from '@acaad/abstractions';
+import { IConnectedServiceAdapter } from '@acaad/abstractions';
 
 describe('signalr connection', () => {
   let intTestContext: IAcaadIntegrationTestContext;

@@ -30,7 +30,6 @@ import { SpanExporter } from '@opentelemetry/sdk-trace-base/build/src/export/Spa
 import { ComponentModel } from './ComponentModel';
 import { Configuration } from '@effect/opentelemetry/src/NodeSdk';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-grpc';
-import { OTLPTraceExporter as OtlpHttp } from '@opentelemetry/exporter-trace-otlp-http';
 
 function noopExporterFactory(container: DependencyContainer): SpanProcessor {
   return new NoopSpanProcessor();
