@@ -4,7 +4,7 @@ import {
   HubConnectionBuilder,
   HubConnectionState
 } from '@microsoft/signalr';
-import { AcaadPopulatedEvent } from './model/events/AcaadEvent';
+import { AcaadEvent, AcaadPopulatedEvent } from './model/events/AcaadEvent';
 import { AcaadHost } from './model/connection/AcaadHost';
 import { Effect, Exit, Fiber, Option, Queue, Schedule } from 'effect';
 import { RuntimeFiber } from 'effect/Fiber';
@@ -16,6 +16,7 @@ import { ParseError } from 'effect/ParseResult';
 import { EventFactory } from './model/factories/EventFactory';
 import { AcaadServerConnectedEvent } from './model/events/AcaadServerConnectedEvent';
 import { AcaadServerDisconnectedEvent } from './model/events/AcaadServerDisconnectedEvent';
+import { AcaadUnhandledEventReceivedEvent } from './model/events/AcaadUnhandledEventReceivedEvent';
 
 const CONST = {
   EVENT_HUB_PATH: 'events',
@@ -102,24 +103,23 @@ export class HubConnectionWrapper {
         onFailure: (cause) =>
           this.logger.logError(cause, undefined, `An error occurred processing inbound event.`),
         onSuccess: (res) => {
-          this.logger.logTrace(`Successfully processed/enqueued event ${res}.`);
+          this.logger.logTrace(`Successfully processed/enqueued event ${res.toString()}.`);
         }
       });
     };
   }
 
-  private onEventEff(host: AcaadHost, eventUntyped: unknown): Effect.Effect<void, ParseError> {
+  private onEventEff(host: AcaadHost, eventUntyped: unknown): Effect.Effect<AcaadEvent, ParseError> {
     return Effect.gen(this, function* () {
       const event = yield* EventFactory.createEvent(eventUntyped);
 
-      if (Option.isSome(event)) {
-        yield* Queue.offer(this.eventQueue, { ...event.value, host });
-      }
+      const transformedEvent = Option.isSome(event)
+        ? { ...event.value, host }
+        : new AcaadUnhandledEventReceivedEvent(host, eventUntyped);
 
-      // TODO: Handle nicely + write test
-      console.log('Received invalid event', eventUntyped);
+      yield* Queue.offer(this.eventQueue, transformedEvent);
 
-      return Effect.void;
+      return transformedEvent;
     });
   }
 

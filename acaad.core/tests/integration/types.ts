@@ -10,7 +10,7 @@ import { Mock } from 'ts-jest-mocker';
 import { DependencyContainer } from 'tsyringe';
 
 export interface IStateObserver {
-  waitForSpanAsync(spanName: string): Promise<void>;
+  waitForSpanAsync(spanName: string, timeoutMs?: number): Promise<void>;
 
   waitForSignalRClient(): Promise<void>;
 }

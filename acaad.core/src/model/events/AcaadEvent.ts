@@ -18,6 +18,10 @@ export class AcaadEvent {
     this.type = type;
     this.name = name;
   }
+
+  public toString(): string {
+    return `${this.topic}:${this.type}:${this.name}`;
+  }
 }
 
 export type AcaadPopulatedEvent = AcaadEvent & { host: AcaadHost };
