@@ -1,0 +1,10 @@
+{
+  "changes": [
+    {
+      "packageName": "@acaad/core",
+      "comment": "Split out abstractions; Moved to acaad/abstractions",
+      "type": "none"
+    }
+  ],
+  "packageName": "@acaad/core"
+}

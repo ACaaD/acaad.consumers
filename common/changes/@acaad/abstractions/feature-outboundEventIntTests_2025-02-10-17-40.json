@@ -1,0 +1,10 @@
+{
+  "changes": [
+    {
+      "packageName": "@acaad/abstractions",
+      "comment": "Created abstraction project; Move files from acaad/core",
+      "type": "none"
+    }
+  ],
+  "packageName": "@acaad/abstractions"
+}
