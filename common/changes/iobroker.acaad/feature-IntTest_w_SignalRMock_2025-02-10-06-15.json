@@ -1,0 +1,10 @@
+{
+  "changes": [
+    {
+      "packageName": "iobroker.acaad",
+      "comment": "Use new acaad.core version; Methods NoOp",
+      "type": "none"
+    }
+  ],
+  "packageName": "iobroker.acaad"
+}
