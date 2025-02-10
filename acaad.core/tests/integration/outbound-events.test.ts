@@ -1,7 +1,9 @@
 import { IAcaadIntegrationTestContext } from './types';
 import { createIntegrationTestContext } from './test-setup';
-import { Component, ComponentManager, ChangeType } from '../../src';
+import { ComponentManager } from '../../src';
 import { Option } from 'effect';
+
+import { IConnectedServiceAdapter, Component, ChangeType } from '@acaad/abstractions';
 
 describe('outbound events', () => {
   let intTestContext: IAcaadIntegrationTestContext;

@@ -1,6 +1,8 @@
 // This must be executed before any access to the actual container.
 import 'reflect-metadata';
 
+import { IConnectedServiceContext, AcaadPopulatedEvent } from '@acaad/abstractions';
+
 import {
   ClassProvider,
   container,
@@ -13,10 +15,8 @@ import {
 import { ComponentManager } from './ComponentManager';
 import { ConnectionManager } from './ConnectionManager';
 import { DependencyInjectionTokens } from './model/DependencyInjectionTokens';
-import { IConnectedServiceContext } from './interfaces';
 import { InMemoryTokenCache } from './services/InMemoryTokenCache';
 import { Effect, Layer, Queue } from 'effect';
-import { AcaadPopulatedEvent } from './model/events/AcaadEvent';
 import { NodeSdk } from '@effect/opentelemetry';
 import {
   BatchSpanProcessor,
@@ -26,8 +26,7 @@ import {
   SpanProcessor
 } from '@opentelemetry/sdk-trace-base';
 import { SpanExporter } from '@opentelemetry/sdk-trace-base/build/src/export/SpanExporter';
-import { ReadableSpan } from '@opentelemetry/sdk-trace-base/build/src/export/ReadableSpan';
-import { ExportResult, ExportResultCode } from '@opentelemetry/core';
+
 import { ComponentModel } from './ComponentModel';
 import { Configuration } from '@effect/opentelemetry/src/NodeSdk';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-grpc';

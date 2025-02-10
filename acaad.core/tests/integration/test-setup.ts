@@ -2,12 +2,11 @@ import { mock, Mock } from 'ts-jest-mocker';
 import {
   AcaadAuthentication,
   ComponentDescriptor,
-  ComponentManager,
-  FrameworkContainer,
   IConnectedServiceAdapter,
   IConnectedServiceContext,
   ICsLogger
-} from '../../src';
+} from '@acaad/abstractions';
+import { ComponentManager, FrameworkContainer } from '../../src';
 import { DependencyContainer } from 'tsyringe';
 import { AcaadApiServer, AcaadSignalRServer } from '@acaad/testing';
 import { Cause } from 'effect';

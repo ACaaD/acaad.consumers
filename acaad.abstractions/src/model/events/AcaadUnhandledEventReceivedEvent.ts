@@ -1,5 +1,5 @@
 import { AcaadEvent, AcaadPopulatedEvent } from './AcaadEvent';
-import { AcaadHost } from '../connection/AcaadHost';
+import { AcaadHost } from '../connection';
 
 export class AcaadUnhandledEventReceivedEvent extends AcaadEvent implements AcaadPopulatedEvent {
   public static Tag: string = 'AcaadUnhandledEventReceivedEvent';

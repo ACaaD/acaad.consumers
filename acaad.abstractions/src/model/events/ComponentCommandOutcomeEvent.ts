@@ -2,7 +2,7 @@ import { AcaadEvent, AcaadEventSchema } from './AcaadEvent';
 import { AcaadOutcome, AcaadOutcomeSchema } from '../AcaadOutcome';
 import { Schema } from 'effect';
 import { ComponentSchema } from '../Component';
-import { AcaadComponentMetadata } from '../AcaadComponentManager';
+import { AcaadComponentMetadata } from '../AcaadComponentMetadata';
 import { ComponentType } from '../ComponentType';
 export const ComponentCommandOutcomeEventSchema = Schema.Struct({
   ...AcaadEventSchema.fields,

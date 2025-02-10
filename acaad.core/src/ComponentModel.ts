@@ -1,9 +1,15 @@
-import { AcaadServerMetadata } from './model/open-api';
 import { Chunk, Effect, GroupBy, Option, Stream } from 'effect';
-import { AcaadHost, Component, ComponentDescriptor } from './model';
-import { AcaadComponentMetadata } from './model/AcaadComponentManager';
-import { IConnectedServiceAdapter } from './interfaces';
+import { inject, injectable } from 'tsyringe';
 
+import {
+  AcaadServerMetadata,
+  AcaadHost,
+  Component,
+  ComponentDescriptor,
+  AcaadComponentMetadata,
+  IConnectedServiceAdapter
+} from '@acaad/abstractions';
+import { DependencyInjectionTokens } from './model/DependencyInjectionTokens';
 export interface IComponentModel {
   clearServerMetadata(server: AcaadServerMetadata): Effect.Effect<void>;
 
@@ -22,12 +28,15 @@ export interface IComponentModel {
 }
 
 // noinspection JSPotentiallyInvalidUsageOfClassThis
+@injectable()
 export class ComponentModel implements IComponentModel {
   private _serviceAdapter: IConnectedServiceAdapter;
   private _meta = new Map<AcaadServerMetadata, Chunk.Chunk<Component>>();
   private _componentByDescriptor = new Map<AcaadServerMetadata, Map<ComponentDescriptor, Component>>();
 
-  public constructor(serviceAdapter: IConnectedServiceAdapter) {
+  public constructor(
+    @inject(DependencyInjectionTokens.ConnectedServiceAdapter) serviceAdapter: IConnectedServiceAdapter
+  ) {
     this._serviceAdapter = serviceAdapter;
 
     this.clearServerMetadata = this.clearServerMetadata.bind(this);
@@ -61,7 +70,7 @@ export class ComponentModel implements IComponentModel {
     const stream = Stream.fromIterable(this._componentByDescriptor.entries()).pipe(
       Stream.filter(([server, _]) => server.host.host === host.host && server.host.port === host.port),
       Stream.flatMap(([_, components]) => Stream.fromIterable(Array.from(components.entries()))),
-      Stream.filter(([cd, c]) => componentDescriptor.isComponent(c)),
+      Stream.filter(([cd, _]) => componentDescriptor.is(cd)),
       Stream.map(([_, c]) => c),
       Stream.runCollect
     );

@@ -1,5 +1,5 @@
 import { Schema } from 'effect';
-import { AcaadHost } from '../connection/AcaadHost';
+import { AcaadHost } from '../connection';
 
 export const AcaadEventSchema = Schema.Struct({
   topic: Schema.String,

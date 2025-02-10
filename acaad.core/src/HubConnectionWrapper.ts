@@ -4,19 +4,24 @@ import {
   HubConnectionBuilder,
   HubConnectionState
 } from '@microsoft/signalr';
-import { AcaadEvent, AcaadPopulatedEvent } from './model/events/AcaadEvent';
-import { AcaadHost } from './model/connection/AcaadHost';
+
 import { Effect, Exit, Fiber, Option, Queue, Schedule } from 'effect';
 import { RuntimeFiber } from 'effect/Fiber';
-import { ICsLogger } from './interfaces/IConnectedServiceContext';
 import { isObject } from 'effect/Predicate';
-import { AcaadServerUnreachableError } from './errors/AcaadServerUnreachableError';
-import { CalloutError } from './errors/CalloutError';
 import { ParseError } from 'effect/ParseResult';
-import { EventFactory } from './model/factories/EventFactory';
-import { AcaadServerConnectedEvent } from './model/events/AcaadServerConnectedEvent';
-import { AcaadServerDisconnectedEvent } from './model/events/AcaadServerDisconnectedEvent';
-import { AcaadUnhandledEventReceivedEvent } from './model/events/AcaadUnhandledEventReceivedEvent';
+
+import {
+  AcaadEvent,
+  AcaadPopulatedEvent,
+  AcaadHost,
+  ICsLogger,
+  AcaadServerUnreachableError,
+  CalloutError,
+  EventFactory,
+  AcaadServerConnectedEvent,
+  AcaadUnhandledEventReceivedEvent,
+  AcaadServerDisconnectedEvent
+} from '@acaad/abstractions';
 
 const CONST = {
   EVENT_HUB_PATH: 'events',

@@ -1,7 +1,9 @@
 import { IAcaadIntegrationTestContext } from './types';
-import { ComponentManager, IConnectedServiceAdapter, ICsLogger } from '../../src';
+import { ComponentManager } from '../../src';
 import { createIntegrationTestContext } from './test-setup';
 import { Mock } from 'ts-jest-mocker';
+
+import { IConnectedServiceAdapter, ICsLogger } from '@acaad/abstractions';
 
 describe('signalr connection', () => {
   let intTestContext: IAcaadIntegrationTestContext;

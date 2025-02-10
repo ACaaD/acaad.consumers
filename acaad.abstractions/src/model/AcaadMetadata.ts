@@ -1,4 +1,4 @@
-import { AcaadComponentMetadata } from './AcaadComponentManager';
+import { AcaadComponentMetadata } from './AcaadComponentMetadata';
 import { Schema } from 'effect';
 import { Option } from 'effect';
 import { isNullOrUndefined } from '../utils/Checks';

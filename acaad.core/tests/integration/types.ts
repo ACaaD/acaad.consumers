@@ -1,10 +1,11 @@
 import {
   AcaadHost,
-  ComponentManager,
   IConnectedServiceAdapter,
   IConnectedServiceContext,
   ICsLogger
-} from '../../src';
+} from '@acaad/abstractions';
+
+import { ComponentManager } from '../../src';
 import { IAcaadApiServer, IAcaadSignalRServer } from '@acaad/testing';
 import { Mock } from 'ts-jest-mocker';
 import { DependencyContainer } from 'tsyringe';

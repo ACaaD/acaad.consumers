@@ -1,0 +1,27 @@
+{
+  "extends": "@tsconfig/node20/tsconfig.json",
+  "compilerOptions": {
+    "importHelpers": true,
+    "allowJs": true,
+    "checkJs": true,
+    "noEmitOnError": false,
+    "outDir": "./dist/esnext",
+    "rootDirs": ["src/"],
+    "removeComments": false,
+    "resolveJsonModule": true,
+    "sourceMap": true,
+    "inlineSources": true,
+    "inlineSourceMap": false,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "strict": true,
+    "moduleResolution": "node",
+    "declaration": true,
+    "declarationMap": true,
+    "module": "ESNext",
+    "types": ["heft-jest", "node"],
+    "esModuleInterop": true
+  },
+  "include": ["src/**/*.ts", "tests/**/*.ts"],
+  "exclude": ["build/**", "node_modules/**", "widgets/**", "lib"]
+}

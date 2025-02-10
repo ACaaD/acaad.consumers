@@ -1,6 +1,9 @@
 import { IAcaadIntegrationTestContext } from './types';
 import { createIntegrationTestContext } from './test-setup';
-import { ComponentManager, IConnectedServiceAdapter } from '../../src';
+import { ComponentManager } from '../../src';
+
+import { IConnectedServiceAdapter } from '@acaad/abstractions';
+
 describe('component creation', () => {
   let intTestContext: IAcaadIntegrationTestContext;
   let instance: ComponentManager;
