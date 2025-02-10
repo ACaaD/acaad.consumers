@@ -116,6 +116,9 @@ export class HubConnectionWrapper {
         yield* Queue.offer(this.eventQueue, { ...event.value, host });
       }
 
+      // TODO: Handle nicely + write test
+      console.log('Received invalid event', eventUntyped);
+
       return Effect.void;
     });
   }
