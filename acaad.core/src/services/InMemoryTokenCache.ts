@@ -1,8 +1,7 @@
-import { ITokenCache } from '../interfaces/ITokenCache';
-import { AcaadAuthentication } from '../model/auth/AcaadAuthentication';
-import { OAuth2Token } from '../model/auth/OAuth2Token';
 import { injectable } from 'tsyringe';
 import { Option } from 'effect';
+
+import { ITokenCache, AcaadAuthentication, OAuth2Token } from '@acaad/abstractions';
 
 @injectable<ITokenCache>()
 export class InMemoryTokenCache implements ITokenCache {

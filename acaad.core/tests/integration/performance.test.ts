@@ -1,5 +1,5 @@
 import { IAcaadIntegrationTestContext } from './types';
-import { createIntegrationTestContext, createPerformanceTestContext } from './test-setup';
+import { createPerformanceTestContext } from './test-setup';
 
 const TIMEOUT = 120 * 1_000;
 jest.setTimeout(TIMEOUT);

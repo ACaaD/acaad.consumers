@@ -1,13 +1,7 @@
 import { Effect, Option, Schema } from 'effect';
-import {
-  ComponentCommandOutcomeEventSchema,
-  ComponentCommandOutcomeEvent
-} from '../events/ComponentCommandOutcomeEvent';
-import { AcaadEvent } from '../events/AcaadEvent';
-import {
-  ComponentCommandExecutionSucceededSchema,
-  ComponentCommandExecutionSucceeded
-} from '../events/ComponentCommandExecutionSucceeded';
+import { ComponentCommandOutcomeEventSchema, ComponentCommandOutcomeEvent } from '../events';
+import { AcaadEvent } from '../events';
+import { ComponentCommandExecutionSucceededSchema, ComponentCommandExecutionSucceeded } from '../events';
 import { ParseError } from 'effect/ParseResult';
 
 export const AnyAcaadEventSchema = Schema.Union(

@@ -1,5 +1,5 @@
 import { ComponentDescriptor } from '../model/ComponentDescriptor';
-import { AcaadComponentMetadata } from '../model/AcaadComponentManager';
+import { AcaadComponentMetadata } from '../model/AcaadComponentMetadata';
 import { AcaadUnitOfMeasure } from '../model/AcaadUnitOfMeasure';
 import { Component } from '../model/Component';
 import { AcaadHost } from '../model/connection/AcaadHost';

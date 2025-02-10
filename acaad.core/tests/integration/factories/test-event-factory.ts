@@ -1,5 +1,4 @@
-import { ComponentCommandOutcomeEvent } from '../../../src/model/events/ComponentCommandOutcomeEvent';
-import { AcaadOutcome, ComponentType } from '../../../src';
+import { AcaadOutcome, ComponentType, ComponentCommandOutcomeEvent } from '@acaad/abstractions';
 
 export class TestEventFactory {
   public static createComponentOutcomeEvent(

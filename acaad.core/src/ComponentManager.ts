@@ -1,15 +1,39 @@
-import IConnectedServiceAdapter, { ChangeType } from './interfaces/IConnectedServiceAdapter';
 import {
   AcaadPopulatedMetadata,
   AcaadServerMetadata,
-  getAcaadMetadata
-} from './model/open-api/OpenApiDefinition';
-import { AcaadEvent, AcaadPopulatedEvent } from './model/events/AcaadEvent';
+  getAcaadMetadata,
+  IConnectedServiceAdapter,
+  ChangeType,
+  AcaadEvent,
+  AcaadPopulatedEvent,
+  ICsLogger,
+  AcaadError,
+  CalloutError,
+  Component,
+  AcaadMetadata,
+  AcaadHost,
+  AcaadServerUnreachableError,
+  ComponentCommandOutcomeEvent,
+  AcaadServerConnectedEvent,
+  AcaadServerDisconnectedEvent,
+  AcaadUnhandledEventReceivedEvent,
+  ComponentDescriptor
+} from '@acaad/abstractions';
+
 import { inject, injectable } from 'tsyringe';
 import { DependencyInjectionTokens } from './model/DependencyInjectionTokens';
-import { ICsLogger } from './interfaces/IConnectedServiceContext';
+
 import { ConnectionManager } from './ConnectionManager';
-import { AcaadError } from './errors/AcaadError';
+
+import { Semaphore } from 'effect/Effect';
+
+import { equals } from 'effect/Equal';
+import { RuntimeFiber } from 'effect/Fiber';
+
+import { IComponentModel } from './ComponentModel';
+import { Resource } from 'effect/Resource';
+import { Configuration } from '@effect/opentelemetry/src/NodeSdk';
+
 import {
   Cause,
   Chunk,
@@ -25,22 +49,6 @@ import {
   Schedule,
   Stream
 } from 'effect';
-import { CalloutError } from './errors/CalloutError';
-import { Semaphore } from 'effect/Effect';
-import { Component } from './model/Component';
-import { AcaadMetadata } from './model/AcaadMetadata';
-import { equals } from 'effect/Equal';
-import { RuntimeFiber } from 'effect/Fiber';
-import { AcaadHost } from './model/connection/AcaadHost';
-import { AcaadServerUnreachableError } from './errors/AcaadServerUnreachableError';
-import { ComponentCommandOutcomeEvent } from './model/events/ComponentCommandOutcomeEvent';
-import { AcaadServerConnectedEvent } from './model/events/AcaadServerConnectedEvent';
-import { AcaadServerDisconnectedEvent } from './model/events/AcaadServerDisconnectedEvent';
-import { IComponentModel } from './ComponentModel';
-import { Resource } from 'effect/Resource';
-import { Configuration } from '@effect/opentelemetry/src/NodeSdk';
-import { AcaadUnhandledEventReceivedEvent } from './model/events/AcaadUnhandledEventReceivedEvent';
-import { ComponentDescriptor } from './model';
 
 class MetadataByComponent extends Data.Class<{ component: Component; metadata: AcaadMetadata[] }> {}
 

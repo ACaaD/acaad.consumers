@@ -3,24 +3,27 @@ import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } f
 import {
   AcaadPopulatedMetadata,
   OpenApiDefinition,
-  OpenApiDefinitionSchema
-} from './model/open-api/OpenApiDefinition';
-import { AcaadHost } from './model/connection/AcaadHost';
-import { OAuth2Token } from './model/auth/OAuth2Token';
-import { ITokenCache } from './interfaces/ITokenCache';
-import { ICsLogger } from './interfaces/IConnectedServiceContext';
+  OpenApiDefinitionSchema,
+  AcaadHost,
+  OAuth2Token,
+  ITokenCache,
+  ICsLogger,
+  AcaadError,
+  CalloutError,
+  AcaadEvent,
+  AcaadPopulatedEvent,
+  IConnectedServiceAdapter,
+  ResponseSchemaError,
+  AcaadServerUnreachableError
+} from '@acaad/abstractions';
+
 import { inject, injectable } from 'tsyringe';
 import { DependencyInjectionTokens } from './model/DependencyInjectionTokens';
 
-import { AcaadError } from './errors/AcaadError';
 import { Context, Effect, Either, pipe, Queue, Schema, Stream } from 'effect';
-import { CalloutError } from './errors/CalloutError';
 
 import { map, mapLeft } from 'effect/Either';
-import { AcaadEvent, AcaadPopulatedEvent } from './model/events/AcaadEvent';
-import IConnectedServiceAdapter from './interfaces/IConnectedServiceAdapter';
-import { ResponseSchemaError } from './errors/ResponseSchemaError';
-import { AcaadServerUnreachableError } from './errors/AcaadServerUnreachableError';
+
 import { HubConnectionWrapper } from './HubConnectionWrapper';
 
 class AxiosSvc extends Context.Tag('axios')<AxiosSvc, { readonly instance: AxiosInstance }>() {}

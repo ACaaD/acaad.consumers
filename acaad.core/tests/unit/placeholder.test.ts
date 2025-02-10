@@ -1,4 +1,4 @@
-import { DependencyInjectionTokens } from '../../src';
+import { DependencyInjectionTokens } from '../../src/model/DependencyInjectionTokens';
 
 describe('DependencyInjectionTokens', () => {
   describe('constants', () => {

@@ -1,1 +1,0 @@
-export { AcaadServerMetadata } from './OpenApiDefinition';

@@ -337,6 +337,12 @@
       "shouldPublish": true
     },
     {
+      "packageName": "@acaad/abstractions",
+      "projectFolder": "acaad.abstractions",
+      "versionPolicyName": "acaad.public",
+      "shouldPublish": true
+    },
+    {
       "packageName": "@acaad/testing",
       "projectFolder": "acaad.testing",
       "versionPolicyName": "acaad.public",

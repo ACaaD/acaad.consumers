@@ -1,4 +1,4 @@
-import { AcaadAuthentication } from '../auth/AcaadAuthentication';
+import { AcaadAuthentication } from '../auth';
 
 export class AcaadHost {
   public friendlyName: string;
