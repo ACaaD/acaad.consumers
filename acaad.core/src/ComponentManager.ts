@@ -44,6 +44,7 @@ import { Resource } from 'effect/Resource';
 import { Configuration } from '@effect/opentelemetry/src/NodeSdk';
 import { SpanExporter } from '@opentelemetry/sdk-trace-base/build/src/export/SpanExporter';
 import { Span, SpanProcessor } from '@opentelemetry/sdk-trace-base';
+import { AcaadUnhandledEventReceivedEvent } from './model/events/AcaadUnhandledEventReceivedEvent';
 
 class MetadataByComponent extends Data.Class<{ component: Component; metadata: AcaadMetadata[] }> {}
 
@@ -376,11 +377,18 @@ export class ComponentManager {
         yield* Effect.tryPromise({
           try: () => this._serviceAdapter.updateComponentStateAsync(cd, event.outcome),
           catch: (error) => new CalloutError('An error occurred updating component state..', error)
-        });
+        }).pipe(Effect.withSpan('acaad:cs:updateComponentState'));
       } else {
         this._logger.logWarning(
           `Received event for unknown component '${event.name}' from host ${event.host.friendlyName}`
         );
+
+        yield* Effect.tryPromise({
+          try: (as: AbortSignal) =>
+            this._serviceAdapter.onUnmappedComponentEventAsync?.call(this._serviceAdapter, event, as) ??
+            Promise.resolve(),
+          catch: (error) => new CalloutError('An error occurred updating component state..', error)
+        }).pipe(Effect.withSpan('acaad:cs:onUnmappedComponentEvent'));
       }
     });
   }
@@ -514,7 +522,23 @@ export class ComponentManager {
         }).pipe(Effect.withSpan('acaad:cs:onServerDisconnected'));
       }
 
-      this._logger.logTrace(`Discarded unhandled event: '${event.name}'`);
+      // TODO: Wrong error raised
+      if (event.name === AcaadUnhandledEventReceivedEvent.Tag) {
+        this._logger.logDebug(`Discarded unhandled server2client event: '${event.name}'`);
+        this._logger.logTrace(`Dropped event full: '${JSON.stringify(event)}'.`);
+
+        return yield* Effect.tryPromise({
+          try: (as) =>
+            this._serviceAdapter.onUnhandledEventAsync?.call(
+              this._serviceAdapter,
+              event as AcaadUnhandledEventReceivedEvent,
+              as
+            ) ?? Promise.resolve(),
+          catch: (error) => new CalloutError('An error occurred handling unknown event event.', error)
+        }).pipe(Effect.withSpan('acaad:cs:onUnhandledEvent'));
+      }
+
+      this._logger.logWarning(`Discarded valid, but unhandled event: '${event.name}'`);
       return yield* Effect.void;
     });
   }

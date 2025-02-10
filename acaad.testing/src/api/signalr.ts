@@ -124,8 +124,5 @@ export class AcaadSignalRServer implements IAcaadSignalRServer {
 
 export const pushEvent = async function (this: typeof fakeEventService.thisInstance, event: unknown) {
   console.log('[M-FWK] Received event to distribute.');
-
-  await this.Clients.All.receiveEvent({
-    test: true
-  });
+  await this.Clients.All.receiveEvent(event);
 };

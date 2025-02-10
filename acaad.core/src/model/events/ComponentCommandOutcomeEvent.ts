@@ -3,6 +3,7 @@ import { AcaadOutcome, AcaadOutcomeSchema } from '../AcaadOutcome';
 import { Schema } from 'effect';
 import { ComponentSchema } from '../Component';
 import { AcaadComponentMetadata } from '../AcaadComponentManager';
+import { ComponentType } from '../ComponentType';
 export const ComponentCommandOutcomeEventSchema = Schema.Struct({
   ...AcaadEventSchema.fields,
   topic: Schema.Literal('Events'),
@@ -18,8 +19,28 @@ export class ComponentCommandOutcomeEvent extends AcaadEvent {
   public component: AcaadComponentMetadata;
 
   public constructor(obj: Schema.Schema.Type<typeof ComponentCommandOutcomeEventSchema>) {
-    super('Events', 'Outcome', 'ComponentCommandOutcomeEvent');
+    super(obj.topic, obj.type, obj.name);
     this.outcome = new AcaadOutcome(obj.outcome);
     this.component = new AcaadComponentMetadata(obj.component.type, obj.component.name); // TODO: Check if the CS should be asked to give the CD
+  }
+
+  public static Create(
+    componentType: ComponentType,
+    componentName: string,
+    outcome: AcaadOutcome
+  ): ComponentCommandOutcomeEvent {
+    return new ComponentCommandOutcomeEvent({
+      topic: 'Events',
+      type: 'Outcome',
+      name: 'ComponentCommandOutcomeEvent',
+      component: {
+        type: componentType,
+        name: componentName
+      },
+      outcome: {
+        success: outcome.success,
+        outcomeRaw: outcome.outcomeRaw
+      }
+    });
   }
 }

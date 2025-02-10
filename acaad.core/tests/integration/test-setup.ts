@@ -66,6 +66,7 @@ function setupConnectedServiceMock(intTestContext: IAcaadIntegrationTestContext)
   serviceAdapterMock.onServerConnectedAsync.mockResolvedValue();
   serviceAdapterMock.onServerDisconnectedAsync.mockResolvedValue();
   serviceAdapterMock.updateComponentStateAsync.mockResolvedValue();
+
   serviceAdapterMock.getComponentDescriptorByComponent.mockImplementation(
     (c) => new ComponentDescriptor(c.name)
   );
@@ -120,12 +121,11 @@ class ObservableSpanExporter implements SpanExporter, IStateObserver {
   private static instance: ObservableSpanExporter = new ObservableSpanExporter();
 
   private trackedSpans: Map<string, () => void> = new Map<string, () => {}>();
+  private trackedTimeouts: Map<string, NodeJS.Timeout> = new Map<string, NodeJS.Timeout>();
 
   private constructor() {
     console.log(`Creating new span exporter. Ref: ${ObservableSpanExporter.instance}`);
   }
-
-  private promise?: Promise<void>;
 
   async waitForSignalRClient(): Promise<void> {
     const startMs = Date.now();
@@ -133,13 +133,22 @@ class ObservableSpanExporter implements SpanExporter, IStateObserver {
     console.log(`[T-FWK] SignalR client connected after ${Date.now() - startMs}ms.`);
   }
 
-  waitForSpanAsync(spanName: string): Promise<void> {
-    const startWait = new Date();
+  private static resolveWrapped(startMs: number, spanName: string, res: () => void) {
+    return () => {
+      res();
+      console.log(`[T-FWK] Span ${spanName} resolved after ${Date.now() - startMs}ms.`);
+    };
+  }
 
-    let resolveFunc: ((value: void | PromiseLike<void>) => void) | undefined;
+  waitForSpanAsync(spanName: string, timeoutMs: number = 200): Promise<void> {
+    const startWait = Date.now();
+
+    let resolveFunc: (() => void) | undefined;
+    let rejectFunc: (reason?: any) => void | undefined;
 
     const promise = new Promise<void>(function (resolve, reject) {
       resolveFunc = resolve;
+      rejectFunc = reject;
     });
 
     if (!resolveFunc) {
@@ -147,7 +156,13 @@ class ObservableSpanExporter implements SpanExporter, IStateObserver {
     }
 
     // TODO: Synchronization + Duplicate handling
-    this.trackedSpans.set(spanName, resolveFunc);
+    this.trackedSpans.set(spanName, ObservableSpanExporter.resolveWrapped(startWait, spanName, resolveFunc));
+
+    const rejectTimeout = setTimeout(
+      () => rejectFunc(`Error: Timeout of ${timeoutMs}ms exceeded for span ${spanName}.`),
+      timeoutMs
+    );
+    this.trackedTimeouts.set(spanName, rejectTimeout);
 
     return promise;
   }
@@ -158,11 +173,14 @@ class ObservableSpanExporter implements SpanExporter, IStateObserver {
     if (toResolve.length > 0) {
       console.log(`[T-FWK] Found ${toResolve.length} promises to resolve.`);
       toResolve.forEach((span) => {
+        const timeout = this.trackedTimeouts.get(span.name)!;
+        clearTimeout(timeout);
+        this.trackedTimeouts.delete(span.name);
+
         const resolveFunc = this.trackedSpans.get(span.name)!;
         resolveFunc();
+        this.trackedSpans.delete(span.name);
       });
-
-      // TODO: Cleanup
     }
 
     resultCallback({
