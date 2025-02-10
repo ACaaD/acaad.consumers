@@ -1,0 +1,10 @@
+{
+  "changes": [
+    {
+      "packageName": "@acaad/core",
+      "comment": "Extended connected-service hooks, add spans for tracing (injectable)",
+      "type": "none"
+    }
+  ],
+  "packageName": "@acaad/core"
+}

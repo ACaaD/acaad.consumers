@@ -171,26 +171,3 @@ export class FrameworkContainer {
     }
   }
 }
-
-class TestSpanExporter implements SpanExporter {
-  export(spans: ReadableSpan[], resultCallback: (result: ExportResult) => void): void {
-    console.log(
-      spans.map((span) => ({
-        spanId: span.spanContext().spanId,
-        parent: span.parentSpanId,
-        name: span.name,
-        durations: span.duration,
-        tags: span.attributes
-      }))
-    );
-    resultCallback({ code: ExportResultCode.SUCCESS });
-  }
-
-  shutdown(): Promise<void> {
-    console.log(`[T-FWK][${new Date().toISOString()}] IMPORTANT: Shutdown called on SpanExporter.`);
-    return Promise.resolve();
-  }
-  forceFlush?(): Promise<void> {
-    return Promise.resolve();
-  }
-}
