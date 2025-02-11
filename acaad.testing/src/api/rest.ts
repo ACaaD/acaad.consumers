@@ -3,6 +3,7 @@ import { createServer } from '@mocks-server/main';
 import openApi from './routes/open-api';
 import collections from './collections';
 import { getNextPortAsync } from '../utility';
+import { AcaadAuthentication, AcaadHost } from '@acaad/abstractions/src';
 
 export interface IAcaadApiServer extends IAcaadServer {
   server: any; // TODO
@@ -11,7 +12,7 @@ export interface IAcaadApiServer extends IAcaadServer {
 export class AcaadApiServer implements IAcaadApiServer {
   server: any;
 
-  private componentCount: number;
+  private readonly componentCount: number;
   public port: number;
   public adminPort: number;
 

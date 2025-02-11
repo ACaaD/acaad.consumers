@@ -8,7 +8,7 @@ import {
 } from '@acaad/abstractions';
 import { ComponentManager, FrameworkContainer } from '../../src';
 import { DependencyContainer } from 'tsyringe';
-import { AcaadApiServer, AcaadSignalRServer } from '@acaad/testing';
+import { AcaadApiServer, AcaadSignalRServer, ServerMocks } from '@acaad/testing';
 import { Cause } from 'effect';
 import { AcaadIntegrationTestContext, IAcaadIntegrationTestContext, IStateObserver } from './types';
 import { ReadableSpan, SpanExporter } from '@opentelemetry/sdk-trace-base';
@@ -80,12 +80,9 @@ export async function createPerformanceTestContext(serverCount: number, componen
   const loggerMock: Mock<ICsLogger> = mock(MockCsLogger);
   serviceContextMock.logger = new MockCsLogger();
 
-  const apiServerPromise = Promise.all(
-    enumerable.map((_) => AcaadApiServer.createMockServerAsync(undefined, componentCountPerServer))
+  const serverMocks = await Promise.all(
+    enumerable.map((_) => ServerMocks.createMockServersAsync(undefined, componentCountPerServer))
   );
-  const signalrServerPromise = Promise.all(enumerable.map((_) => AcaadSignalRServer.createMockServerAsync()));
-
-  const [apiServers, signalrServers] = await Promise.all([apiServerPromise, signalrServerPromise]);
 
   const stateObserver = ObservableSpanExporter.Create();
   const fwkContainer: DependencyContainer = FrameworkContainer.CreateCsContainer<IConnectedServiceAdapter>(
@@ -101,8 +98,7 @@ export async function createPerformanceTestContext(serverCount: number, componen
   const instance: ComponentManager = fwkContainer.resolve(ComponentManager) as ComponentManager;
 
   const intTestContext: IAcaadIntegrationTestContext = new AcaadIntegrationTestContext(
-    apiServers,
-    signalrServers,
+    serverMocks,
     fwkContainer,
     instance,
     loggerMock,

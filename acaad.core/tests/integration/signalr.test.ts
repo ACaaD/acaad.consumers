@@ -30,7 +30,7 @@ describe('signalr connection', () => {
   it('should drop unhandled event', async () => {
     const checkpoint = stateObserver.waitForSpanAsync('acaad:cs:onUnhandledEvent');
 
-    await intTestContext.signalrMocks[0].pushEvent({ abc: 'def' });
+    await intTestContext.serverMocks[0].signalrServer.pushEvent({ abc: 'def' });
 
     await checkpoint;
 
@@ -42,7 +42,7 @@ describe('signalr connection', () => {
 
     const checkpoint = stateObserver.waitForSpanAsync('acaad:cs:onUnmappedComponentEvent');
 
-    await intTestContext.signalrMocks[0].pushEvent(event);
+    await intTestContext.serverMocks[0].signalrServer.pushEvent(event);
     await checkpoint;
 
     expect(serviceAdapterMock.onUnmappedComponentEventAsync).toHaveBeenCalledTimes(1);
@@ -53,7 +53,7 @@ describe('signalr connection', () => {
 
     const checkpoint = stateObserver.waitForSpanAsync('acaad:cs:updateComponentState');
 
-    await intTestContext.signalrMocks[0].pushEvent(event);
+    await intTestContext.serverMocks[0].signalrServer.pushEvent(event);
     await checkpoint;
 
     expect(serviceAdapterMock.onUnmappedComponentEventAsync).toHaveBeenCalledTimes(0);

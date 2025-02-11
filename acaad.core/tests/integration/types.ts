@@ -6,9 +6,10 @@ import {
 } from '@acaad/abstractions';
 
 import { ComponentManager } from '../../src';
-import { IAcaadApiServer, IAcaadSignalRServer } from '@acaad/testing';
+
 import { Mock } from 'ts-jest-mocker';
 import { DependencyContainer } from 'tsyringe';
+import { ServerMocks } from '@acaad/testing';
 
 export interface IStateObserver {
   waitForSpanAsync(spanName: string, timeoutMs?: number): Promise<void>;
@@ -17,8 +18,7 @@ export interface IStateObserver {
 }
 
 export interface IAcaadIntegrationTestContext {
-  apiMocks: IAcaadApiServer[];
-  signalrMocks: IAcaadSignalRServer[];
+  serverMocks: ServerMocks[];
 
   fwkContainer: DependencyContainer;
   instance: ComponentManager;
@@ -37,8 +37,7 @@ export interface IAcaadIntegrationTestContext {
 }
 
 export class AcaadIntegrationTestContext implements IAcaadIntegrationTestContext {
-  public apiMocks: IAcaadApiServer[];
-  public signalrMocks: IAcaadSignalRServer[];
+  public serverMocks: ServerMocks[];
   public fwkContainer: DependencyContainer;
   public instance: ComponentManager;
   public loggerMock: Mock<ICsLogger>;
@@ -48,8 +47,7 @@ export class AcaadIntegrationTestContext implements IAcaadIntegrationTestContext
   public stateObserver: IStateObserver;
 
   public constructor(
-    apiMocks: IAcaadApiServer[],
-    signalrMocks: IAcaadSignalRServer[],
+    serverMocks: ServerMocks[],
     fwkContainer: DependencyContainer,
     instance: ComponentManager,
     loggerMock: Mock<ICsLogger>,
@@ -57,8 +55,7 @@ export class AcaadIntegrationTestContext implements IAcaadIntegrationTestContext
     serviceContextMock: Mock<IConnectedServiceContext>,
     stateObserver: IStateObserver
   ) {
-    this.apiMocks = apiMocks;
-    this.signalrMocks = signalrMocks;
+    this.serverMocks = serverMocks;
     this.fwkContainer = fwkContainer;
     this.instance = instance;
     this.loggerMock = loggerMock;
@@ -68,10 +65,7 @@ export class AcaadIntegrationTestContext implements IAcaadIntegrationTestContext
   }
 
   getHosts(): AcaadHost[] {
-    return this.apiMocks.map(
-      (am, idx) =>
-        new AcaadHost(`mock-server-${idx}`, `localhost`, am.port, undefined, this.signalrMocks[idx].port)
-    );
+    return this.serverMocks.map((sm) => sm.getHost());
   }
 
   public async disposeAsync(): Promise<void> {
@@ -81,20 +75,12 @@ export class AcaadIntegrationTestContext implements IAcaadIntegrationTestContext
     await this.fwkContainer.dispose();
     console.log(`[T-FWK][${new Date().toISOString()}] dispose done`);
 
-    await Promise.all([
-      ...this.apiMocks.map((am) => am.disposeAsync()),
-      ...this.signalrMocks.map((sm) => sm.disposeAsync())
-    ]);
-    console.log(
-      `[T-FWK][${new Date().toISOString()}] ${this.apiMocks.length + this.signalrMocks.length} servers stopped`
-    );
+    await Promise.all([...this.serverMocks.map((sm) => sm.disposeAsync())]);
+    console.log(`[T-FWK][${new Date().toISOString()}] ${this.serverMocks.length} (*2) servers stopped`);
   }
 
   public async startMockServersAsync(): Promise<void> {
-    await Promise.all([
-      ...this.apiMocks.map((am) => am.startAsync()),
-      ...this.signalrMocks.map((sm) => sm.startAsync())
-    ]);
+    await Promise.all([...this.serverMocks.map((sm) => sm.startAsync())]);
   }
 
   public async startAllAsync(): Promise<void> {
