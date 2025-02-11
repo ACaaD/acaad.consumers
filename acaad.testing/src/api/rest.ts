@@ -1,9 +1,11 @@
 import { IAcaadServer } from './index';
 import { createServer } from '@mocks-server/main';
+import { openApiRoutes } from '@mocks-server/plugin-openapi';
+
 import openApi from './routes/open-api';
 import collections from './collections';
 import { getNextPortAsync, getRandomInt } from '../utility';
-import { IComponentConfiguration, IMockedComponentModel } from './types';
+import { IComponentConfiguration, IMockedComponentModel, IPortConfiguration } from './types';
 import { ComponentDescriptor, ComponentType } from '@acaad/abstractions';
 
 export interface IAcaadApiServer extends IAcaadServer {
@@ -98,7 +100,25 @@ export class AcaadApiServer implements IAcaadApiServer {
   async startAsync(): Promise<void> {
     await this.server.start();
     const { loadRoutes, loadCollections } = this.server.mock.createLoaders();
-    loadRoutes(openApi(this.componentModel));
+    const { route, openApiBody } = openApi(this.componentModel);
+
+    const referencedRoutes = await openApiRoutes({
+      basePath: '/',
+      document: { ...openApiBody }
+    });
+
+    console.log(JSON.stringify(referencedRoutes, undefined, 2));
+
+    loadRoutes([...route, ...referencedRoutes]);
+
+    collections[0].routes = referencedRoutes
+      // @ts-ignore
+      .map((route) => route.variants.map((variant) => `${route.id}:${variant.id}`))
+      // @ts-ignore
+      .reduce((aggr, curr) => [...aggr, ...curr], []);
+
+    console.log(collections[0].routes);
+
     loadCollections(collections);
   }
 
@@ -108,10 +128,11 @@ export class AcaadApiServer implements IAcaadApiServer {
 
   public static createMockServerAsync = async (
     selectedCollection = 'positive',
-    componentConfiguration: IComponentConfiguration
+    componentConfiguration: IComponentConfiguration,
+    ports?: IPortConfiguration
   ) => {
-    const nextFreePort = await getNextPortAsync();
-    const adminPort = await getNextPortAsync();
+    const nextFreePort = ports?.api ?? (await getNextPortAsync());
+    const adminPort = ports?.adminApi ?? (await getNextPortAsync());
 
     return new AcaadApiServer(nextFreePort, adminPort, selectedCollection, componentConfiguration);
   };

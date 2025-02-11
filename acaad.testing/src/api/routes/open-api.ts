@@ -1,10 +1,25 @@
 import { IComponentConfiguration, IMockedComponentModel } from '../types';
 import { ComponentDescriptor } from '@acaad/abstractions';
 
+const defaultResponses = {
+  responses: {
+    200: {
+      'application/json': {
+        examples: {
+          success: {
+            empty: 'string'
+          }
+        }
+      }
+    }
+  }
+};
+
 function getSensorComponent(cd: ComponentDescriptor) {
   return {
     [`/components/${cd.toIdentifier()}`]: {
       get: {
+        ...defaultResponses,
         acaad: {
           component: {
             name: `${cd.toIdentifier()}`,
@@ -21,6 +36,7 @@ function getButtonComponent(cd: ComponentDescriptor) {
   return {
     [`/components/${cd.toIdentifier()}`]: {
       post: {
+        ...defaultResponses,
         acaad: {
           component: {
             name: `${cd.toIdentifier()}`,
@@ -37,6 +53,7 @@ function getSwitchComponent(cd: ComponentDescriptor) {
   return {
     [`/components/${cd.toIdentifier()}`]: {
       get: {
+        ...defaultResponses,
         acaad: {
           component: {
             name: `${cd.toIdentifier()}`,
@@ -49,6 +66,7 @@ function getSwitchComponent(cd: ComponentDescriptor) {
     },
     [`/components/${cd.toIdentifier()}/on`]: {
       post: {
+        ...defaultResponses,
         acaad: {
           component: {
             name: `${cd.toIdentifier()}`,
@@ -62,6 +80,7 @@ function getSwitchComponent(cd: ComponentDescriptor) {
     },
     [`/components/${cd.toIdentifier()}/off`]: {
       post: {
+        ...defaultResponses,
         acaad: {
           component: {
             name: `${cd.toIdentifier()}`,
@@ -104,8 +123,17 @@ function openApi(componentModel: IMockedComponentModel) {
   );
 
   console.log(`[T-FWK] Generated path object in ${Date.now() - startMs}ms.`);
+  const openApiBody = {
+    openapi: '3.0.0',
+    info: {
+      title: 'OpenAPI',
+      version: '1.0.0',
+      acaad: 'commit-hash'
+    },
+    paths: pathObj
+  };
 
-  const result = [
+  const route = [
     {
       id: 'openApi', // id of the route
       url: '/openapi/v1.json', // url in path-to-regexp format
@@ -116,21 +144,14 @@ function openApi(componentModel: IMockedComponentModel) {
           type: 'json', // variant type
           options: {
             status: 200,
-            body: {
-              info: {
-                title: 'OpenAPI',
-                version: '1.0.0',
-                acaad: 'commit-hash'
-              },
-              paths: pathObj
-            }
+            body: openApiBody
           }
         }
       ]
     }
   ];
 
-  return result;
+  return { route, openApiBody };
 }
 
 export default openApi;

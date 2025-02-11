@@ -9,6 +9,7 @@ import {
   ILogger,
   LogLevel
 } from '@microsoft/signalr';
+import { IPortConfiguration } from './types';
 
 export interface IAcaadSignalRServer extends IAcaadServer {
   pushEvent(event: unknown): Promise<void>;
@@ -109,8 +110,10 @@ export class AcaadSignalRServer implements IAcaadSignalRServer {
     return this.controller.pushEvent(event);
   }
 
-  public static createMockServerAsync: () => Promise<IAcaadSignalRServer> = async () => {
-    const nextFreePort = await getNextPortAsync();
+  public static createMockServerAsync: (ports?: IPortConfiguration) => Promise<IAcaadSignalRServer> = async (
+    ports?: IPortConfiguration
+  ) => {
+    const nextFreePort = ports?.signalr ?? (await getNextPortAsync());
 
     const server: SignalRServer = await createServerSignalr<typeof hubs>({
       port: nextFreePort,
