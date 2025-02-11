@@ -196,9 +196,12 @@ class ObservableSpanExporter implements SpanExporter, IStateObserver {
   }
 }
 
-export async function createIntegrationTestContext(componentConfiguration?: IComponentConfiguration) {
+export async function createIntegrationTestContext(
+  serverCount: number = 1,
+  componentConfiguration?: IComponentConfiguration
+) {
   return await createPerformanceTestContext(
-    1,
+    serverCount,
     componentConfiguration ?? {
       sensorCount: 5,
       switchCount: 5,

@@ -17,3 +17,9 @@ export async function getNextPortAsync(startPort?: number): Promise<number> {
 export async function delay(delayInMs: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, delayInMs));
 }
+
+export function getRandomInt(max: number, min?: number) {
+  min = Math.ceil(min ?? 0);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}

@@ -20,13 +20,12 @@ function getSensorComponent(cd: ComponentDescriptor) {
 function getButtonComponent(cd: ComponentDescriptor) {
   return {
     [`/components/${cd.toIdentifier()}`]: {
-      get: {
+      post: {
         acaad: {
           component: {
             name: `${cd.toIdentifier()}`,
             type: 'button'
           },
-          queryable: false,
           actionable: true
         }
       }
@@ -43,8 +42,34 @@ function getSwitchComponent(cd: ComponentDescriptor) {
             name: `${cd.toIdentifier()}`,
             type: 'switch'
           },
-          queryable: true,
-          actionable: true
+          onIff: true,
+          queryable: true
+        }
+      }
+    },
+    [`/components/${cd.toIdentifier()}/on`]: {
+      post: {
+        acaad: {
+          component: {
+            name: `${cd.toIdentifier()}`,
+            type: 'switch'
+          },
+          onIff: true,
+          actionable: true,
+          forValue: true
+        }
+      }
+    },
+    [`/components/${cd.toIdentifier()}/off`]: {
+      post: {
+        acaad: {
+          component: {
+            name: `${cd.toIdentifier()}`,
+            type: 'switch'
+          },
+          onIff: true,
+          actionable: true,
+          forValue: false
         }
       }
     }

@@ -12,7 +12,7 @@ export {
   IAcaadSignalRServer,
   IEventReceiver
 } from './api';
-export { delay } from './utility';
+export { delay, getRandomInt } from './utility';
 
 export class ServerMocks {
   serverName: string;

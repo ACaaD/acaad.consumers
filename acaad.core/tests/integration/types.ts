@@ -9,8 +9,7 @@ import { ComponentManager } from '../../src';
 
 import { Mock } from 'ts-jest-mocker';
 import { DependencyContainer } from 'tsyringe';
-import { ServerMocks } from '@acaad/testing';
-import { ComponentDescriptor, ComponentType } from '@acaad/abstractions/src';
+import { ServerMocks, getRandomInt } from '@acaad/testing';
 
 export interface IStateObserver {
   waitForSpanAsync(spanName: string, timeoutMs?: number): Promise<void>;
@@ -20,6 +19,7 @@ export interface IStateObserver {
 
 export interface IAcaadIntegrationTestContext {
   serverMocks: ServerMocks[];
+  getRandomServer(): ServerMocks;
 
   fwkContainer: DependencyContainer;
   instance: ComponentManager;
@@ -67,6 +67,10 @@ export class AcaadIntegrationTestContext implements IAcaadIntegrationTestContext
 
   getHosts(): AcaadHost[] {
     return this.serverMocks.map((sm) => sm.getHost());
+  }
+
+  getRandomServer(): ServerMocks {
+    return this.serverMocks[getRandomInt(this.serverMocks.length - 1)];
   }
 
   public async disposeAsync(): Promise<void> {
