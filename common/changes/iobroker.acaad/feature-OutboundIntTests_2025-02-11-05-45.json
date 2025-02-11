@@ -1,0 +1,10 @@
+{
+  "changes": [
+    {
+      "packageName": "iobroker.acaad",
+      "comment": "Mess around with exports (unsuccessful)",
+      "type": "none"
+    }
+  ],
+  "packageName": "iobroker.acaad"
+}

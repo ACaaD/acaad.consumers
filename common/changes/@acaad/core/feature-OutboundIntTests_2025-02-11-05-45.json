@@ -1,0 +1,10 @@
+{
+  "changes": [
+    {
+      "packageName": "@acaad/core",
+      "comment": "Mess around with exports (unsuccessful)",
+      "type": "none"
+    }
+  ],
+  "packageName": "@acaad/core"
+}
