@@ -17,6 +17,7 @@ export interface IComponentConfiguration {
   buttonCount?: number;
   switchCount?: number;
   componentPrefix?: string;
+  suppressComponentEndpoints?: boolean;
 }
 
 export interface IMockedComponentModel {

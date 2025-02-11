@@ -102,12 +102,13 @@ export class AcaadApiServer implements IAcaadApiServer {
     const { loadRoutes, loadCollections } = this.server.mock.createLoaders();
     const { route, openApiBody } = openApi(this.componentModel);
 
-    const referencedRoutes = await openApiRoutes({
-      basePath: '/',
-      document: { ...openApiBody }
-    });
-
-    console.log(JSON.stringify(referencedRoutes, undefined, 2));
+    const referencedRoutes =
+      this.componentConfiguration.suppressComponentEndpoints !== true
+        ? await openApiRoutes({
+            basePath: '/',
+            document: { ...openApiBody }
+          })
+        : [];
 
     loadRoutes([...route, ...referencedRoutes]);
 
@@ -116,8 +117,6 @@ export class AcaadApiServer implements IAcaadApiServer {
       .map((route) => route.variants.map((variant) => `${route.id}:${variant.id}`))
       // @ts-ignore
       .reduce((aggr, curr) => [...aggr, ...curr], []);
-
-    console.log(collections[0].routes);
 
     loadCollections(collections);
   }
