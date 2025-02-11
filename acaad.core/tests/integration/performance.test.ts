@@ -14,7 +14,8 @@ describe('performance', () => {
     intTestContext = await createPerformanceTestContext(SERVER_COUNT, {
       sensorCount: COMPONENT_COUNT_PER_SERVER,
       switchCount: COMPONENT_COUNT_PER_SERVER,
-      buttonCount: COMPONENT_COUNT_PER_SERVER
+      buttonCount: COMPONENT_COUNT_PER_SERVER,
+      suppressComponentEndpoints: true
     });
     await intTestContext.startAllAsync();
   }, TIMEOUT);
