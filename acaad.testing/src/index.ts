@@ -1,6 +1,9 @@
 import { AcaadApiServer, AcaadSignalRServer, IAcaadApiServer, IAcaadSignalRServer } from './api';
-import { AcaadAuthentication, AcaadHost } from '@acaad/abstractions';
+import { AcaadAuthentication, AcaadHost, ComponentDescriptor, ComponentType } from '@acaad/abstractions';
 import { v4 as uuidv4 } from 'uuid';
+import { IComponentConfiguration } from './api/types';
+
+export { IComponentConfiguration, IAcaadServer } from './api/types';
 
 export {
   AcaadApiServer,
@@ -25,17 +28,21 @@ export class ServerMocks {
 
   static async createMockServersAsync(
     selectedCollection = 'positive',
-    componentCount: number = 1
+    componentConfiguration: IComponentConfiguration
   ): Promise<ServerMocks> {
     const [apiServer, signalrServer] = await Promise.all([
-      AcaadApiServer.createMockServerAsync(selectedCollection, componentCount),
+      AcaadApiServer.createMockServerAsync(selectedCollection, componentConfiguration),
       AcaadSignalRServer.createMockServerAsync()
     ]);
 
     return new ServerMocks(apiServer, signalrServer);
   }
 
-  getHost(): AcaadHost {
+  public getRandomComponent(type: ComponentType): ComponentDescriptor {
+    return this.apiServer.getRandomComponent(type);
+  }
+
+  public getHost(): AcaadHost {
     const auth = new AcaadAuthentication('', '', '', []);
     return new AcaadHost(this.serverName, 'localhost', this.apiServer.port, auth, this.signalrServer.port);
   }

@@ -11,7 +11,11 @@ describe('performance', () => {
   let intTestContext: IAcaadIntegrationTestContext;
 
   beforeAll(async () => {
-    intTestContext = await createPerformanceTestContext(SERVER_COUNT, COMPONENT_COUNT_PER_SERVER);
+    intTestContext = await createPerformanceTestContext(SERVER_COUNT, {
+      sensorCount: COMPONENT_COUNT_PER_SERVER,
+      switchCount: COMPONENT_COUNT_PER_SERVER,
+      buttonCount: COMPONENT_COUNT_PER_SERVER
+    });
     await intTestContext.startAllAsync();
   }, TIMEOUT);
 
@@ -26,7 +30,7 @@ describe('performance', () => {
 
     expect(serviceAdapterMock.createServerModelAsync).toHaveBeenCalledTimes(SERVER_COUNT);
     expect(serviceAdapterMock.createComponentModelAsync).toHaveBeenCalledTimes(
-      SERVER_COUNT * COMPONENT_COUNT_PER_SERVER
+      SERVER_COUNT * COMPONENT_COUNT_PER_SERVER * 3
     );
   });
 });

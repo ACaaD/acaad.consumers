@@ -8,11 +8,12 @@ import {
 } from '@acaad/abstractions';
 import { ComponentManager, FrameworkContainer } from '../../src';
 import { DependencyContainer } from 'tsyringe';
-import { AcaadApiServer, AcaadSignalRServer, ServerMocks } from '@acaad/testing';
+import { ServerMocks } from '@acaad/testing';
 import { Cause } from 'effect';
 import { AcaadIntegrationTestContext, IAcaadIntegrationTestContext, IStateObserver } from './types';
 import { ReadableSpan, SpanExporter } from '@opentelemetry/sdk-trace-base';
 import { ExportResult, ExportResultCode } from '@opentelemetry/core';
+import { IComponentConfiguration } from '@acaad/testing';
 
 class MockCsLogger implements ICsLogger {
   logTrace(...data: any[]): void {
@@ -71,7 +72,10 @@ function setupConnectedServiceMock(intTestContext: IAcaadIntegrationTestContext)
   );
 }
 
-export async function createPerformanceTestContext(serverCount: number, componentCountPerServer: number) {
+export async function createPerformanceTestContext(
+  serverCount: number,
+  componentConfiguration: IComponentConfiguration
+) {
   const enumerable = Array.from({ length: serverCount });
 
   const serviceAdapterMock: Mock<IConnectedServiceAdapter> = mock<IConnectedServiceAdapter>();
@@ -81,7 +85,7 @@ export async function createPerformanceTestContext(serverCount: number, componen
   serviceContextMock.logger = new MockCsLogger();
 
   const serverMocks = await Promise.all(
-    enumerable.map((_) => ServerMocks.createMockServersAsync(undefined, componentCountPerServer))
+    enumerable.map((_) => ServerMocks.createMockServersAsync(undefined, componentConfiguration))
   );
 
   const stateObserver = ObservableSpanExporter.Create();
@@ -192,6 +196,13 @@ class ObservableSpanExporter implements SpanExporter, IStateObserver {
   }
 }
 
-export async function createIntegrationTestContext() {
-  return await createPerformanceTestContext(1, 1);
+export async function createIntegrationTestContext(componentConfiguration?: IComponentConfiguration) {
+  return await createPerformanceTestContext(
+    1,
+    componentConfiguration ?? {
+      sensorCount: 5,
+      switchCount: 5,
+      buttonCount: 5
+    }
+  );
 }
