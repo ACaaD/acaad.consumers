@@ -1,10 +1,13 @@
-function getSensorComponent(identifier: number) {
+import { IComponentConfiguration, IMockedComponentModel } from '../types';
+import { ComponentDescriptor } from '@acaad/abstractions';
+
+function getSensorComponent(cd: ComponentDescriptor) {
   return {
-    [`/components/sensor-${identifier}`]: {
+    [`/components/${cd.toIdentifier()}`]: {
       get: {
         acaad: {
           component: {
-            name: `sensor-${identifier}`,
+            name: `${cd.toIdentifier()}`,
             type: 'sensor'
           },
           queryable: true
@@ -14,15 +17,65 @@ function getSensorComponent(identifier: number) {
   };
 }
 
-function openApi(componentCount: number = 1) {
+function getButtonComponent(cd: ComponentDescriptor) {
+  return {
+    [`/components/${cd.toIdentifier()}`]: {
+      get: {
+        acaad: {
+          component: {
+            name: `${cd.toIdentifier()}`,
+            type: 'button'
+          },
+          queryable: false,
+          actionable: true
+        }
+      }
+    }
+  };
+}
+
+function getSwitchComponent(cd: ComponentDescriptor) {
+  return {
+    [`/components/${cd.toIdentifier()}`]: {
+      get: {
+        acaad: {
+          component: {
+            name: `${cd.toIdentifier()}`,
+            type: 'switch'
+          },
+          queryable: true,
+          actionable: true
+        }
+      }
+    }
+  };
+}
+
+function openApi(componentModel: IMockedComponentModel) {
   const startMs = Date.now();
 
-  const pathsObj = Array.from({ length: componentCount }).reduce(
-    (prev: object, _, idx) => ({
+  let pathObj = (componentModel.sensors ?? []).reduce(
+    (prev: object, cd, idx) => ({
       ...prev,
-      ...getSensorComponent(idx)
+      ...getSensorComponent(cd)
     }),
     {}
+  );
+
+  pathObj = (componentModel.buttons ?? []).reduce(
+    (prev: object, cd, idx) => ({
+      ...prev,
+      ...getButtonComponent(cd)
+    }),
+    pathObj
+  );
+
+  pathObj = (componentModel.switches ?? []).reduce(
+    (prev: object, cd, idx) => ({
+      ...prev,
+      ...getSwitchComponent(cd)
+    }),
+    pathObj
   );
 
   console.log(`[T-FWK] Generated path object in ${Date.now() - startMs}ms.`);
@@ -44,7 +97,7 @@ function openApi(componentCount: number = 1) {
                 version: '1.0.0',
                 acaad: 'commit-hash'
               },
-              paths: pathsObj
+              paths: pathObj
             }
           }
         }

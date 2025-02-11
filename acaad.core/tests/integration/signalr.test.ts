@@ -3,7 +3,7 @@ import { ComponentManager } from '../../src';
 import { createIntegrationTestContext } from './test-setup';
 import { TestEventFactory } from './factories/test-event-factory';
 
-import { IConnectedServiceAdapter } from '@acaad/abstractions';
+import { IConnectedServiceAdapter, ComponentType } from '@acaad/abstractions';
 
 describe('signalr connection', () => {
   let intTestContext: IAcaadIntegrationTestContext;
@@ -49,7 +49,10 @@ describe('signalr connection', () => {
   });
 
   it('should process sensor component', async () => {
-    const event = TestEventFactory.createComponentOutcomeEvent('sensor-0');
+    const rndCd = intTestContext.serverMocks[0].getRandomComponent(ComponentType.Sensor);
+    console.log(rndCd);
+
+    const event = TestEventFactory.createComponentOutcomeEvent(rndCd.toIdentifier());
 
     const checkpoint = stateObserver.waitForSpanAsync('acaad:cs:updateComponentState');
 
