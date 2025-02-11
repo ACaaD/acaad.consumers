@@ -5,8 +5,7 @@ import { ComponentType } from '@acaad/abstractions';
 import { Option } from 'effect';
 
 describe('outbound events', () => {
-  /* TODO: Wrong value. Should be true, but mocks are not yet generated. */
-  const EXPECTED_RESULT = false;
+  const EXPECTED_RESULT = true;
 
   let intTestContext: IAcaadIntegrationTestContext;
   let instance: ComponentManager;
@@ -91,5 +90,19 @@ describe('outbound events', () => {
     );
 
     expect(result).toBe(EXPECTED_RESULT);
+  });
+
+  it('should not process sensor with type action', async () => {
+    const rndServer = intTestContext.getRandomServer();
+    const rndComponent = rndServer.getRandomComponent(ComponentType.Sensor);
+
+    const result = await instance.handleOutboundStateChangeAsync(
+      rndServer.getHost(),
+      rndComponent,
+      'action',
+      Option.some<boolean>(true)
+    );
+
+    expect(result).toBe(false);
   });
 });

@@ -6,6 +6,12 @@ export interface IAcaadServer {
   port: number;
 }
 
+export interface IPortConfiguration {
+  api: number;
+  adminApi: number;
+  signalr: number;
+}
+
 export interface IComponentConfiguration {
   sensorCount?: number;
   buttonCount?: number;

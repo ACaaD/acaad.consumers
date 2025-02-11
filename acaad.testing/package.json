@@ -7,6 +7,7 @@
   "es2015": "./dist/esm2015/index.js",
   "typings": "./dist/esnext/index.d.ts",
   "scripts": {
+    "run": "heft build && node dist/cjs/run.js",
     "build": "heft build --clean",
     "_phase:build": "heft run --only build -- --clean"
   },
@@ -25,7 +26,9 @@
     "effect": "~3.12.10",
     "@microsoft/signalr": "~8.0.7",
     "@acaad/abstractions": "workspace:*",
-    "uuid": "~11.0.5"
+    "uuid": "~11.0.5",
+    "@mocks-server/plugin-openapi": "~2.1.0",
+    "@mocks-server/core": "~4.0.2"
   },
   "devDependencies": {
     "typescript": "~5.6.0",

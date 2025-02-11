@@ -1,7 +1,7 @@
 import { AcaadApiServer, AcaadSignalRServer, IAcaadApiServer, IAcaadSignalRServer } from './api';
 import { AcaadAuthentication, AcaadHost, ComponentDescriptor, ComponentType } from '@acaad/abstractions';
 import { v4 as uuidv4 } from 'uuid';
-import { IComponentConfiguration } from './api/types';
+import { IComponentConfiguration, IPortConfiguration } from './api/types';
 
 export { IComponentConfiguration, IAcaadServer } from './api/types';
 
@@ -28,11 +28,12 @@ export class ServerMocks {
 
   static async createMockServersAsync(
     selectedCollection = 'positive',
-    componentConfiguration: IComponentConfiguration
+    componentConfiguration: IComponentConfiguration,
+    ports?: IPortConfiguration
   ): Promise<ServerMocks> {
     const [apiServer, signalrServer] = await Promise.all([
-      AcaadApiServer.createMockServerAsync(selectedCollection, componentConfiguration),
-      AcaadSignalRServer.createMockServerAsync()
+      AcaadApiServer.createMockServerAsync(selectedCollection, componentConfiguration, ports),
+      AcaadSignalRServer.createMockServerAsync(ports)
     ]);
 
     return new ServerMocks(apiServer, signalrServer);
