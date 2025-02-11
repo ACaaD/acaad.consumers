@@ -12,7 +12,7 @@ describe('component creation', () => {
   });
 
   it('should sync sensor component', async () => {
-    intTestContext = await createIntegrationTestContext({
+    intTestContext = await createIntegrationTestContext(1, {
       sensorCount: 1
     });
     await intTestContext.startAllAsync();
@@ -24,7 +24,7 @@ describe('component creation', () => {
   });
 
   it('should sync switch component', async () => {
-    intTestContext = await createIntegrationTestContext({
+    intTestContext = await createIntegrationTestContext(1, {
       switchCount: 1
     });
     await intTestContext.startAllAsync();
@@ -36,7 +36,7 @@ describe('component creation', () => {
   });
 
   it('should sync button component', async () => {
-    intTestContext = await createIntegrationTestContext({
+    intTestContext = await createIntegrationTestContext(1, {
       buttonCount: 1
     });
     await intTestContext.startAllAsync();

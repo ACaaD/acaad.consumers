@@ -2,7 +2,7 @@ import { IAcaadServer } from './index';
 import { createServer } from '@mocks-server/main';
 import openApi from './routes/open-api';
 import collections from './collections';
-import { getNextPortAsync } from '../utility';
+import { getNextPortAsync, getRandomInt } from '../utility';
 import { IComponentConfiguration, IMockedComponentModel } from './types';
 import { ComponentDescriptor, ComponentType } from '@acaad/abstractions';
 
@@ -10,12 +10,6 @@ export interface IAcaadApiServer extends IAcaadServer {
   server: any; // TODO
 
   getRandomComponent(type: ComponentType): ComponentDescriptor;
-}
-
-function getRandomInt(max: number, min?: number) {
-  min = Math.ceil(min ?? 0);
-  max = Math.floor(max);
-  return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 export class AcaadApiServer implements IAcaadApiServer {
@@ -61,7 +55,7 @@ export class AcaadApiServer implements IAcaadApiServer {
   ): IMockedComponentModel {
     const prefix = componentConfiguration.componentPrefix ?? '';
 
-    const result = {
+    return {
       sensors: Array.from({ length: componentConfiguration.sensorCount ?? 0 }).map(
         (_, idx) => new ComponentDescriptor(`${prefix}sensor-${idx}`)
       ),
@@ -72,8 +66,6 @@ export class AcaadApiServer implements IAcaadApiServer {
         (_, idx) => new ComponentDescriptor(`${prefix}switch-${idx}`)
       )
     };
-
-    return result;
   }
 
   public getRandomComponent(type: ComponentType): ComponentDescriptor {
