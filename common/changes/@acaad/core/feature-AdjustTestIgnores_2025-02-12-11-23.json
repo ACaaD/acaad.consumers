@@ -1,0 +1,10 @@
+{
+  "changes": [
+    {
+      "packageName": "@acaad/core",
+      "comment": "Adjust jest config (why does this need a rush change?)",
+      "type": "none"
+    }
+  ],
+  "packageName": "@acaad/core"
+}
