@@ -24,6 +24,11 @@
     "_phase:test": "heft run --only test -- --clean"
   },
   "keywords": [],
+  "repository": {
+    "url": "https://github.com/ACaaD/acaad.consumers.git",
+    "type": "git"
+  },
+  "homepage": "https://github.com/ACaaD/acaad.consumers",
   "license": "Apache-2.0",
   "dependencies": {
     "effect": "~3.12.10"

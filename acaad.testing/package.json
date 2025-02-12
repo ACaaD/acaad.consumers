@@ -16,7 +16,11 @@
     "name": "OlliMartin",
     "email": "dev@ollimart.in"
   },
-  "homepage": "https://github.com/OlliMartin/acaad.ts",
+  "repository": {
+    "url": "https://github.com/ACaaD/acaad.consumers.git",
+    "type": "git"
+  },
+  "homepage": "https://github.com/ACaaD/acaad.consumers",
   "license": "Apache-2.0",
   "dependencies": {
     "@mocks-server/main": "~4.1.0",

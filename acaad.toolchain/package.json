@@ -6,7 +6,11 @@
     "name": "OlliMartin",
     "email": "dev@ollimart.in"
   },
-  "homepage": "https://github.com/OlliMartin/ioBroker.acaad",
+  "repository": {
+    "url": "https://github.com/ACaaD/acaad.consumers.git",
+    "type": "git"
+  },
+  "homepage": "https://github.com/ACaaD/acaad.consumers",
   "license": "Apache-2.0",
   "main": "index.js",
   "scripts": {
