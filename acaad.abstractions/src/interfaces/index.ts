@@ -1,7 +1,8 @@
 export {
   IConnectedServiceAdapter,
   OutboundStateChangeCallback,
-  ChangeType
+  ChangeType,
+  ConnectedServiceFunction
 } from './IConnectedServiceAdapter';
 
 export { IConnectedServiceContext, ICsLogger } from './IConnectedServiceContext';

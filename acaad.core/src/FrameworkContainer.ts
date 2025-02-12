@@ -1,13 +1,14 @@
 // This must be executed before any access to the actual container.
 import 'reflect-metadata';
 
-import { IConnectedServiceContext, AcaadPopulatedEvent } from '@acaad/abstractions';
+import { AcaadPopulatedEvent, IConnectedServiceContext } from '@acaad/abstractions';
 
 import {
   ClassProvider,
   container,
   DependencyContainer,
   InjectionToken,
+  Lifecycle,
   RegistrationOptions,
   registry,
   ValueProvider
@@ -46,10 +47,16 @@ function batchExporterFactory(container: DependencyContainer): SpanProcessor {
 }
 
 @registry([
-  { token: ComponentManager, useClass: ComponentManager },
+  { token: ComponentManager, useClass: ComponentManager, options: { lifecycle: Lifecycle.ResolutionScoped } },
   {
     token: DependencyInjectionTokens.ConnectionManager,
-    useClass: ConnectionManager
+    useClass: ConnectionManager,
+    options: { lifecycle: Lifecycle.ResolutionScoped }
+  },
+  {
+    token: DependencyInjectionTokens.ComponentModel,
+    useClass: ComponentModel,
+    options: { lifecycle: Lifecycle.ResolutionScoped }
   },
   { token: DependencyInjectionTokens.TokenCache, useClass: InMemoryTokenCache },
   {
@@ -58,9 +65,8 @@ function batchExporterFactory(container: DependencyContainer): SpanProcessor {
   },
   {
     token: DependencyInjectionTokens.EventQueue,
-    useValue: Effect.runSync(Queue.unbounded<AcaadPopulatedEvent>()) // TODO: Define drop-strategy and set bound for capacity
+    useFactory: (_) => Effect.runSync(Queue.unbounded<AcaadPopulatedEvent>()) // TODO: Define drop-strategy and set bound for capacity
   },
-  { token: DependencyInjectionTokens.ComponentModel, useClass: ComponentModel },
   {
     token: DependencyInjectionTokens.OpenTelExporter,
     useFactory: (_) =>
