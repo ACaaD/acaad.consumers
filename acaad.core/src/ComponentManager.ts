@@ -52,7 +52,7 @@ import {
 } from 'effect';
 import { ApplicationState } from './model/ApplicationState';
 import { QueueWrapper } from './QueueWrapper';
-import { onErrorEff, executeCsAdapter, onErrorEff } from './utility';
+import { onErrorEff, executeCsAdapter } from './utility';
 
 class MetadataByComponent extends Data.Class<{ component: Component; metadata: AcaadMetadata[] }> {}
 
@@ -368,7 +368,8 @@ export class ComponentManager {
 
     const result = await Effect.runPromiseExit(
       this.getMetadataToExecuteOpt(potentialMetadata).pipe(
-        Effect.andThen((m) => this._connectionManager.updateComponentStateAsync(m))
+        Effect.andThen((m) => this._connectionManager.updateComponentStateAsync(m)),
+        Effect.tapError((err) => onErrorEff(this._serviceAdapter, err))
       )
     );
 
@@ -476,7 +477,11 @@ export class ComponentManager {
     this._appState = 'Starting';
 
     const result = await Effect.runPromiseExit(
-      this.startEff().pipe(Effect.withSpan('acaad:startup'), Effect.provide(this._openTelLayer()))
+      this.startEff().pipe(
+        Effect.withSpan('acaad:startup'),
+        Effect.provide(this._openTelLayer()),
+        Effect.tapError((err) => onErrorEff(this._serviceAdapter, err))
+      )
     );
 
     Exit.match(result, {
@@ -526,7 +531,8 @@ export class ComponentManager {
       Effect.withSpan('acaad:events', {
         parent: undefined,
         root: true
-      })
+      }),
+      Effect.tapError((err) => onErrorEff(this._serviceAdapter, err))
     );
 
     return yield* instrumented;
@@ -607,7 +613,11 @@ export class ComponentManager {
     this._logger.logInformation('Stopping component manager.');
 
     const exit = await Effect.runPromiseExit(
-      this.stopEff.pipe(Effect.withSpan('acaad:shutdown'), Effect.provide(Layer.fresh(this._openTelLayer())))
+      this.stopEff.pipe(
+        Effect.withSpan('acaad:shutdown'),
+        Effect.provide(Layer.fresh(this._openTelLayer())),
+        Effect.tapError((err) => onErrorEff(this._serviceAdapter, err))
+      )
     );
 
     Exit.match(exit, {

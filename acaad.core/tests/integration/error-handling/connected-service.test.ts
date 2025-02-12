@@ -73,6 +73,7 @@ describe('connected service error handling', () => {
 
     beforeAll(() => {
       setupConnectedServiceMock(intTestContext);
+      serviceAdapterMock.mapServiceError.mockReturnValue(mappedAcaadError);
     });
 
     it('should pass occurred error to mapper', async () => {
@@ -86,7 +87,7 @@ describe('connected service error handling', () => {
       serviceAdapterMock.createServerModelAsync.mockRejectedValue(recoverableError);
 
       await instance.createMissingComponentsAsync();
-      expect(serviceAdapterMock.onErrorAsync).toHaveBeenCalledWith(recoverableError);
+      expect(serviceAdapterMock.onErrorAsync).toHaveBeenCalledWith(mappedAcaadError, expect.anything());
     });
   });
 
@@ -95,6 +96,7 @@ describe('connected service error handling', () => {
 
     beforeAll(() => {
       setupConnectedServiceMock(intTestContext);
+      serviceAdapterMock.mapServiceError.mockReturnValue(mappedAcaadError);
     });
 
     it('should pass occurred error to mapper', async () => {
@@ -111,7 +113,8 @@ describe('connected service error handling', () => {
       serviceAdapterMock.createComponentModelAsync.mockRejectedValue(recoverableError);
 
       await instance.createMissingComponentsAsync();
-      expect(serviceAdapterMock.onErrorAsync).toHaveBeenCalledWith(recoverableError);
+
+      expect(serviceAdapterMock.onErrorAsync).toHaveBeenCalledWith(mappedAcaadError, expect.anything());
     });
   });
 
@@ -120,6 +123,7 @@ describe('connected service error handling', () => {
 
     beforeAll(() => {
       setupConnectedServiceMock(intTestContext);
+      serviceAdapterMock.mapServiceError.mockReturnValue(mappedAcaadError);
     });
 
     it('should pass occurred error to mapper', async () => {
@@ -139,7 +143,7 @@ describe('connected service error handling', () => {
       const start = await throwAwayInstance.startAsync();
 
       expect(start).toBe(false);
-      expect(serviceAdapterMock.onErrorAsync).toHaveBeenCalledWith(recoverableError);
+      expect(serviceAdapterMock.onErrorAsync).toHaveBeenCalledWith(mappedAcaadError, expect.anything());
     });
   });
 
@@ -148,6 +152,8 @@ describe('connected service error handling', () => {
 
     beforeAll(async () => {
       setupConnectedServiceMock(intTestContext);
+      serviceAdapterMock.mapServiceError.mockReturnValue(mappedAcaadError);
+
       await intTestContext.startAndWaitForSignalR();
     });
 
@@ -182,7 +188,7 @@ describe('connected service error handling', () => {
       const [srv, event] = getEventData();
       await intTestContext.queueEventAndWaitAsync(srv, event, 'acaad:cs:updateComponentState');
 
-      expect(serviceAdapterMock.onErrorAsync).toHaveBeenCalledWith(recoverableError);
+      expect(serviceAdapterMock.onErrorAsync).toHaveBeenCalledWith(mappedAcaadError, expect.anything());
     });
   });
 });
