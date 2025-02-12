@@ -1,0 +1,10 @@
+{
+  "changes": [
+    {
+      "packageName": "@acaad/abstractions",
+      "comment": "Interface updates to match error handling",
+      "type": "none"
+    }
+  ],
+  "packageName": "@acaad/abstractions"
+}
