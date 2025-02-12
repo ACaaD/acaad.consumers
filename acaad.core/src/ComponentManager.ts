@@ -68,7 +68,6 @@ export class ComponentManager {
   private _eventQueue: Queue.Queue<AcaadPopulatedEvent>;
   private _openTelLayer: () => Layer.Layer<Resource<Configuration>>;
 
-  private static _instanceNumber = 0;
   public constructor(
     @inject(DependencyInjectionTokens.ConnectedServiceAdapter) serviceAdapter: IConnectedServiceAdapter,
     @inject(DependencyInjectionTokens.ConnectionManager) connectionManager: ConnectionManager,
@@ -77,8 +76,6 @@ export class ComponentManager {
     @inject(DependencyInjectionTokens.ComponentModel) componentModel: IComponentModel,
     @inject(DependencyInjectionTokens.OpenTelLayer) openTelLayer: () => Layer.Layer<Resource<Configuration>>
   ) {
-    ComponentManager._instanceNumber++;
-
     this._appState = 'Initialized';
     this._abortController = new AbortController();
 
@@ -473,7 +470,7 @@ export class ComponentManager {
   }
 
   async startAsync(): Promise<boolean> {
-    this._logger.logInformation(`[${ComponentManager._instanceNumber}] Starting component manager.`);
+    this._logger.logInformation(`Starting component manager.`);
     this._appState = 'Starting';
 
     const result = await Effect.runPromiseExit(
@@ -505,9 +502,6 @@ export class ComponentManager {
       this.runEventListener.pipe(
         Effect.onError((err) => {
           if (Cause.isInterruptType(err)) {
-            console.log(err);
-            console.error(Cause.prettyErrors(err));
-
             this._logger.logDebug(
               'Event listener fiber was interrupted. This is normal in a graceful shutdown.'
             );
@@ -590,7 +584,7 @@ export class ComponentManager {
   private stopEff = Effect.gen(this, function* () {
     this._appState = 'Stopping';
 
-    this._logger.logDebug(`[${ComponentManager._instanceNumber}] Stopping hub connections.`);
+    this._logger.logDebug(`Stopping hub connections.`);
     const connections = yield* this._connectionManager.stopHubConnections.pipe(
       Effect.withSpan('acaad:shutdown:stop-hub-connections')
     );
@@ -600,14 +594,14 @@ export class ComponentManager {
       Effect.withSpan('acaad:shutdown:stop-event-queue')
     );
 
-    this._logger.logDebug(`[${ComponentManager._instanceNumber}] Interrupting event listener fiber.`);
+    this._logger.logDebug(`Interrupting event listener fiber.`);
     if (this.listenerFiber !== null) {
       yield* Fiber.interrupt(this.listenerFiber).pipe(
         Effect.withSpan('acaad:shutdown:interrupt-listener-fiber')
       );
     }
 
-    this._logger.logDebug(`[${ComponentManager._instanceNumber}] Shut down all concurrent processes.`);
+    this._logger.logDebug(`Shut down all concurrent processes.`);
     this._appState = 'Stopped';
   });
 

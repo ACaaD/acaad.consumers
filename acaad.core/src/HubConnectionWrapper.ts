@@ -130,9 +130,7 @@ export class HubConnectionWrapper {
   }
 
   private raiseHubStartedEvent(host: AcaadHost): Effect.Effect<boolean> {
-    console.log(`--- [${new Date().toISOString()}] Connected. Queuing. ${this.eventQueue.isActive()}`);
     this.logger.logDebug(`Hub connection to ${host.friendlyName} started.`);
-
     return this.eventQueue.offer(new AcaadServerConnectedEvent(host));
   }
 
