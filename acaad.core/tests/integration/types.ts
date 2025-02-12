@@ -11,7 +11,6 @@ import { ComponentManager } from '../../src';
 import { Mock } from 'ts-jest-mocker';
 import { DependencyContainer } from 'tsyringe';
 import { ServerMocks } from '@acaad/testing';
-import {} from '@acaad/abstractions';
 
 export interface IStateObserver {
   waitForSpanAsync(spanName: string, timeoutMs?: number): Promise<void>;
