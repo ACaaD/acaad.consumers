@@ -3,5 +3,13 @@
   "setupFiles": [
     "<rootDir>/dist/cjs/tests/jest-global-setup.js",
     "<rootDir>/dist/cjs/tests/ts-jest-mocker.setup.js"
+  ],
+  "coveragePathIgnorePatterns": [
+    "/tests/integration/factories/.*",
+    "/tests/integration/framework/.*",
+    "/tests/integration/mocks/.*",
+    "/tests/integration/types\\.(ts|js)",
+    "/tests/integration/shared-flows\\.(ts|js)",
+    "\\.performance-test\\.(ts|js)"
   ]
 }
