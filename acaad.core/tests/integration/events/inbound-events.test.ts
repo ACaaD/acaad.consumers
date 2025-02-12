@@ -1,11 +1,11 @@
-import { IAcaadIntegrationTestContext, IStateObserver } from './types';
-import { ComponentManager } from '../../src';
-import { createIntegrationTestContext } from './test-setup';
-import { TestEventFactory } from './factories/test-event-factory';
+import { IAcaadIntegrationTestContext, IStateObserver } from '../types';
+import { ComponentManager } from '../../../src';
+import { createIntegrationTestContext } from '../framework/test-setup';
+import { TestEventFactory } from '../factories/test-event-factory';
 
 import { IConnectedServiceAdapter, ComponentType } from '@acaad/abstractions';
 
-describe('signalr connection', () => {
+describe('inbound events', () => {
   let intTestContext: IAcaadIntegrationTestContext;
   let instance: ComponentManager;
   let serviceAdapterMock: IConnectedServiceAdapter;
@@ -30,7 +30,7 @@ describe('signalr connection', () => {
   it('should drop unhandled event', async () => {
     const checkpoint = stateObserver.waitForSpanAsync('acaad:cs:onUnhandledEvent');
 
-    await intTestContext.serverMocks[0].signalrServer.pushEvent({ abc: 'def' });
+    await intTestContext.getRandomServer().signalrServer.pushEvent({ abc: 'def' });
 
     await checkpoint;
 
@@ -42,21 +42,21 @@ describe('signalr connection', () => {
 
     const checkpoint = stateObserver.waitForSpanAsync('acaad:cs:onUnmappedComponentEvent');
 
-    await intTestContext.serverMocks[0].signalrServer.pushEvent(event);
+    await intTestContext.getRandomServer().signalrServer.pushEvent(event);
     await checkpoint;
 
     expect(serviceAdapterMock.onUnmappedComponentEventAsync).toHaveBeenCalledTimes(1);
   });
 
   it('should process sensor component', async () => {
-    const rndCd = intTestContext.serverMocks[0].getRandomComponent(ComponentType.Sensor);
-    console.log(rndCd);
+    const rndServer = intTestContext.getRandomServer();
+    const rndCd = rndServer.getRandomComponent(ComponentType.Sensor);
 
     const event = TestEventFactory.createComponentOutcomeEvent(rndCd.toIdentifier());
 
     const checkpoint = stateObserver.waitForSpanAsync('acaad:cs:updateComponentState');
 
-    await intTestContext.serverMocks[0].signalrServer.pushEvent(event);
+    await rndServer.signalrServer.pushEvent(event);
     await checkpoint;
 
     expect(serviceAdapterMock.onUnmappedComponentEventAsync).toHaveBeenCalledTimes(0);

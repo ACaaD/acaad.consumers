@@ -1,5 +1,14 @@
 {
   "extends": "@rushstack/heft-jest-plugin/includes/jest-shared.config.json",
   "roots": ["<rootDir>/dist/cjs/tests/unit"],
-  "testMatch": ["<rootDir>/dist/cjs/tests/unit/**/*.test.{cjs,js}"]
+  "testMatch": ["<rootDir>/dist/cjs/tests/unit/**/*.test.{cjs,js}"],
+  "reporters": [
+    "default",
+    [
+      "<rootDir>/node_modules/@acaad/toolchain/tests/reporters/test-duration-reporter",
+      {
+        "numTests": 5
+      }
+    ]
+  ]
 }

@@ -1,12 +1,13 @@
 import { IAcaadIntegrationTestContext } from './types';
-import { createPerformanceTestContext } from './test-setup';
+import { createPerformanceTestContext } from './framework/test-setup';
 
 const TIMEOUT = 120 * 1_000;
 jest.setTimeout(TIMEOUT);
 
-describe('performance', () => {
+describe('component creation', () => {
   const SERVER_COUNT = 5;
   const COMPONENT_COUNT_PER_SERVER = 500;
+  const EXPECTED_COMPONENT_COUNT = SERVER_COUNT * COMPONENT_COUNT_PER_SERVER * 3;
 
   let intTestContext: IAcaadIntegrationTestContext;
 
@@ -24,14 +25,12 @@ describe('performance', () => {
     await intTestContext.disposeAsync();
   }, TIMEOUT);
 
-  it('should start successfully', async () => {
+  it(`should sync ${EXPECTED_COMPONENT_COUNT} components`, async () => {
     const { instance, serviceAdapterMock } = intTestContext;
 
     const success = await instance.createMissingComponentsAsync();
 
     expect(serviceAdapterMock.createServerModelAsync).toHaveBeenCalledTimes(SERVER_COUNT);
-    expect(serviceAdapterMock.createComponentModelAsync).toHaveBeenCalledTimes(
-      SERVER_COUNT * COMPONENT_COUNT_PER_SERVER * 3
-    );
+    expect(serviceAdapterMock.createComponentModelAsync).toHaveBeenCalledTimes(EXPECTED_COMPONENT_COUNT);
   });
 });

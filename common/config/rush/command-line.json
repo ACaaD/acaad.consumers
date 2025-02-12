@@ -12,6 +12,13 @@
    */
   "commands": [
     {
+      "name": "test:coverage",
+      "commandKind": "bulk",
+      "summary": "Runs test:coverage of all projects.",
+      "enableParallelism": true,
+      "ignoreMissingScript": true
+    },
+    {
       "name": "prettier",
       "commandKind": "global",
       "summary": "Used by the pre-commit Git hook. This command invokes Prettier to reformat staged changes.",

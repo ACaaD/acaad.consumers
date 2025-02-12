@@ -1,11 +1,11 @@
-import { IAcaadIntegrationTestContext } from './types';
-import { ComponentManager } from '../../src';
-import { createIntegrationTestContext } from './test-setup';
+import { IAcaadIntegrationTestContext } from '../types';
+import { ComponentManager } from '../../../src';
+import { createIntegrationTestContext } from '../framework/test-setup';
 import { Mock } from 'ts-jest-mocker';
 
 import { IConnectedServiceAdapter, ICsLogger } from '@acaad/abstractions';
 
-describe('signalr connection', () => {
+describe('unreachable target', () => {
   let intTestContext: IAcaadIntegrationTestContext;
   let instance: ComponentManager;
   let serviceAdapterMock: IConnectedServiceAdapter;
@@ -15,7 +15,7 @@ describe('signalr connection', () => {
     intTestContext = await createIntegrationTestContext();
     instance = intTestContext.instance;
     serviceAdapterMock = intTestContext.serviceAdapterMock;
-    loggerMock = intTestContext.loggerMock;
+    loggerMock = intTestContext.getLoggerMock();
 
     await intTestContext.startAllAsync();
   });

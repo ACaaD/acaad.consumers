@@ -1,6 +1,6 @@
 import { IAcaadServer } from './index';
 import { FakeSignalrHub } from '@fakehost/signalr';
-import { getNextPortAsync } from '../utility';
+import { getNextPortAsync, getTestLogger, LogFunc } from '../utility';
 import { createServerSignalr } from '@fakehost/signalr/server';
 import {
   HttpTransportType,
@@ -39,20 +39,25 @@ const hubs = {
   eventHub: fakeEventService
 };
 
-function srClientLog(logLevel: LogLevel, message: string) {
-  if (logLevel >= LogLevel.Information) {
-    console.log(`[M-FWK][${new Date().toISOString()}][${LogLevel[logLevel]}] ${message}`);
-  }
-}
-
 export class AcaadSignalRController {
   private hubConnection: HubConnection;
+  private readonly log: LogFunc;
+
+  srClientLog(logLevel: LogLevel, message: string) {
+    if (logLevel >= LogLevel.Information) {
+      this.log(`[${LogLevel[logLevel]}] ${message}`);
+    }
+  }
+
   constructor(port: number) {
+    this.log = getTestLogger('SRController');
+    this.srClientLog = this.srClientLog.bind(this);
+
     const signalrUrl = `http://localhost:${port}/events`;
 
     this.hubConnection = new HubConnectionBuilder()
       .configureLogging({
-        log: srClientLog
+        log: this.srClientLog
       } as ILogger)
       .withUrl(signalrUrl, {
         skipNegotiation: true,
@@ -68,7 +73,7 @@ export class AcaadSignalRController {
   public async startAsync() {
     const startMs = Date.now();
     await this.hubConnection.start();
-    console.log(`[M-FWK] SignalR controller client connected in ${Date.now() - startMs}ms.`);
+    this.log(`SignalR controller client connected in ${Date.now() - startMs}ms.`);
   }
 
   public async disposeAsync() {
@@ -126,6 +131,5 @@ export class AcaadSignalRServer implements IAcaadSignalRServer {
 }
 
 export const pushEvent = async function (this: typeof fakeEventService.thisInstance, event: unknown) {
-  console.log('[M-FWK] Received event to distribute.');
   await this.Clients.All.receiveEvent(event);
 };

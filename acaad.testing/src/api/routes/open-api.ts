@@ -1,5 +1,6 @@
 import { IComponentConfiguration, IMockedComponentModel } from '../types';
 import { ComponentDescriptor } from '@acaad/abstractions';
+import { getTestLogger } from '../../utility';
 
 const defaultResponses = {
   responses: {
@@ -96,6 +97,8 @@ function getSwitchComponent(cd: ComponentDescriptor) {
 }
 
 function openApi(componentModel: IMockedComponentModel) {
+  const log = getTestLogger('open-api-route');
+
   const startMs = Date.now();
 
   let pathObj = (componentModel.sensors ?? []).reduce(
@@ -122,7 +125,7 @@ function openApi(componentModel: IMockedComponentModel) {
     pathObj
   );
 
-  console.log(`[T-FWK] Generated path object in ${Date.now() - startMs}ms.`);
+  log(`Generated path object in ${Date.now() - startMs}ms.`);
   const openApiBody = {
     openapi: '3.0.0',
     info: {

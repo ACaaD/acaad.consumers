@@ -1,6 +1,6 @@
 import { IAcaadIntegrationTestContext } from './types';
 import { ComponentManager } from '../../src';
-import { createIntegrationTestContext } from './test-setup';
+import { createIntegrationTestContext } from './framework/test-setup';
 
 import { IConnectedServiceAdapter } from '@acaad/abstractions';
 

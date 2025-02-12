@@ -1,49 +1,54 @@
 import { IAcaadIntegrationTestContext } from './types';
-import { createIntegrationTestContext } from './test-setup';
-import { ComponentManager } from '../../src';
-
-import { IConnectedServiceAdapter } from '@acaad/abstractions';
+import { createIntegrationTestContext } from './framework/test-setup';
+import { beforeEach } from 'node:test';
 
 describe('component creation', () => {
-  let intTestContext: IAcaadIntegrationTestContext;
+  let sensorTestContext: IAcaadIntegrationTestContext;
+  let buttonTestContext: IAcaadIntegrationTestContext;
+  let switchTestContext: IAcaadIntegrationTestContext;
 
-  afterEach(async () => {
-    await intTestContext.disposeAsync();
+  afterAll(async () => {
+    await Promise.all(
+      [sensorTestContext, buttonTestContext, switchTestContext].map((ctx) => ctx.disposeAsync())
+    );
+  });
+
+  beforeAll(async () => {
+    [sensorTestContext, buttonTestContext, switchTestContext] = await Promise.all([
+      createIntegrationTestContext(1, {
+        sensorCount: 1
+      }),
+      createIntegrationTestContext(1, {
+        buttonCount: 1
+      }),
+      createIntegrationTestContext(1, {
+        switchCount: 1
+      })
+    ]);
+
+    await Promise.all(
+      [sensorTestContext, buttonTestContext, switchTestContext].map((ctx) => ctx.startAllAsync())
+    );
   });
 
   it('should sync sensor component', async () => {
-    intTestContext = await createIntegrationTestContext(1, {
-      sensorCount: 1
-    });
-    await intTestContext.startAllAsync();
-
-    const result = await intTestContext.instance.createMissingComponentsAsync();
+    const result = await sensorTestContext.instance.createMissingComponentsAsync();
     expect(result).toBe(true);
 
-    expect(intTestContext.serviceAdapterMock.createComponentModelAsync).toHaveBeenCalledTimes(1);
+    expect(sensorTestContext.serviceAdapterMock.createComponentModelAsync).toHaveBeenCalledTimes(1);
   });
 
   it('should sync switch component', async () => {
-    intTestContext = await createIntegrationTestContext(1, {
-      switchCount: 1
-    });
-    await intTestContext.startAllAsync();
-
-    const result = await intTestContext.instance.createMissingComponentsAsync();
+    const result = await buttonTestContext.instance.createMissingComponentsAsync();
     expect(result).toBe(true);
 
-    expect(intTestContext.serviceAdapterMock.createComponentModelAsync).toHaveBeenCalledTimes(1);
+    expect(buttonTestContext.serviceAdapterMock.createComponentModelAsync).toHaveBeenCalledTimes(1);
   });
 
   it('should sync button component', async () => {
-    intTestContext = await createIntegrationTestContext(1, {
-      buttonCount: 1
-    });
-    await intTestContext.startAllAsync();
-
-    const result = await intTestContext.instance.createMissingComponentsAsync();
+    const result = await switchTestContext.instance.createMissingComponentsAsync();
     expect(result).toBe(true);
 
-    expect(intTestContext.serviceAdapterMock.createComponentModelAsync).toHaveBeenCalledTimes(1);
+    expect(switchTestContext.serviceAdapterMock.createComponentModelAsync).toHaveBeenCalledTimes(1);
   });
 });

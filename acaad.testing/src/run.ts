@@ -1,6 +1,9 @@
-import { ServerMocks } from './index';
+import { getTestLogger, ServerMocks } from './index';
 
 let servers: ServerMocks | undefined;
+
+const log = getTestLogger('Servers');
+
 const serverPromise = ServerMocks.createMockServersAsync(
   undefined,
   {
@@ -17,16 +20,16 @@ const serverPromise = ServerMocks.createMockServersAsync(
   servers = s;
   servers
     .startAsync()
-    .then((s) => console.log('started'))
-    .catch((err) => console.error('An error occurred starting servers.', err));
+    .then((s) => log('started'))
+    .catch((err) => log('An error occurred starting servers.', err));
 });
 
 process.on('SIGINT', () => {
-  console.log('Caught interrupt signal');
+  log('Caught interrupt signal');
 
   servers
     ?.disposeAsync()
-    .then(() => console.log('Successfully stopped servers.'))
-    .catch((reason) => console.error('An error occurred stopping servers.', reason))
+    .then(() => log('Successfully stopped servers.'))
+    .catch((reason) => log('An error occurred stopping servers.', reason))
     .finally(() => process.exit());
 });

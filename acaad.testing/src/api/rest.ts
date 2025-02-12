@@ -4,7 +4,7 @@ import { openApiRoutes } from '@mocks-server/plugin-openapi';
 
 import openApi from './routes/open-api';
 import collections from './collections';
-import { getNextPortAsync, getRandomInt } from '../utility';
+import { getNextPortAsync, getRandomInt, getTestLogger, LogFunc } from '../utility';
 import { IComponentConfiguration, IMockedComponentModel, IPortConfiguration } from './types';
 import { ComponentDescriptor, ComponentType } from '@acaad/abstractions';
 
@@ -22,6 +22,7 @@ export class AcaadApiServer implements IAcaadApiServer {
   public adminPort: number;
 
   private componentModel: IMockedComponentModel;
+  private log: LogFunc;
 
   private constructor(
     port: number,
@@ -29,6 +30,8 @@ export class AcaadApiServer implements IAcaadApiServer {
     selectedCollection: string,
     componentConfiguration: IComponentConfiguration
   ) {
+    this.log = getTestLogger('Api');
+
     this.port = port;
     this.adminPort = adminPort;
 
@@ -48,7 +51,8 @@ export class AcaadApiServer implements IAcaadApiServer {
         adminApi: {
           port: adminPort
         }
-      }
+      },
+      log: 'silent'
     });
   }
 

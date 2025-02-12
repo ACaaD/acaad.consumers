@@ -9,6 +9,7 @@ import {
 } from '../model';
 
 import { Option } from 'effect/Option';
+import { AcaadError } from '../errors';
 
 export type ChangeType = 'action' | 'query';
 
@@ -19,7 +20,16 @@ export type OutboundStateChangeCallback = (
   value: Option<unknown>
 ) => Promise<boolean>;
 
-export interface IConnectedServiceAdapter {
+type __funcDef = (...args: any[]) => any;
+export type ConnectedServiceFunction = {
+  [K in keyof IConnectedServiceAdapterFunctional]: IConnectedServiceAdapterFunctional[K] extends
+    | __funcDef
+    | undefined
+    ? K
+    : never;
+}[keyof IConnectedServiceAdapterFunctional];
+
+export interface IConnectedServiceAdapterFunctional {
   getComponentDescriptorByComponent(component: Component): ComponentDescriptor;
 
   transformUnitOfMeasure(uom: AcaadUnitOfMeasure): unknown;
@@ -44,5 +54,13 @@ export interface IConnectedServiceAdapter {
 
   onUnmappedComponentEventAsync?(event: ComponentCommandOutcomeEvent, as: AbortSignal): Promise<void>;
 }
+
+export interface ICsErrorHandler {
+  mapServiceError?(functionName: ConnectedServiceFunction, error: unknown): AcaadError;
+
+  onErrorAsync?(acaadError: AcaadError, as: AbortSignal): Promise<void>;
+}
+
+export interface IConnectedServiceAdapter extends IConnectedServiceAdapterFunctional, ICsErrorHandler {}
 
 export default IConnectedServiceAdapter;

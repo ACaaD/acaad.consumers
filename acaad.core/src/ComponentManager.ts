@@ -600,4 +600,8 @@ export class ComponentManager {
       }
     });
   }
+
+  async forceReconnectAndSync(): Promise<number> {
+    return 0;
+  }
 }

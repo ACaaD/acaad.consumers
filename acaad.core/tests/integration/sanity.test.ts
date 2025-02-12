@@ -1,21 +1,23 @@
 import { IAcaadIntegrationTestContext } from './types';
-import { createIntegrationTestContext } from './test-setup';
+import { createIntegrationTestContext } from './framework/test-setup';
+import { MockCsLogger } from './mocks/MockCsLogger';
+import { sanityCheckGenerator } from './shared-flows';
 
 describe('sanity checks', () => {
   let intTestContext: IAcaadIntegrationTestContext;
 
   beforeAll(async () => {
-    intTestContext = await createIntegrationTestContext();
-    await intTestContext.startAllAsync();
+    const logger = new MockCsLogger();
+    intTestContext = await createIntegrationTestContext(undefined, undefined, logger);
+
+    await intTestContext.startMockServersAsync();
   });
 
   afterAll(async () => {
     await intTestContext.disposeAsync();
   });
 
-  it('should start successfully', async () => {
-    const { instance } = intTestContext;
-
-    expect(instance).not.toBeNull();
+  it('should log process details', async () => {
+    await sanityCheckGenerator(intTestContext)();
   });
 });

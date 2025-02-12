@@ -45,7 +45,20 @@
           "taskPlugin": {
             "pluginPackage": "@rushstack/heft-jest-plugin",
             "options": {
-              "configurationPath": "./config/jest.integration-test.config.json"
+              "configurationPath": "./config/jest.integration.config.json"
+            }
+          }
+        }
+      }
+    },
+    "test-performance": {
+      "phaseDependencies": ["build"],
+      "tasksByName": {
+        "jest": {
+          "taskPlugin": {
+            "pluginPackage": "@rushstack/heft-jest-plugin",
+            "options": {
+              "configurationPath": "./config/jest.performance.config.json"
             }
           }
         }

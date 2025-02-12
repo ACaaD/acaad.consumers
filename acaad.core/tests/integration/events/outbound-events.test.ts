@@ -1,6 +1,6 @@
-import { IAcaadIntegrationTestContext } from './types';
-import { createIntegrationTestContext } from './test-setup';
-import { ComponentManager } from '../../src';
+import { IAcaadIntegrationTestContext } from '../types';
+import { createIntegrationTestContext } from '../framework/test-setup';
+import { ComponentManager } from '../../../src';
 import { ComponentType } from '@acaad/abstractions';
 import { Option } from 'effect';
 
