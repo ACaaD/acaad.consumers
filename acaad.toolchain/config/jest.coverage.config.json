@@ -6,5 +6,6 @@
   "clearMocks": true,
   "coverageDirectory": "<rootDir>/coverage",
   "collectCoverage": true,
-  "collectCoverageFrom": ["<rootDir>/dist/cjs/**/*.{cjs,js}"]
+  "collectCoverageFrom": ["<rootDir>/dist/cjs/**/*.{cjs,js}"],
+  "reporters": ["default", "jest-junit"]
 }

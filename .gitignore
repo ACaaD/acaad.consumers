@@ -120,3 +120,6 @@ dist-storybook/
 # Heft temporary files
 .cache/
 .heft/
+
+# JUnit test outcome summary
+junit.xml
