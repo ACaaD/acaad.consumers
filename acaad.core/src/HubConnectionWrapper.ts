@@ -75,6 +75,8 @@ export class HubConnectionWrapper {
 
     this.logger.logTrace(`Attempting to reconnect to '${this.host.friendlyName}' ...`);
     const res = yield* Effect.either(this.startEff);
+
+    console.log(res);
   });
 
   public startEff = Effect.gen(this, function* () {

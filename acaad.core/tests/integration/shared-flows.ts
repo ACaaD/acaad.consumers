@@ -2,10 +2,16 @@ import { IAcaadIntegrationTestContext } from './types';
 import { Option } from 'effect';
 import { TestEventFactory } from './factories/test-event-factory';
 import { ComponentType } from '@acaad/abstractions';
+import { ComponentManager } from '../../src';
 
-export function sanityCheckGenerator(intTestContext: IAcaadIntegrationTestContext) {
+export function sanityCheckGenerator(
+  intTestContext: IAcaadIntegrationTestContext,
+  instanceToUse?: ComponentManager
+) {
   return async () => {
-    const { instance, stateObserver, serviceAdapterMock } = intTestContext;
+    const { instance: instanceFromContext, stateObserver, serviceAdapterMock } = intTestContext;
+
+    const instance = instanceToUse ?? instanceFromContext;
 
     const componentCreationResult = await instance.createMissingComponentsAsync();
 

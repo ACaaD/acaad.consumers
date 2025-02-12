@@ -19,7 +19,7 @@ export class ObservableSpanExporter implements SpanExporter, IStateObserver {
   async waitForSignalRClient(): Promise<void> {
     this.log('Setting up wait promise for signalR client.');
     const startMs = Date.now();
-    await this.waitForSpanAsync('acaad:cs:onServerConnected', 200);
+    await this.waitForSpanAsync('acaad:cs:onServerConnected', 500);
     this.log(`SignalR client connected after ${Date.now() - startMs}ms.`);
   }
 
@@ -31,6 +31,8 @@ export class ObservableSpanExporter implements SpanExporter, IStateObserver {
   }
 
   waitForSpanAsync(spanName: string, timeoutMs: number = 200): Promise<void> {
+    this.log(`Tracking span with name ${spanName}.`);
+
     const startWait = Date.now();
 
     let resolveFunc: (() => void) | undefined;
@@ -72,6 +74,8 @@ export class ObservableSpanExporter implements SpanExporter, IStateObserver {
         this.trackedSpans.delete(span.name);
       });
     }
+
+    spans.forEach((span) => console.log(`${span.name} -> ${span.duration}`));
 
     resultCallback({
       code: ExportResultCode.SUCCESS

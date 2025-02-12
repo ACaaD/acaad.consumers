@@ -12,7 +12,8 @@ export {
   ICsLogger,
   OutboundStateChangeCallback,
   ChangeType,
-  ITokenCache
+  ITokenCache,
+  ConnectedServiceFunction
 } from './interfaces';
 
 export {

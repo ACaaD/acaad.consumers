@@ -8,11 +8,13 @@ import {
   ICsLogger,
   IConnectedServiceAdapter,
   IConnectedServiceContext,
-  AcaadHost
+  AcaadHost,
+  AcaadEvent
 } from '@acaad/abstractions';
 
 export class AcaadIntegrationTestContext implements IAcaadIntegrationTestContext {
   private readonly log: LogFunc;
+  private readonly throwAwayInstances: ComponentManager[] = [];
 
   public serverMocks: ServerMocks[];
   public fwkContainer: DependencyContainer;
@@ -47,6 +49,32 @@ export class AcaadIntegrationTestContext implements IAcaadIntegrationTestContext
     this.loggerMock = loggerMock;
   }
 
+  async startAndWaitForSignalR(): Promise<void> {
+    console.log(this.instance.getState());
+    const checkpoint = this.stateObserver.waitForSignalRClient();
+    await this.instance.startAsync();
+    console.log(this.instance.getState());
+    await checkpoint;
+    console.log(this.instance.getState());
+  }
+
+  getThrowAwayInstance(): ComponentManager {
+    const instance: ComponentManager = this.fwkContainer.resolve(ComponentManager) as ComponentManager;
+    this.throwAwayInstances.push(instance);
+    return instance;
+  }
+
+  async queueEventAndWaitAsync(
+    serverMock: ServerMocks,
+    event: AcaadEvent,
+    spanName: string,
+    timeoutMs: number = 200
+  ): Promise<void> {
+    const checkpoint = this.stateObserver.waitForSpanAsync(spanName, timeoutMs);
+    await serverMock.signalrServer.pushEvent(event);
+    await checkpoint;
+  }
+
   getHosts(): AcaadHost[] {
     return this.serverMocks.map((sm) => sm.getHost());
   }
@@ -66,6 +94,11 @@ export class AcaadIntegrationTestContext implements IAcaadIntegrationTestContext
   }
 
   public async disposeAsync(): Promise<void> {
+    const runningThrowAwayInstances = this.throwAwayInstances.filter((i) => i.getState() !== 'Stopped');
+    if (runningThrowAwayInstances.length > 0) {
+      await Promise.all(this.throwAwayInstances.map((i) => i.shutdownAsync()));
+    }
+
     this.log(`Shutting down instance.`);
     await this.instance.shutdownAsync();
     this.log(`Disposing framework container.`);
@@ -74,6 +107,12 @@ export class AcaadIntegrationTestContext implements IAcaadIntegrationTestContext
 
     await Promise.all([...this.serverMocks.map((sm) => sm.disposeAsync())]);
     this.log(`${this.serverMocks.length} (*2) servers stopped`);
+
+    if (runningThrowAwayInstances.length > 0) {
+      throw new Error(
+        'At least one throw-away instance was not shutdown. To save resources please ensure to stop them as soon as the test is done. Fix the test.'
+      );
+    }
   }
 
   public async startMockServersAsync(): Promise<void> {
