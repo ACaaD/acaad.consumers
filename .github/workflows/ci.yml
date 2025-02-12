@@ -30,3 +30,7 @@ jobs:
         run: node common/scripts/install-run-rush.js rebuild --verbose
       - name: Rush test:coverage
         run: node common/scripts/install-run-rush.js test:coverage --verbose
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
