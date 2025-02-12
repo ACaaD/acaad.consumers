@@ -52,7 +52,7 @@ import {
 } from 'effect';
 import { ApplicationState } from './model/ApplicationState';
 import { QueueWrapper } from './QueueWrapper';
-import { executeCsAdapter } from './utility';
+import { onErrorEff, executeCsAdapter, onErrorEff } from './utility';
 
 class MetadataByComponent extends Data.Class<{ component: Component; metadata: AcaadMetadata[] }> {}
 
@@ -173,7 +173,11 @@ export class ComponentManager {
     this._logger.logInformation('Syncing components from ACAAD servers.');
 
     const result = await Effect.runPromiseExit(
-      this.flowEff.pipe(Effect.withSpan('acaad:sync'), Effect.provide(this._openTelLayer()))
+      this.flowEff.pipe(
+        Effect.withSpan('acaad:sync'),
+        Effect.provide(this._openTelLayer()),
+        Effect.tapError((err) => onErrorEff(this._serviceAdapter, err))
+      )
     );
 
     return Exit.match(result, {
