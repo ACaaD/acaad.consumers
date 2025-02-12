@@ -50,14 +50,12 @@ export class AcaadIntegrationTestContext implements IAcaadIntegrationTestContext
   }
 
   async startAndWaitForSignalR(): Promise<void> {
-    console.log(this.instance.getState());
     const checkpoint = this.stateObserver.waitForSignalRClient();
     const start = await this.instance.startAsync();
-    console.log('Start+Wait', start);
     expect(start).toBe(true);
-    console.log(this.instance.getState());
+
     await checkpoint;
-    console.log(this.instance.getState());
+
     await this.instance.createMissingComponentsAsync();
   }
 

@@ -1,6 +1,10 @@
 import { Effect } from 'effect';
-import { AcaadError, ConnectedServiceFunction, IConnectedServiceAdapter } from '@acaad/abstractions';
-import { AcaadFatalError } from '@acaad/abstractions/src/errors/AcaadFatalError';
+import {
+  AcaadError,
+  AcaadFatalError,
+  ConnectedServiceFunction,
+  IConnectedServiceAdapter
+} from '@acaad/abstractions';
 
 export function executeCsAdapter<TOut>(
   serviceAdapter: IConnectedServiceAdapter,

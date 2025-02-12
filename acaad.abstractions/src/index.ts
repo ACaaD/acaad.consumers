@@ -1,5 +1,6 @@
 export {
   AcaadError,
+  AcaadFatalError,
   AcaadServerUnreachableError,
   CalloutError,
   ConfigurationError,
