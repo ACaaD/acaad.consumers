@@ -19,7 +19,7 @@ export class ObservableSpanExporter implements SpanExporter, IStateObserver {
   async waitForSignalRClient(): Promise<void> {
     this.log('Setting up wait promise for signalR client.');
     const startMs = Date.now();
-    await this.waitForSpanAsync('acaad:cs:onServerConnected', 500);
+    await this.waitForSpanAsync('acaad:cs:onServerConnected');
     this.log(`SignalR client connected after ${Date.now() - startMs}ms.`);
   }
 
