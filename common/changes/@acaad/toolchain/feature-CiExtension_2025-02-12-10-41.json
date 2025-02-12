@@ -1,0 +1,10 @@
+{
+  "changes": [
+    {
+      "packageName": "@acaad/toolchain",
+      "comment": "Add jest-junit reporter for test-metric extraction",
+      "type": "none"
+    }
+  ],
+  "packageName": "@acaad/toolchain"
+}
