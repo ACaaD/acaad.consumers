@@ -17,7 +17,8 @@ import {
   AcaadServerConnectedEvent,
   AcaadServerDisconnectedEvent,
   AcaadUnhandledEventReceivedEvent,
-  ComponentDescriptor
+  ComponentDescriptor,
+  ConnectedServiceFunction
 } from '@acaad/abstractions';
 
 import { inject, injectable } from 'tsyringe';
@@ -51,6 +52,7 @@ import {
 } from 'effect';
 import { ApplicationState } from './model/ApplicationState';
 import { QueueWrapper } from './QueueWrapper';
+import { executeCsAdapter } from './utility';
 
 class MetadataByComponent extends Data.Class<{ component: Component; metadata: AcaadMetadata[] }> {}
 
@@ -278,19 +280,19 @@ export class ComponentManager {
   ): Effect.Effect<void, AcaadError> {
     return Effect.gen(this, function* () {
       yield* sem.take(1).pipe(Effect.withSpan('acaad:sem:wait'));
-      const eff = Effect.tryPromise({
-        try: () => this._serviceAdapter.createServerModelAsync(server),
-        catch: (error) => new CalloutError(error) as AcaadError
-      }).pipe(
+      const res = executeCsAdapter(this._serviceAdapter, 'createServerModelAsync', (ad, as) =>
+        ad.createServerModelAsync(server, as)
+      ).pipe(
         Effect.withSpan('acaad:sync:cs:server-metadata', {
           attributes: {
             server: server.host.friendlyName
           }
         })
       );
+
       yield* sem.release(1);
 
-      return yield* eff;
+      return yield* res;
     });
   }
 
@@ -326,10 +328,9 @@ export class ComponentManager {
 
   private processSingleComponent(cmp: Component): Effect.Effect<string, AcaadError> {
     return Effect.gen(this, function* () {
-      yield* Effect.tryPromise({
-        try: () => this._serviceAdapter.createComponentModelAsync(cmp),
-        catch: (error) => new CalloutError(error)
-      });
+      yield* executeCsAdapter(this._serviceAdapter, 'createComponentModelAsync', (ad, as) =>
+        ad.createComponentModelAsync(cmp, as)
+      );
 
       return cmp.name;
     });
@@ -382,7 +383,7 @@ export class ComponentManager {
     return Exit.isSuccess(result);
   }
 
-  handleInboundStateChangeAsync(event: AcaadPopulatedEvent): Effect.Effect<void, CalloutError> {
+  handleInboundStateChangeAsync(event: AcaadPopulatedEvent): Effect.Effect<void, AcaadError> {
     const isComponentCommandOutcomeEvent = (e: AcaadEvent): e is ComponentCommandOutcomeEvent =>
       e.name === 'ComponentCommandOutcomeEvent';
 
@@ -400,21 +401,20 @@ export class ComponentManager {
       if (Option.isSome(component)) {
         const cd = this._serviceAdapter.getComponentDescriptorByComponent(component.value);
 
-        yield* Effect.tryPromise({
-          try: () => this._serviceAdapter.updateComponentStateAsync(cd, event.outcome),
-          catch: (error) => new CalloutError('An error occurred updating component state..', error)
-        }).pipe(Effect.withSpan('acaad:cs:updateComponentState'));
+        yield* executeCsAdapter(this._serviceAdapter, 'updateComponentStateAsync', (ad, as) =>
+          ad.updateComponentStateAsync(cd, event.outcome, as)
+        ).pipe(Effect.withSpan('acaad:cs:updateComponentState'));
       } else {
         this._logger.logWarning(
           `Received event for unknown component '${event.name}' from host ${event.host.friendlyName}`
         );
 
-        yield* Effect.tryPromise({
-          try: (as: AbortSignal) =>
-            this._serviceAdapter.onUnmappedComponentEventAsync?.call(this._serviceAdapter, event, as) ??
-            Promise.resolve(),
-          catch: (error) => new CalloutError('An error occurred updating component state..', error)
-        }).pipe(Effect.withSpan('acaad:cs:onUnmappedComponentEvent'));
+        return yield* executeCsAdapter(
+          this._serviceAdapter,
+          'onUnmappedComponentEventAsync',
+          (ad, as) =>
+            ad.onUnmappedComponentEventAsync?.call(this._serviceAdapter, event, as) ?? Promise.resolve()
+        ).pipe(Effect.withSpan('acaad:cs:onUnmappedComponentEvent'));
       }
     });
   }
@@ -461,11 +461,9 @@ export class ComponentManager {
         Effect.withSpan('acaad:startup:start-hub-connections')
       );
 
-      yield* Effect.tryPromise({
-        try: (as) =>
-          this._serviceAdapter.registerStateChangeCallbackAsync(this.handleOutboundStateChangeAsync, as),
-        catch: (error) => new CalloutError('An error occurred registering state change callback.', error)
-      }).pipe(Effect.withSpan('acaad:startup:cs:register-state-chance-callback'));
+      yield* executeCsAdapter(this._serviceAdapter, 'registerStateChangeCallbackAsync', (ad, as) =>
+        ad.registerStateChangeCallbackAsync(this.handleOutboundStateChangeAsync, as)
+      ).pipe(Effect.withSpan('acaad:startup:cs:register-state-chance-callback'));
     });
   }
 
@@ -538,38 +536,34 @@ export class ComponentManager {
         return yield* this.handleInboundStateChangeAsync(event);
       }
 
-      // TODO: Wrong error raised
       if (event.name === AcaadServerConnectedEvent.Tag) {
         this._logger.logDebug(`Events: Server ${event.host.friendlyName} connected.`);
 
-        return yield* Effect.tryPromise({
-          try: () => this._serviceAdapter.onServerConnectedAsync(event.host),
-          catch: (error) => new CalloutError('An error occurred handling server connected event.', error)
-        }).pipe(Effect.withSpan('acaad:cs:onServerConnected'));
+        return yield* executeCsAdapter(this._serviceAdapter, 'onServerConnectedAsync', (ad, as) =>
+          ad.onServerConnectedAsync(event.host, as)
+        ).pipe(Effect.withSpan('acaad:cs:onServerConnected'));
       }
 
-      // TODO: Wrong error raised
       if (event.name === AcaadServerDisconnectedEvent.Tag) {
-        return yield* Effect.tryPromise({
-          try: () => this._serviceAdapter.onServerDisconnectedAsync(event.host),
-          catch: (error) => new CalloutError('An error occurred handling server connected event.', error)
-        }).pipe(Effect.withSpan('acaad:cs:onServerDisconnected'));
+        return yield* executeCsAdapter(this._serviceAdapter, 'onServerDisconnectedAsync', (ad, as) =>
+          ad.onServerDisconnectedAsync(event.host, as)
+        ).pipe(Effect.withSpan('acaad:cs:onServerDisconnected'));
       }
 
-      // TODO: Wrong error raised
       if (event.name === AcaadUnhandledEventReceivedEvent.Tag) {
         this._logger.logDebug(`Discarded unhandled server2client event: '${event.name}'`);
         this._logger.logTrace(`Dropped event full: '${JSON.stringify(event)}'.`);
 
-        return yield* Effect.tryPromise({
-          try: (as) =>
-            this._serviceAdapter.onUnhandledEventAsync?.call(
+        return yield* executeCsAdapter(
+          this._serviceAdapter,
+          'onUnhandledEventAsync',
+          (ad, as) =>
+            ad.onUnhandledEventAsync?.call(
               this._serviceAdapter,
               event as AcaadUnhandledEventReceivedEvent,
               as
-            ) ?? Promise.resolve(),
-          catch: (error) => new CalloutError('An error occurred handling unknown event event.', error)
-        }).pipe(Effect.withSpan('acaad:cs:onUnhandledEvent'));
+            ) ?? Promise.resolve()
+        ).pipe(Effect.withSpan('acaad:cs:onUnhandledEvent'));
       }
 
       this._logger.logWarning(`Discarded valid, but unhandled event: '${event.name}'`);

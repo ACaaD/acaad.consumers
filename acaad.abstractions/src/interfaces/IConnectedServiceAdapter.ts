@@ -34,17 +34,17 @@ export interface IConnectedServiceAdapterFunctional {
 
   transformUnitOfMeasure(uom: AcaadUnitOfMeasure): unknown;
 
-  createServerModelAsync(server: AcaadServerMetadata): Promise<void>;
+  createServerModelAsync(server: AcaadServerMetadata, as: AbortSignal): Promise<void>;
 
-  onServerConnectedAsync(server: AcaadHost): Promise<void>;
+  onServerConnectedAsync(server: AcaadHost, as: AbortSignal): Promise<void>;
 
-  onServerDisconnectedAsync(server: AcaadHost): Promise<void>;
+  onServerDisconnectedAsync(server: AcaadHost, as: AbortSignal): Promise<void>;
 
-  createComponentModelAsync(component: Component): Promise<void>;
+  createComponentModelAsync(component: Component, as: AbortSignal): Promise<void>;
 
   registerStateChangeCallbackAsync(cb: OutboundStateChangeCallback, as: AbortSignal): Promise<void>;
 
-  updateComponentStateAsync(cd: ComponentDescriptor, obj: unknown): Promise<void>;
+  updateComponentStateAsync(cd: ComponentDescriptor, obj: unknown, as: AbortSignal): Promise<void>;
 
   getConnectedServersAsync(as: AbortSignal): Promise<AcaadHost[]>;
 
@@ -56,7 +56,7 @@ export interface IConnectedServiceAdapterFunctional {
 }
 
 export interface ICsErrorHandler {
-  mapServiceError?(functionName: ConnectedServiceFunction, error: unknown): AcaadError;
+  mapServiceError(functionName: ConnectedServiceFunction, error: unknown): AcaadError;
 
   onErrorAsync?(acaadError: AcaadError, as: AbortSignal): Promise<void>;
 }
