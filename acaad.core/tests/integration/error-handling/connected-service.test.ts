@@ -18,6 +18,7 @@ import { beforeEach } from 'node:test';
 import { TestEventFactory } from '../factories/test-event-factory';
 import { ServerMocks } from '@acaad/testing';
 import { MockCsLogger } from '../mocks/MockCsLogger';
+import { setupConnectedServiceMock } from '../mocks/MockServiceAdapter';
 
 describe('connected service error handling', () => {
   let intTestContext: IAcaadIntegrationTestContext;
@@ -46,7 +47,8 @@ describe('connected service error handling', () => {
   });
 
   beforeEach(async () => {
-    (serviceAdapterMock.mapServiceError as jest.Mock).mockReturnValue(mappedAcaadError);
+    serviceAdapterMock.mapServiceError = jest.fn();
+    serviceAdapterMock.mapServiceError.mockReturnValue(mappedAcaadError);
   });
 
   afterAll(async () => {
@@ -67,18 +69,22 @@ describe('connected service error handling', () => {
   });
 
   describe('createServerModelAsync', () => {
-    const failedFunction: ConnectedServiceFunction = 'createComponentModelAsync';
+    const failedFunction: ConnectedServiceFunction = 'createServerModelAsync';
 
-    beforeEach(() => {
-      serviceAdapterMock.createServerModelAsync.mockRejectedValue(recoverableError);
+    beforeAll(() => {
+      setupConnectedServiceMock(intTestContext);
     });
 
     it('should pass occurred error to mapper', async () => {
+      serviceAdapterMock.createServerModelAsync.mockRejectedValue(recoverableError);
+
       await instance.createMissingComponentsAsync();
       expect(serviceAdapterMock.mapServiceError).toHaveBeenCalledWith(failedFunction, recoverableError);
     });
 
     it('should pass mapped acaad error to error event listener', async () => {
+      serviceAdapterMock.createServerModelAsync.mockRejectedValue(recoverableError);
+
       await instance.createMissingComponentsAsync();
       expect(serviceAdapterMock.onErrorAsync).toHaveBeenCalledWith(recoverableError);
     });
@@ -87,16 +93,23 @@ describe('connected service error handling', () => {
   describe('createComponentModelAsync', () => {
     const failedFunction: ConnectedServiceFunction = 'createComponentModelAsync';
 
-    beforeEach(() => {
-      serviceAdapterMock.createComponentModelAsync.mockRejectedValue(recoverableError);
+    beforeAll(() => {
+      setupConnectedServiceMock(intTestContext);
     });
 
     it('should pass occurred error to mapper', async () => {
-      await instance.createMissingComponentsAsync();
+      serviceAdapterMock.createComponentModelAsync.mockRejectedValue(recoverableError);
+
+      const result = await instance.createMissingComponentsAsync();
+
+      expect(result).toBe(false);
+      expect(serviceAdapterMock.mapServiceError).toHaveBeenCalled();
       expect(serviceAdapterMock.mapServiceError).toHaveBeenCalledWith(failedFunction, recoverableError);
     });
 
     it('should pass mapped acaad error to error event listener', async () => {
+      serviceAdapterMock.createComponentModelAsync.mockRejectedValue(recoverableError);
+
       await instance.createMissingComponentsAsync();
       expect(serviceAdapterMock.onErrorAsync).toHaveBeenCalledWith(recoverableError);
     });
@@ -105,23 +118,27 @@ describe('connected service error handling', () => {
   describe('registerStateChangeCallbackAsync', () => {
     const failedFunction: ConnectedServiceFunction = 'registerStateChangeCallbackAsync';
 
-    beforeEach(() => {
-      serviceAdapterMock.registerStateChangeCallbackAsync.mockRejectedValue(recoverableError);
+    beforeAll(() => {
+      setupConnectedServiceMock(intTestContext);
     });
 
     it('should pass occurred error to mapper', async () => {
+      serviceAdapterMock.registerStateChangeCallbackAsync.mockRejectedValue(recoverableError);
+
       throwAwayInstance = intTestContext.getThrowAwayInstance();
       const start = await throwAwayInstance.startAsync();
 
-      expect(start).toBe(true);
+      expect(start).toBe(false);
       expect(serviceAdapterMock.mapServiceError).toHaveBeenCalledWith(failedFunction, recoverableError);
     });
 
     it('should pass mapped acaad error to error event listener', async () => {
+      serviceAdapterMock.registerStateChangeCallbackAsync.mockRejectedValue(recoverableError);
+
       throwAwayInstance = intTestContext.getThrowAwayInstance();
       const start = await throwAwayInstance.startAsync();
 
-      expect(start).toBe(true);
+      expect(start).toBe(false);
       expect(serviceAdapterMock.onErrorAsync).toHaveBeenCalledWith(recoverableError);
     });
   });
@@ -130,11 +147,8 @@ describe('connected service error handling', () => {
     const failedFunction: ConnectedServiceFunction = 'updateComponentStateAsync';
 
     beforeAll(async () => {
+      setupConnectedServiceMock(intTestContext);
       await intTestContext.startAndWaitForSignalR();
-    });
-
-    beforeEach(async () => {
-      serviceAdapterMock.updateComponentStateAsync.mockRejectedValue(recoverableError);
     });
 
     function getEventData(): [ServerMocks, AcaadEvent] {
@@ -154,6 +168,8 @@ describe('connected service error handling', () => {
     });
 
     it('should pass occurred error to mapper', async () => {
+      serviceAdapterMock.updateComponentStateAsync.mockRejectedValue(recoverableError);
+
       const [srv, event] = getEventData();
       await intTestContext.queueEventAndWaitAsync(srv, event, 'acaad:cs:updateComponentState');
 
@@ -161,6 +177,8 @@ describe('connected service error handling', () => {
     });
 
     it('should pass mapped acaad error to error event listener', async () => {
+      serviceAdapterMock.updateComponentStateAsync.mockRejectedValue(recoverableError);
+
       const [srv, event] = getEventData();
       await intTestContext.queueEventAndWaitAsync(srv, event, 'acaad:cs:updateComponentState');
 

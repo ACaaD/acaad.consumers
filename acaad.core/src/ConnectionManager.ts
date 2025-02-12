@@ -14,7 +14,8 @@ import {
   AcaadPopulatedEvent,
   IConnectedServiceAdapter,
   ResponseSchemaError,
-  AcaadServerUnreachableError
+  AcaadServerUnreachableError,
+  ConnectedServiceFunction
 } from '@acaad/abstractions';
 
 import { inject, injectable } from 'tsyringe';
@@ -26,6 +27,7 @@ import { map, mapLeft } from 'effect/Either';
 
 import { HubConnectionWrapper } from './HubConnectionWrapper';
 import { QueueWrapper } from './QueueWrapper';
+import { executeCsAdapter } from './utility';
 
 class AxiosSvc extends Context.Tag('axios')<AxiosSvc, { readonly instance: AxiosInstance }>() {}
 
@@ -54,11 +56,9 @@ export class ConnectionManager {
   }
 
   public getHosts = Effect.gen(this, function* () {
-    return yield* Effect.tryPromise({
-      try: (as) => this.connectedServiceAdapter.getConnectedServersAsync(as),
-      // TODO: Error handling
-      catch: (unknown) => new CalloutError(unknown)
-    });
+    return yield* executeCsAdapter(this.connectedServiceAdapter, 'getConnectedServersAsync', (ad, as) =>
+      ad.getConnectedServersAsync(as)
+    ).pipe(Effect.withSpan('acaad:cs:onServerDisconnected'));
   });
 
   private async retrieveAuthenticationAsync(): Promise<OAuth2Token> {
