@@ -75,8 +75,6 @@ export class ObservableSpanExporter implements SpanExporter, IStateObserver {
       });
     }
 
-    spans.forEach((span) => console.log(`${span.name} -> ${span.duration}`));
-
     resultCallback({
       code: ExportResultCode.SUCCESS
     });
