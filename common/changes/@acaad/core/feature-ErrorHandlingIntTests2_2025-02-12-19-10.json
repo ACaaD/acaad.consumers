@@ -1,0 +1,10 @@
+{
+  "changes": [
+    {
+      "packageName": "@acaad/core",
+      "comment": "Error handling + int tests",
+      "type": "none"
+    }
+  ],
+  "packageName": "@acaad/core"
+}
