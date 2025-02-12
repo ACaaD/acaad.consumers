@@ -25,6 +25,7 @@ import { Context, Effect, Either, pipe, Queue, Schema, Stream } from 'effect';
 import { map, mapLeft } from 'effect/Either';
 
 import { HubConnectionWrapper } from './HubConnectionWrapper';
+import { QueueWrapper } from './QueueWrapper';
 
 class AxiosSvc extends Context.Tag('axios')<AxiosSvc, { readonly instance: AxiosInstance }>() {}
 
@@ -42,7 +43,7 @@ export class ConnectionManager {
     @inject(DependencyInjectionTokens.ConnectedServiceAdapter)
     private connectedServiceAdapter: IConnectedServiceAdapter,
     @inject(DependencyInjectionTokens.EventQueue)
-    private eventQueue: Queue.Queue<AcaadPopulatedEvent>
+    private eventQueueWrapper: QueueWrapper
   ) {
     this.axiosInstance = axios.create({
       headers: {
@@ -166,7 +167,7 @@ export class ConnectionManager {
 
     const startedHosts = Stream.fromIterable(hosts).pipe(
       Stream.filter((host) => this.hubConnections.find((hc) => hc.host === host) === undefined),
-      Stream.map((host) => new HubConnectionWrapper(host, this.eventQueue, this.logger)),
+      Stream.map((host) => new HubConnectionWrapper(host, this.eventQueueWrapper.getQueue(), this.logger)),
       Stream.tap((hc) => Effect.succeed(this.hubConnections.push(hc))),
       Stream.mapEffect((hc) => hc.startEff),
       Stream.either,

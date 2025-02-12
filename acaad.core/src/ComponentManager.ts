@@ -50,6 +50,7 @@ import {
   Stream
 } from 'effect';
 import { ApplicationState } from './model/ApplicationState';
+import { QueueWrapper } from './QueueWrapper';
 
 class MetadataByComponent extends Data.Class<{ component: Component; metadata: AcaadMetadata[] }> {}
 
@@ -72,7 +73,7 @@ export class ComponentManager {
     @inject(DependencyInjectionTokens.ConnectedServiceAdapter) serviceAdapter: IConnectedServiceAdapter,
     @inject(DependencyInjectionTokens.ConnectionManager) connectionManager: ConnectionManager,
     @inject(DependencyInjectionTokens.Logger) logger: ICsLogger,
-    @inject(DependencyInjectionTokens.EventQueue) eventQueue: Queue.Queue<AcaadPopulatedEvent>,
+    @inject(DependencyInjectionTokens.EventQueue) eventQueueWrapper: QueueWrapper,
     @inject(DependencyInjectionTokens.ComponentModel) componentModel: IComponentModel,
     @inject(DependencyInjectionTokens.OpenTelLayer) openTelLayer: () => Layer.Layer<Resource<Configuration>>
   ) {
@@ -86,7 +87,7 @@ export class ComponentManager {
     this._componentModel = componentModel;
 
     this._logger = logger;
-    this._eventQueue = eventQueue;
+    this._eventQueue = eventQueueWrapper.getQueue();
     this._openTelLayer = openTelLayer;
 
     this.handleOutboundStateChangeAsync = this.handleOutboundStateChangeAsync.bind(this);
@@ -471,7 +472,7 @@ export class ComponentManager {
     });
   }
 
-  async startAsync(): Promise<void> {
+  async startAsync(): Promise<boolean> {
     this._logger.logInformation(`[${ComponentManager._instanceNumber}] Starting component manager.`);
     this._appState = 'Starting';
 
@@ -488,23 +489,16 @@ export class ComponentManager {
     });
 
     this._logger.logInformation('Started.');
-    this._appState = 'Running';
+    this._appState = Exit.isSuccess(result) ? 'Running' : 'Crashed';
+
+    return Exit.isSuccess(result);
   }
 
   private listenerFiber: RuntimeFiber<void | number> | null = null;
   private startEventListener = Effect.gen(this, function* () {
-    if (Queue.isShutdown(this._eventQueue)) {
+    if (!this._eventQueue.isActive()) {
       return Effect.fail(new AcaadError('The provided queue is already shut down.'));
     }
-
-    console.error(
-      'Queue - Active: ',
-      this._eventQueue.isActive(),
-      'Shutdown',
-      Effect.runSync(this._eventQueue.isShutdown),
-      'Full',
-      Effect.runSync(this._eventQueue.isFull)
-    );
 
     this.listenerFiber = yield* Effect.forkDaemon(
       // TODO: Use error handler (potentially sharable with comp. model creation)

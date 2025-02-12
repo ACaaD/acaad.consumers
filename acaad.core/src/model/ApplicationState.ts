@@ -1,1 +1,1 @@
-export type ApplicationState = 'Initialized' | 'Starting' | 'Running' | 'Stopping' | 'Stopped';
+export type ApplicationState = 'Initialized' | 'Starting' | 'Running' | 'Stopping' | 'Stopped' | 'Crashed';
