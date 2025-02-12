@@ -12,15 +12,15 @@ import { ParseError } from 'effect/ParseResult';
 
 import {
   AcaadEvent,
-  AcaadPopulatedEvent,
   AcaadHost,
-  ICsLogger,
+  AcaadPopulatedEvent,
+  AcaadServerConnectedEvent,
+  AcaadServerDisconnectedEvent,
   AcaadServerUnreachableError,
+  AcaadUnhandledEventReceivedEvent,
   CalloutError,
   EventFactory,
-  AcaadServerConnectedEvent,
-  AcaadUnhandledEventReceivedEvent,
-  AcaadServerDisconnectedEvent
+  ICsLogger
 } from '@acaad/abstractions';
 
 const CONST = {
@@ -35,7 +35,7 @@ const isServerUnavailable = (err: unknown): boolean => {
 // noinspection JSPotentiallyInvalidUsageOfClassThis
 export class HubConnectionWrapper {
   private hubConnection: HubConnection;
-  private reconnectFiber: RuntimeFiber<number, never>;
+  private reconnectFiber: RuntimeFiber<number, CalloutError>;
 
   constructor(
     public host: AcaadHost,
@@ -64,6 +64,7 @@ export class HubConnectionWrapper {
     this.hubConnection = hubConnection;
 
     this.logger.logDebug(`Hub connection to ${host.friendlyName} created.`);
+
     const reconnectEff = this.tryReconnectEff.pipe(Effect.repeat(Schedule.fixed(5_000)));
     this.reconnectFiber = Effect.runSync(Effect.forkDaemon(reconnectEff));
   }
@@ -73,10 +74,7 @@ export class HubConnectionWrapper {
       return;
     }
 
-    this.logger.logTrace(`Attempting to reconnect to '${this.host.friendlyName}' ...`);
-    const res = yield* Effect.either(this.startEff);
-
-    console.log(res);
+    return yield* Effect.either(this.startEff);
   });
 
   public startEff = Effect.gen(this, function* () {
@@ -99,6 +97,7 @@ export class HubConnectionWrapper {
       }
     });
 
+    this.logger.logTrace(`(Re)connected to '${this.host.friendlyName}'.`);
     yield* this.raiseHubStartedEvent(this.host);
   });
 
@@ -131,7 +130,9 @@ export class HubConnectionWrapper {
   }
 
   private raiseHubStartedEvent(host: AcaadHost): Effect.Effect<boolean> {
+    console.log(`--- [${new Date().toISOString()}] Connected. Queuing. ${this.eventQueue.isActive()}`);
     this.logger.logDebug(`Hub connection to ${host.friendlyName} started.`);
+
     return this.eventQueue.offer(new AcaadServerConnectedEvent(host));
   }
 

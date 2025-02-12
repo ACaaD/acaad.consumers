@@ -33,8 +33,11 @@ describe('connected service error handling', () => {
   const mappedAcaadError = new AcaadError('', '');
 
   beforeAll(async () => {
-    const logger = new MockCsLogger();
-    intTestContext = await createIntegrationTestContext(undefined, undefined, logger);
+    // const logger = new MockCsLogger();
+    // intTestContext = await createIntegrationTestContext(undefined, undefined, logger);
+
+    intTestContext = await createIntegrationTestContext();
+
     serviceAdapterMock = intTestContext.serviceAdapterMock;
     instance = intTestContext.instance;
     stateObserver = intTestContext.stateObserver;
@@ -108,13 +111,17 @@ describe('connected service error handling', () => {
 
     it('should pass occurred error to mapper', async () => {
       throwAwayInstance = intTestContext.getThrowAwayInstance();
-      await throwAwayInstance.startAsync();
+      const start = await throwAwayInstance.startAsync();
+
+      expect(start).toBe(true);
       expect(serviceAdapterMock.mapServiceError).toHaveBeenCalledWith(failedFunction, recoverableError);
     });
 
     it('should pass mapped acaad error to error event listener', async () => {
       throwAwayInstance = intTestContext.getThrowAwayInstance();
-      await throwAwayInstance.startAsync();
+      const start = await throwAwayInstance.startAsync();
+
+      expect(start).toBe(true);
       expect(serviceAdapterMock.onErrorAsync).toHaveBeenCalledWith(recoverableError);
     });
   });

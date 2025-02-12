@@ -31,6 +31,7 @@ import { SpanExporter } from '@opentelemetry/sdk-trace-base/build/src/export/Spa
 import { ComponentModel } from './ComponentModel';
 import { Configuration } from '@effect/opentelemetry/src/NodeSdk';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-grpc';
+import { QueueWrapper } from './QueueWrapper';
 
 function noopExporterFactory(container: DependencyContainer): SpanProcessor {
   return new NoopSpanProcessor();
@@ -65,7 +66,8 @@ function batchExporterFactory(container: DependencyContainer): SpanProcessor {
   },
   {
     token: DependencyInjectionTokens.EventQueue,
-    useFactory: (_) => Effect.runSync(Queue.unbounded<AcaadPopulatedEvent>()) // TODO: Define drop-strategy and set bound for capacity
+    useClass: QueueWrapper,
+    options: { lifecycle: Lifecycle.ResolutionScoped }
   },
   {
     token: DependencyInjectionTokens.OpenTelExporter,

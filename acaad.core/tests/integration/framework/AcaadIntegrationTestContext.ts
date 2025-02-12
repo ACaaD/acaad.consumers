@@ -52,10 +52,13 @@ export class AcaadIntegrationTestContext implements IAcaadIntegrationTestContext
   async startAndWaitForSignalR(): Promise<void> {
     console.log(this.instance.getState());
     const checkpoint = this.stateObserver.waitForSignalRClient();
-    await this.instance.startAsync();
+    const start = await this.instance.startAsync();
+    console.log('Start+Wait', start);
+    expect(start).toBe(true);
     console.log(this.instance.getState());
     await checkpoint;
     console.log(this.instance.getState());
+    await this.instance.createMissingComponentsAsync();
   }
 
   getThrowAwayInstance(): ComponentManager {
@@ -121,6 +124,8 @@ export class AcaadIntegrationTestContext implements IAcaadIntegrationTestContext
 
   public async startAllAsync(): Promise<void> {
     await this.startMockServersAsync();
-    await this.instance.startAsync();
+    const start = await this.instance.startAsync();
+
+    expect(start).toBe(true);
   }
 }
