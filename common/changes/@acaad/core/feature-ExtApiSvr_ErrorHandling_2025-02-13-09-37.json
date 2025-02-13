@@ -1,0 +1,10 @@
+{
+  "changes": [
+    {
+      "packageName": "@acaad/core",
+      "comment": "Additional traces/spans (outbound change was missing)",
+      "type": "none"
+    }
+  ],
+  "packageName": "@acaad/core"
+}

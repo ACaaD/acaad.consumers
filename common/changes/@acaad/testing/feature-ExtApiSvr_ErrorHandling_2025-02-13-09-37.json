@@ -1,0 +1,10 @@
+{
+  "changes": [
+    {
+      "packageName": "@acaad/testing",
+      "comment": "Allow intercepting+tracking of requests (available through rest api as well)",
+      "type": "none"
+    }
+  ],
+  "packageName": "@acaad/testing"
+}
