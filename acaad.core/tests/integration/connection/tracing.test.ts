@@ -95,8 +95,4 @@ describe('tracing', () => {
       await checkForComponentType(ComponentType.Switch, 'action', false);
     });
   });
-
-  describe('inbound events', () => {
-    it('should reuse traceParent provided by event', async () => {});
-  });
 });
