@@ -93,7 +93,7 @@ export class ConnectionManager {
     return Effect.fail(new CalloutError('No or invalid data received from the server.'));
   };
 
-  getTraceHeaders(): Effect.Effect<TraceHeaders> {
+  public getTraceHeaders(): Effect.Effect<TraceHeaders> {
     return Effect.gen(this, function* () {
       const span = yield* Effect.currentSpan.pipe(
         Effect.catchAll((e: NoSuchElementException) => {
