@@ -368,8 +368,21 @@ export class ComponentManager {
 
     const result = await Effect.runPromiseExit(
       this.getMetadataToExecuteOpt(potentialMetadata).pipe(
-        Effect.andThen((m) => this._connectionManager.updateComponentStateAsync(m)),
-        Effect.tapError((err) => onErrorEff(this._serviceAdapter, err))
+        Effect.andThen((m) =>
+          this._connectionManager
+            .updateComponentStateAsync(m)
+            .pipe(Effect.withSpan('acaad:events:outbound:api'))
+        ),
+        Effect.tapError((err) => onErrorEff(this._serviceAdapter, err)),
+        Effect.withSpan('acaad:events', {
+          parent: undefined,
+          root: true,
+          attributes: {
+            server: host.friendlyName,
+            ['component-name']: component.name
+          }
+        }),
+        Effect.provide(this._openTelLayer())
       )
     );
 

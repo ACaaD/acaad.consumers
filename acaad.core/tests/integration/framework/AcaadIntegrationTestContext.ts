@@ -3,7 +3,7 @@ import { ComponentManager } from '../../../src';
 import { Mock } from 'ts-jest-mocker';
 import { getTestLogger } from './test-setup';
 import { IAcaadIntegrationTestContext, IStateObserver } from '../types';
-import { LogFunc, ServerMocks, getRandomInt } from '@acaad/testing';
+import { LogFunc, ServerMocks, getRandomInt, TrackedRequest } from '@acaad/testing';
 import {
   ICsLogger,
   IConnectedServiceAdapter,
@@ -47,6 +47,19 @@ export class AcaadIntegrationTestContext implements IAcaadIntegrationTestContext
     this.stateObserver = stateObserver;
 
     this.loggerMock = loggerMock;
+  }
+
+  enableRequestTracking(): void {
+    this.serverMocks.forEach((sm) => sm.enableRequestTracking());
+  }
+  clearTrackedRequests(): void {
+    this.serverMocks.forEach((sm) => sm.clearTrackedRequests());
+  }
+
+  getTrackedRequests(traceId?: string, spanId?: string): TrackedRequest[] {
+    return this.serverMocks
+      .map((sm) => sm.getTrackedRequests(traceId, spanId))
+      .reduce((prev, curr) => [...prev, ...curr], []);
   }
 
   async startAndWaitForSignalR(): Promise<void> {

@@ -7,9 +7,7 @@ import {
   ComponentType,
   ConnectedServiceFunction,
   AcaadError,
-  AcaadEvent,
-  ComponentDescriptor,
-  EventFactory
+  AcaadEvent
 } from '@acaad/abstractions';
 
 import { sanityCheckGenerator } from '../shared-flows';
@@ -17,7 +15,6 @@ import { Mock } from 'ts-jest-mocker';
 import { beforeEach } from 'node:test';
 import { TestEventFactory } from '../factories/test-event-factory';
 import { ServerMocks } from '@acaad/testing';
-import { MockCsLogger } from '../mocks/MockCsLogger';
 import { setupConnectedServiceMock } from '../mocks/MockServiceAdapter';
 
 describe('connected service error handling', () => {
@@ -34,9 +31,6 @@ describe('connected service error handling', () => {
   const mappedAcaadError = new AcaadError('', '');
 
   beforeAll(async () => {
-    // const logger = new MockCsLogger();
-    // intTestContext = await createIntegrationTestContext(undefined, undefined, logger);
-
     intTestContext = await createIntegrationTestContext();
 
     serviceAdapterMock = intTestContext.serviceAdapterMock;
@@ -191,4 +185,9 @@ describe('connected service error handling', () => {
       expect(serviceAdapterMock.onErrorAsync).toHaveBeenCalledWith(mappedAcaadError, expect.anything());
     });
   });
+
+  /*  
+      TODO: Tests to shut down manager instance if returned error (mapServiceError) 
+      returns AcaadFatalError or any child class. 
+  */
 });

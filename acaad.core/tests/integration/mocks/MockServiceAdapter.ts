@@ -1,5 +1,5 @@
 import { IAcaadIntegrationTestContext } from '../types';
-import { AcaadAuthentication, ComponentDescriptor, AcaadHost } from '@acaad/abstractions';
+import { AcaadAuthentication, ComponentDescriptor, AcaadHost, AcaadError } from '@acaad/abstractions';
 
 export function setupConnectedServiceMock(
   intTestContext: IAcaadIntegrationTestContext,
@@ -43,4 +43,16 @@ export function setupConnectedServiceMock(
   serviceAdapterMock.getComponentDescriptorByComponent.mockImplementation(
     (c) => new ComponentDescriptor(c.name)
   );
+
+  const mapErrorMock = jest.fn();
+  mapErrorMock.mockImplementation((args) => {
+    return new AcaadError(args, 'An unexpected error occurred during int-test execution.');
+  });
+
+  const onErrorMock = jest.fn();
+  onErrorMock.mockImplementation((args) => {
+    console.error(args);
+    return Promise.resolve();
+  });
+  serviceAdapterMock.onErrorAsync = onErrorMock;
 }

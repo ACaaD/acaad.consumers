@@ -6,16 +6,48 @@ import openApi from './routes/open-api';
 import collections from './collections';
 import { getNextPortAsync, getRandomInt, getTestLogger, LogFunc } from '../utility';
 import { IComponentConfiguration, IMockedComponentModel, IPortConfiguration } from './types';
-import { ComponentDescriptor, ComponentType } from '@acaad/abstractions';
+import { ComponentDescriptor, ComponentType, TraceInfo } from '@acaad/abstractions';
+
+export class TrackedRequest {
+  url: string;
+  method: string;
+  headers: unknown;
+  body: unknown;
+  traceParent: string | undefined;
+  traceInfo: TraceInfo | undefined;
+
+  constructor(req: any) {
+    this.url = req.url;
+    this.method = req.method;
+    this.headers = req.headers;
+    this.body = req.body;
+
+    this.traceParent = (this.headers as any).traceparent;
+
+    if (this.traceParent) {
+      this.traceInfo = new TraceInfo(this.traceParent);
+    }
+  }
+
+  getTraceId(): string | undefined {
+    return this.traceInfo?.traceId;
+  }
+
+  getSpanId(): string | undefined {
+    return this.traceInfo?.spanId;
+  }
+}
 
 export interface IAcaadApiServer extends IAcaadServer {
-  server: any; // TODO
-
   getRandomComponent(type: ComponentType): ComponentDescriptor;
+
+  enableRequestTracking(): void;
+  getTrackedRequests(traceId?: string, spanId?: string): TrackedRequest[];
+  clearTrackedRequests(): void;
 }
 
 export class AcaadApiServer implements IAcaadApiServer {
-  server: any;
+  private server: any;
 
   private readonly componentConfiguration: IComponentConfiguration;
   public port: number;
@@ -38,6 +70,8 @@ export class AcaadApiServer implements IAcaadApiServer {
     this.componentConfiguration = componentConfiguration;
     this.componentModel = AcaadApiServer.createComponentModel(componentConfiguration);
 
+    this.requestTrackingMiddleware = this.requestTrackingMiddleware.bind(this);
+
     this.server = createServer({
       server: {
         port: port
@@ -52,7 +86,8 @@ export class AcaadApiServer implements IAcaadApiServer {
           port: adminPort
         }
       },
-      log: 'silent'
+      // @ts-ignore
+      log: global.__ENABLE_TEST_FWK_LOGS__ ? 'info' : 'silent'
     });
   }
 
@@ -114,13 +149,33 @@ export class AcaadApiServer implements IAcaadApiServer {
           })
         : [];
 
-    loadRoutes([...route, ...referencedRoutes]);
+    const middlewareVariantId = 'request-tracking-middleware';
+    const globalMiddlewareRoute = {
+      id: 'global-middleware',
+      url: '*',
+      method: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+      variants: [
+        {
+          id: middlewareVariantId,
+          type: 'middleware',
+          options: {
+            middleware: this.requestTrackingMiddleware
+          }
+        }
+      ]
+    };
+
+    const allRoutes = [globalMiddlewareRoute, ...route, ...referencedRoutes];
+
+    loadRoutes(allRoutes);
+
+    const defaultRoutes = [`${globalMiddlewareRoute.id}:${middlewareVariantId}`];
 
     collections[0].routes = referencedRoutes
       // @ts-ignore
       .map((route) => route.variants.map((variant) => `${route.id}:${variant.id}`))
       // @ts-ignore
-      .reduce((aggr, curr) => [...aggr, ...curr], []);
+      .reduce((aggr, curr) => [...aggr, ...curr], defaultRoutes);
 
     loadCollections(collections);
   }
@@ -139,4 +194,71 @@ export class AcaadApiServer implements IAcaadApiServer {
 
     return new AcaadApiServer(nextFreePort, adminPort, selectedCollection, componentConfiguration);
   };
+
+  private requestTrackingMiddleware(req: any, res: any, next: any, core: any) {
+    this.log(`Request to ${req.url} received at ${new Date().toISOString()}`);
+
+    if (this.withRequestTracking) {
+      if (req.url === '/_/requests/tracked' && req.method === 'GET') {
+        res.status(200);
+        res.send(this.trackedRequests);
+        return;
+      }
+
+      const url = req.url as string;
+      if (url.startsWith('/_/requests/tracked/') && req.method === 'GET') {
+        const traceId = url.split('/').at(-1);
+
+        if (traceId) {
+          res.status(200);
+          res.send(this.getTrackedRequest(traceId));
+          return;
+        }
+      }
+
+      this.log(`Tracked request to ${req.url} received at ${new Date().toISOString()}`);
+      this.trackedRequests.push(new TrackedRequest(req));
+    }
+
+    next();
+  }
+
+  trackedRequests: TrackedRequest[] = [];
+  withRequestTracking: boolean = false;
+
+  enableRequestTracking(): void {
+    this.log('Enabling request tracking.');
+    this.withRequestTracking = true;
+  }
+
+  getTrackedRequests(traceId?: string, spanId?: string): TrackedRequest[] {
+    if (!this.withRequestTracking) {
+      throw new Error('Request tracking is not enabled.');
+    }
+
+    let collection = this.trackedRequests;
+
+    if (traceId) {
+      collection = collection.filter((tr) => tr.getTraceId() === traceId);
+    }
+
+    if (spanId) {
+      collection = collection.filter((tr) => tr.getSpanId() === spanId);
+    }
+
+    return collection;
+  }
+
+  getTrackedRequest(traceId: string): TrackedRequest[] {
+    if (!this.withRequestTracking) {
+      throw new Error('Request tracking is not enabled.');
+    }
+
+    return this.trackedRequests.filter((tr) => tr.getTraceId() === traceId);
+  }
+
+  clearTrackedRequests() {
+    this.log('Clearing tracked requests.');
+    this.trackedRequests = [];
+  }
 }

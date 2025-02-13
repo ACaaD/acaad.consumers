@@ -1,4 +1,10 @@
-import { AcaadApiServer, AcaadSignalRServer, IAcaadApiServer, IAcaadSignalRServer } from './api';
+import {
+  AcaadApiServer,
+  AcaadSignalRServer,
+  IAcaadApiServer,
+  IAcaadSignalRServer,
+  TrackedRequest
+} from './api';
 import { AcaadAuthentication, AcaadHost, ComponentDescriptor, ComponentType } from '@acaad/abstractions';
 import { v4 as uuidv4 } from 'uuid';
 import { IComponentConfiguration, IPortConfiguration } from './api/types';
@@ -10,11 +16,14 @@ export {
   IAcaadApiServer,
   AcaadSignalRServer,
   IAcaadSignalRServer,
-  IEventReceiver
+  IEventReceiver,
+  TrackedRequest
 } from './api';
 export { delay, getRandomInt, LogFunc, getTestLogger } from './utility';
 
-export class ServerMocks {
+export class ServerMocks implements IAcaadApiServer, IAcaadSignalRServer {
+  port: number;
+
   serverName: string;
   apiServer: IAcaadApiServer;
   signalrServer: IAcaadSignalRServer;
@@ -23,6 +32,8 @@ export class ServerMocks {
     this.serverName = `mock-${uuidv4()}`;
 
     this.apiServer = apiServer;
+    this.port = apiServer.port;
+
     this.signalrServer = signalrServer;
   }
 
@@ -49,10 +60,24 @@ export class ServerMocks {
   }
 
   public async startAsync() {
-    return await Promise.all([this.apiServer.startAsync(), this.signalrServer.startAsync()]);
+    await Promise.all([this.apiServer.startAsync(), this.signalrServer.startAsync()]);
   }
 
   public async disposeAsync() {
-    return await Promise.all([this.apiServer.disposeAsync(), this.signalrServer.disposeAsync()]);
+    await Promise.all([this.apiServer.disposeAsync(), this.signalrServer.disposeAsync()]);
+  }
+
+  pushEvent(event: unknown): Promise<void> {
+    return this.signalrServer.pushEvent(event);
+  }
+  enableRequestTracking(): void {
+    this.apiServer.enableRequestTracking();
+  }
+  getTrackedRequests(traceId?: string, spanId?: string): TrackedRequest[] {
+    return this.apiServer.getTrackedRequests(traceId, spanId);
+  }
+
+  clearTrackedRequests(): void {
+    this.apiServer.enableRequestTracking();
   }
 }

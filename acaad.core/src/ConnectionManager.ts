@@ -1,33 +1,36 @@
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 
 import {
+  AcaadError,
+  AcaadEvent,
+  AcaadHost,
   AcaadPopulatedMetadata,
+  AcaadServerUnreachableError,
+  CalloutError,
+  IConnectedServiceAdapter,
+  ICsLogger,
+  ITokenCache,
+  OAuth2Token,
   OpenApiDefinition,
   OpenApiDefinitionSchema,
-  AcaadHost,
-  OAuth2Token,
-  ITokenCache,
-  ICsLogger,
-  AcaadError,
-  CalloutError,
-  AcaadEvent,
-  AcaadPopulatedEvent,
-  IConnectedServiceAdapter,
-  ResponseSchemaError,
-  AcaadServerUnreachableError,
-  ConnectedServiceFunction
+  ResponseSchemaError
 } from '@acaad/abstractions';
 
 import { inject, injectable } from 'tsyringe';
 import { DependencyInjectionTokens } from './model/DependencyInjectionTokens';
 
-import { Context, Effect, Either, pipe, Queue, Schema, Stream } from 'effect';
+import { Context, Effect, Either, pipe, Schema, Stream } from 'effect';
 
 import { map, mapLeft } from 'effect/Either';
 
 import { HubConnectionWrapper } from './HubConnectionWrapper';
 import { QueueWrapper } from './QueueWrapper';
 import { executeCsAdapter } from './utility';
+import { NoSuchElementException } from 'effect/Cause';
+
+interface TraceHeaders {
+  traceparent: string;
+}
 
 class AxiosSvc extends Context.Tag('axios')<AxiosSvc, { readonly instance: AxiosInstance }>() {}
 
@@ -90,6 +93,24 @@ export class ConnectionManager {
     return Effect.fail(new CalloutError('No or invalid data received from the server.'));
   };
 
+  getTraceHeaders(): Effect.Effect<TraceHeaders> {
+    return Effect.gen(this, function* () {
+      const span = yield* Effect.currentSpan.pipe(
+        Effect.catchAll((e: NoSuchElementException) => {
+          this.logger.logError(
+            undefined,
+            undefined,
+            "No current span found in effect context. Cannot populate 'traceparent' header. This is a programming error."
+          );
+          return Effect.makeSpan('acaad:sync:query:api:span-fallback');
+        })
+      );
+      return {
+        traceparent: `00-${span.traceId}-${span.spanId}-01`
+      };
+    });
+  }
+
   queryComponentConfigurationAsync(
     host: AcaadHost
   ): Effect.Effect<Either.Either<OpenApiDefinition, AcaadError>> {
@@ -98,30 +119,38 @@ export class ConnectionManager {
     const requestUrl = host.append(this._openApiEndpoint);
     this.logger.logTrace('Using request URL:', requestUrl);
 
-    const result = AxiosSvc.pipe(
-      Effect.andThen(({ instance }) => {
-        return Effect.tryPromise({
-          try: (abortSignal) => instance.get(requestUrl, { signal: abortSignal }),
-          catch: (unknown) => {
-            if (unknown instanceof AxiosError) {
-              if (unknown.code === 'ECONNREFUSED') {
-                return new AcaadServerUnreachableError(host, unknown);
-              }
-            }
+    const result = Effect.gen(this, function* () {
+      const { instance } = yield* AxiosSvc;
 
-            return new CalloutError(unknown);
+      const request: AxiosRequestConfig = {
+        method: 'get',
+        url: requestUrl,
+        headers: {
+          ...(yield* this.getTraceHeaders())
+        }
+      };
+
+      const res = yield* Effect.tryPromise({
+        try: (abortSignal) => instance.request<OpenApiDefinition>({ ...request, signal: abortSignal }),
+        catch: (unknown) => {
+          if (unknown instanceof AxiosError) {
+            if (unknown.code === 'ECONNREFUSED') {
+              return new AcaadServerUnreachableError(host, unknown);
+            }
           }
-        }).pipe(Effect.withSpan('acaad:sync:query:api:request-wait'));
-      }),
-      Effect.andThen((res) =>
-        ConnectionManager.verifyResponsePayload(res).pipe(
-          Effect.withSpan('acaad:sync:query:api:request-parse')
-        )
-      ),
-      Effect.tap((res) =>
-        this.logger.logTrace(`Received acaad configuration with ${res.paths.length} paths.`)
-      )
-    );
+
+          return new CalloutError(unknown);
+        }
+      }).pipe(Effect.withSpan('acaad:sync:query:api:request-wait'));
+
+      const openApi = yield* ConnectionManager.verifyResponsePayload(res).pipe(
+        Effect.withSpan('acaad:sync:query:api:request-parse')
+      );
+
+      this.logger.logTrace(`Received acaad configuration with ${openApi.paths.length} paths.`);
+
+      return openApi;
+    });
 
     return Effect.provideService(result, AxiosSvc, {
       instance: this.axiosInstance
@@ -138,7 +167,10 @@ export class ConnectionManager {
 
       const request: AxiosRequestConfig = {
         method: metadata.method,
-        url: requestUrl
+        url: requestUrl,
+        headers: {
+          ...(yield* this.getTraceHeaders())
+        }
       };
 
       this.logger.logDebug(`Executing request generated from metadata: ${metadata.method}::${requestUrl}`);

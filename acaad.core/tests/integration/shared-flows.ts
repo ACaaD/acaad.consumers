@@ -3,6 +3,19 @@ import { Option } from 'effect';
 import { TestEventFactory } from './factories/test-event-factory';
 import { ComponentType } from '@acaad/abstractions';
 import { ComponentManager } from '../../src';
+import { ReadableSpan } from '@opentelemetry/sdk-trace-base';
+
+export async function getRequestsFromSpan(
+  intTestContext: IAcaadIntegrationTestContext,
+  spanPrm: Promise<ReadableSpan>
+) {
+  const spanDetails = await spanPrm;
+
+  const traceId = spanDetails.spanContext().traceId;
+  const spanId = spanDetails.spanContext().spanId;
+
+  return intTestContext.getTrackedRequests(traceId, spanId);
+}
 
 export function sanityCheckGenerator(
   intTestContext: IAcaadIntegrationTestContext,
