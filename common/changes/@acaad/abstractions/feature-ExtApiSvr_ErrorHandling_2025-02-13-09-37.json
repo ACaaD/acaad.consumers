@@ -1,0 +1,10 @@
+{
+  "changes": [
+    {
+      "packageName": "@acaad/abstractions",
+      "comment": "Add TraceInfo as defined by W3C trace context",
+      "type": "none"
+    }
+  ],
+  "packageName": "@acaad/abstractions"
+}
