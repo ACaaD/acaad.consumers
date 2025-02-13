@@ -1,5 +1,12 @@
 import { IAcaadIntegrationTestContext } from '../types';
-import { AcaadAuthentication, ComponentDescriptor, AcaadHost, AcaadError } from '@acaad/abstractions';
+import {
+  AcaadAuthentication,
+  ComponentDescriptor,
+  AcaadHost,
+  AcaadError,
+  IConnectedServiceAdapter
+} from '@acaad/abstractions';
+import { Mock } from 'ts-jest-mocker';
 
 export function setupConnectedServiceMock(
   intTestContext: IAcaadIntegrationTestContext,
@@ -8,6 +15,8 @@ export function setupConnectedServiceMock(
   const { serviceAdapterMock } = intTestContext;
 
   const authentication: AcaadAuthentication | undefined = undefined;
+
+  setupConnectedServiceMockInstance(serviceAdapterMock);
 
   serviceAdapterMock.getConnectedServersAsync.mockImplementation((as: AbortSignal) => {
     if (serverMultiplier === 1) {
@@ -30,7 +39,10 @@ export function setupConnectedServiceMock(
 
     return Promise.resolve(result);
   });
+}
 
+export function setupConnectedServiceMockInstance(serviceAdapterMock: Mock<IConnectedServiceAdapter>) {
+  serviceAdapterMock.getConnectedServersAsync.mockResolvedValue([]);
   serviceAdapterMock.registerStateChangeCallbackAsync.mockResolvedValue();
 
   serviceAdapterMock.getAllowedConcurrency.mockReturnValue(16);

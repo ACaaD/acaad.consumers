@@ -16,8 +16,6 @@ describe('unreachable target', () => {
     instance = intTestContext.instance;
     serviceAdapterMock = intTestContext.serviceAdapterMock;
     loggerMock = intTestContext.getLoggerMock();
-
-    await intTestContext.startAllAsync();
   });
 
   afterAll(async () => {
@@ -25,11 +23,13 @@ describe('unreachable target', () => {
   });
 
   it('should ignore unreachable server', async () => {
+    /* Mock servers are not started */
     const result = await instance.createMissingComponentsAsync();
     expect(result).toBe(true);
   });
 
   it('should not raise any errors', async () => {
+    /* Mock servers are not started */
     const result = await instance.createMissingComponentsAsync();
     expect(result).toBe(true);
     expect(loggerMock.logError).not.toHaveBeenCalled();
