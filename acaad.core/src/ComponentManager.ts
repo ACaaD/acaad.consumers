@@ -500,10 +500,6 @@ export class ComponentManager {
 
   private listenerFiber: RuntimeFiber<void | number> | null = null;
   private startEventListener = Effect.gen(this, function* () {
-    if (!this._eventQueue.isActive()) {
-      return Effect.fail(new AcaadError('The provided queue is already shut down.'));
-    }
-
     this.listenerFiber = yield* Effect.forkDaemon(
       // TODO: Use error handler (potentially sharable with comp. model creation)
       this.runEventListener.pipe(
