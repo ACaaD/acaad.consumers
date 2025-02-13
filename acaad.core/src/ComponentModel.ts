@@ -45,11 +45,10 @@ export class ComponentModel implements IComponentModel {
   }
 
   public clearServerMetadata(server: AcaadServerMetadata): Effect.Effect<boolean> {
-    const fountServerOpt = Array.from(this._meta.keys()).find((sm) => sm.host.equals(server.host));
+    const foundServerOpt = Array.from(this._meta.keys()).find((sm) => sm.host.equals(server.host));
 
-    if (fountServerOpt) {
-      this._meta.delete(fountServerOpt);
-      return Effect.succeed(true);
+    if (foundServerOpt) {
+      this._meta.delete(foundServerOpt);
     }
 
     const foundMappingOpt = Array.from(this._componentByDescriptor.keys()).find((sm) =>
@@ -57,10 +56,9 @@ export class ComponentModel implements IComponentModel {
     );
     if (foundMappingOpt) {
       this._componentByDescriptor.delete(foundMappingOpt);
-      return Effect.succeed(true);
     }
 
-    return Effect.succeed(false);
+    return foundServerOpt && foundMappingOpt ? Effect.succeed(true) : Effect.succeed(false);
   }
 
   public getComponentByDescriptor(

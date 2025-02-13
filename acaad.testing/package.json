@@ -7,7 +7,7 @@
   "es2015": "./dist/esm2015/index.js",
   "typings": "./dist/esnext/index.d.ts",
   "scripts": {
-    "run": "heft build && node dist/cjs/run.js",
+    "svr-mocks": "heft build && node dist/cjs/run.js",
     "build": "heft build --clean",
     "_phase:build": "heft run --only build -- --clean"
   },
@@ -44,6 +44,7 @@
     "tslib": "~2.8.1",
     "eslint": "^8.57.0",
     "@acaad/toolchain": "workspace:*",
-    "@types/heft-jest": "~1.0.6"
+    "@types/heft-jest": "~1.0.6",
+    "@types/express": "~5.0.0"
   }
 }

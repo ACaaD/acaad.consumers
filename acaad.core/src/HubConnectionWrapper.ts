@@ -141,10 +141,6 @@ export class HubConnectionWrapper {
   public stopHubConnection = Effect.gen(this, function* () {
     this.logger.logTrace(`Shutting down hub connection to server ${this.host.friendlyName}.`);
 
-    if (!this.hubConnection) {
-      return;
-    }
-
     yield* Fiber.interrupt(this.reconnectFiber);
 
     yield* Effect.tryPromise({

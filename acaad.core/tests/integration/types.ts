@@ -10,10 +10,11 @@ import { ComponentManager } from '../../src';
 
 import { Mock } from 'ts-jest-mocker';
 import { DependencyContainer } from 'tsyringe';
-import { ServerMocks } from '@acaad/testing';
+import { ServerMocks, TrackedRequest } from '@acaad/testing';
+import { ReadableSpan } from '@opentelemetry/sdk-trace-base';
 
 export interface IStateObserver {
-  waitForSpanAsync(spanName: string, timeoutMs?: number): Promise<void>;
+  waitForSpanAsync(spanName: string, timeoutMs?: number): Promise<ReadableSpan>;
 
   waitForSignalRClient(): Promise<void>;
 }
@@ -49,4 +50,8 @@ export interface IAcaadIntegrationTestContext {
   startAndWaitForSignalR(): Promise<void>;
 
   getThrowAwayInstance(): ComponentManager;
+
+  enableRequestTracking(): void;
+  clearTrackedRequests(): void;
+  getTrackedRequests(traceId?: string, spanId?: string): TrackedRequest[];
 }

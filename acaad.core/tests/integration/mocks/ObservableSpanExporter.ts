@@ -8,7 +8,7 @@ export class ObservableSpanExporter implements SpanExporter, IStateObserver {
   private readonly log: LogFunc;
   private static instance: ObservableSpanExporter = new ObservableSpanExporter();
 
-  private trackedSpans: Map<string, () => void> = new Map<string, () => {}>();
+  private trackedSpans: Map<string, (span: ReadableSpan) => void> = new Map<string, () => {}>();
   private trackedTimeouts: Map<string, NodeJS.Timeout> = new Map<string, NodeJS.Timeout>();
 
   private constructor() {
@@ -23,22 +23,22 @@ export class ObservableSpanExporter implements SpanExporter, IStateObserver {
     this.log(`SignalR client connected after ${Date.now() - startMs}ms.`);
   }
 
-  private resolveWrapped(startMs: number, spanName: string, res: () => void) {
-    return () => {
-      res();
+  private resolveWrapped(startMs: number, spanName: string, res: (value: ReadableSpan) => void) {
+    return (span: ReadableSpan) => {
+      res(span);
       this.log(`Span ${spanName} resolved after ${Date.now() - startMs}ms.`);
     };
   }
 
-  waitForSpanAsync(spanName: string, timeoutMs: number = 200): Promise<void> {
+  waitForSpanAsync(spanName: string, timeoutMs: number = 200): Promise<ReadableSpan> {
     this.log(`Tracking span with name ${spanName}.`);
 
     const startWait = Date.now();
 
-    let resolveFunc: (() => void) | undefined;
+    let resolveFunc: ((value: ReadableSpan) => void) | undefined;
     let rejectFunc: (reason?: any) => void | undefined;
 
-    const promise = new Promise<void>(function (resolve, reject) {
+    const promise = new Promise<ReadableSpan>(function (resolve, reject) {
       resolveFunc = resolve;
       rejectFunc = reject;
     });
@@ -70,10 +70,16 @@ export class ObservableSpanExporter implements SpanExporter, IStateObserver {
         this.trackedTimeouts.delete(span.name);
 
         const resolveFunc = this.trackedSpans.get(span.name)!;
-        resolveFunc();
+        resolveFunc(span);
         this.trackedSpans.delete(span.name);
       });
     }
+
+    // spans.forEach((span) =>
+    //   console.log(
+    //     `[${span.spanContext().traceId}] ${span.name}: ${span.spanContext().spanId} -> ${span.parentSpanId}`
+    //   )
+    // );
 
     resultCallback({
       code: ExportResultCode.SUCCESS

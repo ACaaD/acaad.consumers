@@ -63,3 +63,4 @@ export {
 } from './model';
 
 export { isNullOrUndefined } from './utils/Checks';
+export { TraceInfo } from './utils/Traces';

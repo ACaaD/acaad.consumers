@@ -1,4 +1,4 @@
 export { IAcaadServer } from './types';
 
-export { IAcaadApiServer, AcaadApiServer } from './rest';
+export { IAcaadApiServer, AcaadApiServer, TrackedRequest } from './rest';
 export { IAcaadSignalRServer, AcaadSignalRServer, IEventReceiver } from './signalr';
