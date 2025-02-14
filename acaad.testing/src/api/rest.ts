@@ -59,7 +59,7 @@ export class AcaadApiServer implements IAcaadApiServer {
   private constructor(
     port: number,
     adminPort: number,
-    selectedCollection: string,
+    selectedCollection: string | undefined,
     componentConfiguration: IComponentConfiguration
   ) {
     this.log = getTestLogger('Api');
@@ -78,7 +78,7 @@ export class AcaadApiServer implements IAcaadApiServer {
       },
       mock: {
         collections: {
-          selected: selectedCollection
+          selected: selectedCollection ?? 'generated'
         }
       },
       plugins: {
@@ -139,13 +139,21 @@ export class AcaadApiServer implements IAcaadApiServer {
   async startAsync(): Promise<void> {
     await this.server.start();
     const { loadRoutes, loadCollections } = this.server.mock.createLoaders();
-    const { route, openApiBody } = openApi(this.componentModel);
+    const { route, generatedBody, realisticBody } = openApi(this.componentModel);
 
-    const referencedRoutes =
+    const generatedComponentRoutes =
       this.componentConfiguration.suppressComponentEndpoints !== true
         ? await openApiRoutes({
             basePath: '/',
-            document: { ...openApiBody }
+            document: { ...generatedBody }
+          })
+        : [];
+
+    const realisticRoutes =
+      this.componentConfiguration.suppressComponentEndpoints !== true
+        ? await openApiRoutes({
+            basePath: '/',
+            document: { ...realisticBody }
           })
         : [];
 
@@ -165,19 +173,47 @@ export class AcaadApiServer implements IAcaadApiServer {
       ]
     };
 
-    const allRoutes = [globalMiddlewareRoute, ...route, ...referencedRoutes];
+    const allRoutes = [globalMiddlewareRoute, ...route, ...generatedComponentRoutes, ...realisticRoutes];
 
     loadRoutes(allRoutes);
 
     const defaultRoutes = [`${globalMiddlewareRoute.id}:${middlewareVariantId}`];
 
-    collections[0].routes = referencedRoutes
-      // @ts-ignore
-      .map((route) => route.variants.map((variant) => `${route.id}:${variant.id}`))
-      // @ts-ignore
-      .reduce((aggr, curr) => [...aggr, ...curr], defaultRoutes);
+    this.mergeRoutesInCollection(collections[1], defaultRoutes, generatedComponentRoutes, '200-status');
+
+    const collCount = collections.length;
+    this.mergeRoutesInCollection(collections[collCount - 1], defaultRoutes, realisticRoutes, '200-status');
+
+    const statusRegex = new RegExp('\\d{3}-status');
+
+    collections
+      .filter((coll) => {
+        const res = statusRegex.test(coll.id);
+        this.log(`Checked collection id: ${coll.id}; Result is: ${res}`);
+        return res;
+      })
+      .map((coll) => ({ variantId: coll.id, collection: coll }))
+      .forEach(({ variantId, collection }) =>
+        this.mergeRoutesInCollection(collection, defaultRoutes, generatedComponentRoutes, variantId)
+      );
 
     loadCollections(collections);
+  }
+
+  mergeRoutesInCollection(collection: any, defaultRoutes: any, additionalRoutes: any, variantId: string) {
+    this.log(`Merging collection with id=${collection.id} and ${collection.routes.length} routes.`);
+
+    collection.routes = additionalRoutes
+      // @ts-ignore
+      .map((route) =>
+        route.variants
+          // @ts-ignore
+          .filter((variant) => (variant.id as string).includes(variantId))
+          // @ts-ignore
+          .map((variant) => `${route.id}:${variant.id}`)
+      )
+      // @ts-ignore
+      .reduce((aggr, curr) => [...aggr, ...curr], [...defaultRoutes, ...collection.routes]);
   }
 
   async disposeAsync(): Promise<void> {
@@ -185,7 +221,7 @@ export class AcaadApiServer implements IAcaadApiServer {
   }
 
   public static createMockServerAsync = async (
-    selectedCollection = 'positive',
+    selectedCollection: string | undefined,
     componentConfiguration: IComponentConfiguration,
     ports?: IPortConfiguration
   ) => {
