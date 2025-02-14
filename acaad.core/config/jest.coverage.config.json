@@ -5,6 +5,7 @@
     "<rootDir>/dist/cjs/tests/ts-jest-mocker.setup.js"
   ],
   "coveragePathIgnorePatterns": [
+    "/tests/unit/mocks/.*",
     "/tests/integration/factories/.*",
     "/tests/integration/framework/.*",
     "/tests/integration/mocks/.*",

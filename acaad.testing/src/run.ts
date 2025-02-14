@@ -8,11 +8,12 @@ let servers: ServerMocks | undefined;
 const log = getTestLogger('Servers');
 
 const serverPromise = ServerMocks.createMockServersAsync(
+  // 'realistic',
   undefined,
   {
-    switchCount: 0,
-    sensorCount: 1,
-    buttonCount: 0
+    switchCount: 5,
+    sensorCount: 5,
+    buttonCount: 5
   },
   {
     api: 15000,

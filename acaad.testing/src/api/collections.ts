@@ -4,9 +4,29 @@ const routes = [
     routes: [] // collection routes
   },
   {
-    id: 'positive', // collection id
-    from: 'base', // extends "base" collection
-    routes: ['openApi:sensor'] // "get-user" route uses "id-2" variant instead of "id-1"
+    id: 'generated',
+    from: 'base',
+    routes: ['openApi:generated']
+  },
+  {
+    id: '400-status',
+    from: 'base',
+    routes: ['openApi:400-status']
+  },
+  {
+    id: '403-status',
+    from: 'base',
+    routes: ['openApi:403-status']
+  },
+  {
+    id: '500-status',
+    from: 'base',
+    routes: ['openApi:500-status']
+  },
+  {
+    id: 'realistic',
+    from: 'base',
+    routes: ['openApi:realistic']
   }
 ];
 

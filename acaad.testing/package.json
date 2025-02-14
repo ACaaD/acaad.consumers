@@ -45,6 +45,7 @@
     "eslint": "^8.57.0",
     "@acaad/toolchain": "workspace:*",
     "@types/heft-jest": "~1.0.6",
-    "@types/express": "~5.0.0"
+    "@types/express": "~5.0.0",
+    "openapi-types": "~12.1.3"
   }
 }

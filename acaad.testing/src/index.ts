@@ -38,7 +38,7 @@ export class ServerMocks implements IAcaadApiServer, IAcaadSignalRServer {
   }
 
   static async createMockServersAsync(
-    selectedCollection = 'positive',
+    selectedCollection: string | undefined,
     componentConfiguration: IComponentConfiguration,
     ports?: IPortConfiguration
   ): Promise<ServerMocks> {
