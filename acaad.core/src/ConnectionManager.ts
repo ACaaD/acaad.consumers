@@ -142,12 +142,13 @@ export class ConnectionManager {
           return new CalloutError(unknown);
         }
       }).pipe(Effect.withSpan('acaad:sync:query:api:request-wait'));
-
       const openApi = yield* ConnectionManager.verifyResponsePayload(res).pipe(
         Effect.withSpan('acaad:sync:query:api:request-parse')
       );
 
-      this.logger.logTrace(`Received acaad configuration with ${openApi.paths.length} paths.`);
+      this.logger.logTrace(
+        `Received acaad configuration with ${openApi.paths.length} paths from host ${host.friendlyName}.`
+      );
 
       return openApi;
     });

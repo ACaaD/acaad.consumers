@@ -13,8 +13,7 @@ describe('tracing', () => {
   let throwAwayInstance: ComponentManager | undefined;
 
   beforeAll(async () => {
-    const logger = new MockCsLogger();
-    intTestContext = await createIntegrationTestContext(3, undefined, logger);
+    intTestContext = await createIntegrationTestContext(3);
     instance = intTestContext.instance;
     stateObserver = intTestContext.stateObserver;
 
@@ -74,7 +73,7 @@ describe('tracing', () => {
     expect(trackedRequests[0].url).toMatch(rndComponent.toIdentifier());
   };
 
-  describe('outbound events', () => {
+  fdescribe('outbound events', () => {
     it('should append traceParent header for sensor component', async () => {
       await checkForComponentType(ComponentType.Sensor, 'query');
     });

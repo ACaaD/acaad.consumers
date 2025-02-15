@@ -195,6 +195,30 @@ function openApi(componentModel: IMockedComponentModel) {
     }
   };
 
+  const missingAcaadMetadata = {
+    ...generatedVariant,
+    id: 'missing-acaad-metadata',
+    options: {
+      status: 200,
+      body: {
+        ...generatedBody,
+        info: {
+          ...generatedBody.info,
+          acaad: undefined
+        }
+      }
+    }
+  };
+
+  const emptyResponse = {
+    id: 'empty-response', // id of the variant
+    type: 'json', // variant type
+    options: {
+      status: 200,
+      body: {}
+    }
+  };
+
   const realisticVariant = {
     id: 'realistic', // id of the variant
     type: 'json', // variant type
@@ -236,7 +260,7 @@ function openApi(componentModel: IMockedComponentModel) {
       id: 'openApi', // id of the route
       url: '/openapi/v1.json', // url in path-to-regexp format
       method: 'GET', // HTTP method
-      variants: [generatedVariant, realisticVariant, ...errorResponses]
+      variants: [generatedVariant, missingAcaadMetadata, emptyResponse, realisticVariant, ...errorResponses]
     }
   ];
 
