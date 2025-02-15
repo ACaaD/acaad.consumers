@@ -1,0 +1,10 @@
+{
+  "changes": [
+    {
+      "packageName": "@acaad/core",
+      "comment": "Extend connection/api error handling; Yield everything to CS adapter",
+      "type": "none"
+    }
+  ],
+  "packageName": "@acaad/core"
+}
