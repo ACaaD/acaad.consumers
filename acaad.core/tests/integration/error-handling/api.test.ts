@@ -10,9 +10,11 @@ import {
   ResponseSchemaError,
   AcaadServerUnreachableError,
   CalloutError,
-  ResponseStatusCodeError
+  ResponseStatusCodeError,
+  ComponentType
 } from '@acaad/abstractions';
-import { Cause } from 'effect';
+import { Cause, Option } from 'effect';
+import { ChangeType } from '@acaad/abstractions/src';
 
 describe('api error handling', () => {
   let intTestContext: IAcaadIntegrationTestContext;
@@ -132,24 +134,107 @@ describe('api error handling', () => {
   });
 
   describe('outbound events', () => {
-    it('should handle 4xx server response', async () => {});
+    const componentCheck = async (
+      intTestContext: IAcaadIntegrationTestContext,
+      simulateStatus: number,
+      componentType: ComponentType,
+      changeType: ChangeType,
+      value?: unknown
+    ) => {
+      const rndServer = intTestContext.getRandomServer();
+      await rndServer.apiServer.useCollectionAsync(`${simulateStatus}-status`);
+      const rndComponent = rndServer.getRandomComponent(componentType);
 
-    it('should handle 5xx server response', async () => {});
+      const result = await instance.handleOutboundStateChangeAsync(
+        rndServer.getHost(),
+        rndComponent,
+        changeType,
+        value !== undefined ? Option.some(value) : Option.none()
+      );
 
-    it('should handle invalid authentication', async () => {
-      // TODO
+      expect(result).toBe(false);
+      expectOneError(ResponseStatusCodeError, (err: ResponseStatusCodeError) => {
+        expect(err.expectedStatusCode).toBe(200);
+        expect(err.actualStatusCode).toBe(simulateStatus);
+      });
+    };
+
+    beforeEach(async () => {
+      await intTestContext.resetApiCollectionAsync();
     });
-  });
 
-  describe('signalr', () => {
-    it('should handle unreachable server', async () => {});
+    it('sanity check', async () => {
+      const rndServer = intTestContext.getRandomServer();
+      const rndComponent = rndServer.getRandomComponent(ComponentType.Button);
 
-    it('should handle server error on connect', async () => {
-      // TODO: TBD how to force an error from the mock?
+      const result = await instance.handleOutboundStateChangeAsync(
+        rndServer.getHost(),
+        rndComponent,
+        'action',
+        Option.none<unknown>()
+      );
+
+      expect(result).toBe(true);
     });
 
-    it('should handle server error on disconnect', async () => {
-      // TODO: TBD how to force an error from the mock?
+    it('should handle 4xx server response for sensor', async () => {
+      await componentCheck(intTestContext, 400, ComponentType.Sensor, 'query');
+    });
+
+    it('should handle invalid authentication for sensor', async () => {
+      await componentCheck(intTestContext, 403, ComponentType.Sensor, 'query');
+    });
+
+    it('should handle 5xx server response for sensor', async () => {
+      await componentCheck(intTestContext, 500, ComponentType.Sensor, 'query');
+    });
+
+    it('should handle 4xx server response for button', async () => {
+      await componentCheck(intTestContext, 400, ComponentType.Button, 'action');
+    });
+
+    it('should handle invalid authentication for button', async () => {
+      await componentCheck(intTestContext, 403, ComponentType.Button, 'action');
+    });
+
+    it('should handle 5xx server response for button', async () => {
+      await componentCheck(intTestContext, 500, ComponentType.Button, 'action');
+    });
+
+    it('should handle 4xx server response for switch (query)', async () => {
+      await componentCheck(intTestContext, 400, ComponentType.Switch, 'query');
+    });
+
+    it('should handle invalid authentication for switch (query)', async () => {
+      await componentCheck(intTestContext, 403, ComponentType.Switch, 'query');
+    });
+
+    it('should handle 5xx server response for switch (query)', async () => {
+      await componentCheck(intTestContext, 500, ComponentType.Switch, 'query');
+    });
+
+    it('should handle 4xx server response for switch (action, val=true)', async () => {
+      await componentCheck(intTestContext, 400, ComponentType.Switch, 'action', true);
+    });
+
+    it('should handle invalid authentication for switch (action, val=true)', async () => {
+      await componentCheck(intTestContext, 403, ComponentType.Switch, 'action', true);
+    });
+
+    it('should handle 5xx server response for switch (action, val=true)', async () => {
+      await componentCheck(intTestContext, 500, ComponentType.Switch, 'action', true);
+    });
+
+    it('should handle 4xx server response for switch (action, val=false)', async () => {
+      await componentCheck(intTestContext, 400, ComponentType.Switch, 'action', false);
+    });
+
+    it('should handle invalid authentication for switch (action, val=false)', async () => {
+      await componentCheck(intTestContext, 403, ComponentType.Switch, 'action', false);
+    });
+
+    it('should handle 5xx server response for switch (action, val=false)', async () => {
+      await componentCheck(intTestContext, 500, ComponentType.Switch, 'action', false);
     });
   });
 });
