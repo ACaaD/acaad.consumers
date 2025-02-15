@@ -8,9 +8,14 @@ export class ResponseStatusCodeError extends CalloutError {
   public host: AcaadHost;
 
   public expectedStatusCode: number;
-  public actualStatusCode: number;
+  public actualStatusCode: number | undefined;
 
-  public constructor(host: AcaadHost, expectedStatusCode: number, actualStatusCode: number, error: unknown) {
+  public constructor(
+    host: AcaadHost,
+    expectedStatusCode: number,
+    actualStatusCode: number | undefined,
+    error: unknown
+  ) {
     super(error);
     this.host = host;
     this.expectedStatusCode = expectedStatusCode;

@@ -45,6 +45,7 @@ import {
   Fiber,
   GroupBy,
   Layer,
+  ManagedRuntime,
   Option,
   Queue,
   Schedule,
@@ -69,6 +70,7 @@ export class ComponentManager {
   private _logger: ICsLogger;
   private _eventQueue: Queue.Queue<AcaadPopulatedEvent>;
   private _openTelLayer: () => Layer.Layer<Resource<Configuration>>;
+  private _managedRuntime: ManagedRuntime.ManagedRuntime<Resource<Configuration>, never>;
 
   public constructor(
     @inject(DependencyInjectionTokens.ConnectedServiceAdapter) serviceAdapter: IConnectedServiceAdapter,
@@ -88,6 +90,7 @@ export class ComponentManager {
     this._logger = logger;
     this._eventQueue = eventQueueWrapper.getQueue();
     this._openTelLayer = openTelLayer;
+    this._managedRuntime = ManagedRuntime.make(this._openTelLayer());
 
     this.handleOutboundStateChangeAsync = this.handleOutboundStateChangeAsync.bind(this);
     this.processComponentsByServer = this.processComponentsByServer.bind(this);
@@ -621,6 +624,8 @@ export class ComponentManager {
         Effect.withSpan('acaad:shutdown:interrupt-listener-fiber')
       );
     }
+
+    yield* this._managedRuntime.disposeEffect;
 
     this._logger.logDebug(`Shut down all concurrent processes.`);
     this._appState = 'Stopped';
