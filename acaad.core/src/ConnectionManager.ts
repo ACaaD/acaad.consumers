@@ -13,7 +13,8 @@ import {
   OAuth2Token,
   OpenApiDefinition,
   OpenApiDefinitionSchema,
-  ResponseSchemaError
+  ResponseSchemaError,
+  ResponseStatusCodeError
 } from '@acaad/abstractions';
 
 import { inject, injectable } from 'tsyringe';
@@ -111,6 +112,30 @@ export class ConnectionManager {
     });
   }
 
+  private handleCalloutErrorEff(host: AcaadHost, error: unknown) {
+    return Effect.gen(function* () {
+      let resultError: AcaadError | undefined;
+
+      if (error instanceof AxiosError) {
+        const axiosError: AxiosError = error;
+
+        if (axiosError.code === 'ECONNREFUSED') {
+          resultError = new AcaadServerUnreachableError(host, axiosError);
+        }
+
+        if (axiosError.code === 'ERR_BAD_REQUEST' || axiosError.code === 'ERR_BAD_RESPONSE') {
+          resultError = new ResponseStatusCodeError(host, 200, axiosError.status, axiosError);
+        }
+      }
+
+      resultError ??= new CalloutError(error);
+
+      yield* Effect.annotateCurrentSpan('raised-error', resultError);
+
+      return resultError;
+    }).pipe(Effect.withSpan('acaad:conn:error-mapper'));
+  }
+
   queryComponentConfigurationAsync(
     host: AcaadHost
   ): Effect.Effect<Either.Either<OpenApiDefinition, AcaadError>> {
@@ -132,16 +157,9 @@ export class ConnectionManager {
 
       const res = yield* Effect.tryPromise({
         try: (abortSignal) => instance.request<OpenApiDefinition>({ ...request, signal: abortSignal }),
-        catch: (unknown) => {
-          if (unknown instanceof AxiosError) {
-            if (unknown.code === 'ECONNREFUSED') {
-              return new AcaadServerUnreachableError(host, unknown);
-            }
-          }
-
-          return new CalloutError(unknown);
-        }
+        catch: (err) => Effect.runSync(this.handleCalloutErrorEff(host, err))
       }).pipe(Effect.withSpan('acaad:sync:query:api:request-wait'));
+
       const openApi = yield* ConnectionManager.verifyResponsePayload(res).pipe(
         Effect.withSpan('acaad:sync:query:api:request-parse')
       );
@@ -164,7 +182,8 @@ export class ConnectionManager {
     return Effect.gen(this, function* () {
       const { instance } = yield* AxiosSvc;
 
-      const requestUrl = metadata.serverMetadata.host.append(metadata.path);
+      const host = metadata.serverMetadata.host;
+      const requestUrl = host.append(metadata.path);
 
       const request: AxiosRequestConfig = {
         method: metadata.method,
@@ -180,7 +199,7 @@ export class ConnectionManager {
         try: (abortSignal) => {
           return instance.request<AcaadEvent>({ ...request, signal: abortSignal });
         },
-        catch: (unknown) => new CalloutError(unknown)
+        catch: (err) => Effect.runSync(this.handleCalloutErrorEff(host, err))
       });
 
       return response.data;

@@ -20,7 +20,8 @@ export class MockCsLogger implements ICsLogger {
 
   logError(cause?: Cause.Cause<unknown>, error?: Error, ...data: any[]): void {
     if (cause) {
-      console.error(Cause.pretty(cause), cause.toJSON(), ...data);
+      // console.error(Cause.pretty(cause), cause.toJSON(), ...data);
+      console.error(...data);
       return;
     }
 

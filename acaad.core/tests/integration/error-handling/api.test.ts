@@ -12,6 +12,7 @@ import {
   CalloutError,
   ResponseStatusCodeError
 } from '@acaad/abstractions';
+import { Cause } from 'effect';
 
 describe('api error handling', () => {
   let intTestContext: IAcaadIntegrationTestContext;
@@ -21,8 +22,11 @@ describe('api error handling', () => {
   let throwAwayInstance: ComponentManager | undefined;
 
   beforeAll(async () => {
-    const logger = new MockCsLogger();
-    intTestContext = await createIntegrationTestContext(3, undefined, logger);
+    // const logger = new MockCsLogger();
+    // intTestContext = await createIntegrationTestContext(3, undefined, logger);
+
+    intTestContext = await createIntegrationTestContext(3);
+
     instance = intTestContext.instance;
     serviceAdapter = intTestContext.serviceAdapterMock;
     stateObserver = intTestContext.stateObserver;
@@ -56,7 +60,7 @@ describe('api error handling', () => {
       await intTestContext.resumeAllAsync();
     });
 
-    it.only('should handle unreachable server', async () => {
+    it('should handle unreachable server', async () => {
       const rndServer = intTestContext.getRandomServer();
       await rndServer.apiServer.pauseAsync();
 
@@ -84,7 +88,7 @@ describe('api error handling', () => {
       const res = await instance.createMissingComponentsAsync();
 
       expect(res).toBe(true);
-      expectOneError(CalloutError);
+      expectOneError(ResponseSchemaError);
     });
 
     it('should handle 4xx server response', async () => {

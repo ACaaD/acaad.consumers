@@ -39,7 +39,7 @@ export async function createPerformanceTestContext(
     }
   )
     .WithContext<IConnectedServiceContext>('mock-context', serviceContextMock)
-    .WithOpenTelemtry('single', (_) => stateObserver)
+    // .WithOpenTelemtry('single', (_) => stateObserver)
     .Build();
 
   const instance: ComponentManager = fwkContainer.resolve(ComponentManager) as ComponentManager;
