@@ -56,4 +56,5 @@ export interface IAcaadIntegrationTestContext {
   getTrackedRequests(traceId?: string, spanId?: string): TrackedRequest[];
 
   resetApiCollectionAsync(): Promise<void>;
+  resumeAllAsync(): Promise<void>;
 }
