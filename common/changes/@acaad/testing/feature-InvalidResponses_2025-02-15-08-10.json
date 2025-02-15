@@ -1,0 +1,10 @@
+{
+  "changes": [
+    {
+      "packageName": "@acaad/testing",
+      "comment": "Extend mock API api",
+      "type": "none"
+    }
+  ],
+  "packageName": "@acaad/testing"
+}

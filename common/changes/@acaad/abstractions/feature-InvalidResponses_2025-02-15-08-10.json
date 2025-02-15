@@ -1,0 +1,10 @@
+{
+  "changes": [
+    {
+      "packageName": "@acaad/abstractions",
+      "comment": "Add connection/api related error classes",
+      "type": "none"
+    }
+  ],
+  "packageName": "@acaad/abstractions"
+}
