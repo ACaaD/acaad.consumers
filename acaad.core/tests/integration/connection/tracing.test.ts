@@ -73,7 +73,7 @@ describe('tracing', () => {
     expect(trackedRequests[0].url).toMatch(rndComponent.toIdentifier());
   };
 
-  fdescribe('outbound events', () => {
+  describe('outbound events', () => {
     it('should append traceParent header for sensor component', async () => {
       await checkForComponentType(ComponentType.Sensor, 'query');
     });

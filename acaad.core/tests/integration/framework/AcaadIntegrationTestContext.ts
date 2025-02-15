@@ -143,4 +143,8 @@ export class AcaadIntegrationTestContext implements IAcaadIntegrationTestContext
 
     expect(start).toBe(true);
   }
+
+  public async resumeAllAsync(): Promise<void> {
+    await Promise.all([this.serverMocks.map((sm) => sm.apiServer.resumeAsync())]);
+  }
 }

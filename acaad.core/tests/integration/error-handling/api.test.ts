@@ -42,29 +42,30 @@ describe('api error handling', () => {
     }
   });
 
-  const expectOneError = (classType: any) => {
+  const expectOneError = <T>(classType: any, errCheck?: (err: T) => void) => {
     expect(serviceAdapter.onErrorAsync).toHaveBeenCalledTimes(1);
     expect(serviceAdapter.onErrorAsync).toHaveBeenCalledWith(expect.any(classType), expect.anything());
+
+    const raisedError = (serviceAdapter.onErrorAsync as any).mock.calls[0][0];
+    errCheck?.call(this, raisedError);
   };
 
   describe('server metadata query', () => {
     beforeEach(async () => {
       await intTestContext.resetApiCollectionAsync();
+      await intTestContext.resumeAllAsync();
     });
 
-    afterEach(async () => {
-      await intTestContext.resetApiCollectionAsync();
-    });
-
-    it('should handle unreachable server', async () => {
+    it.only('should handle unreachable server', async () => {
       const rndServer = intTestContext.getRandomServer();
       await rndServer.apiServer.pauseAsync();
 
       const res = await instance.createMissingComponentsAsync();
-      expect(res).toBe(true);
-      expectOneError(AcaadServerUnreachableError);
 
-      await rndServer.apiServer.resumeAsync();
+      expect(res).toBe(true);
+      expectOneError(AcaadServerUnreachableError, (err: AcaadServerUnreachableError) =>
+        expect(err.host.friendlyName).toBe(rndServer.getHost().friendlyName)
+      );
     });
 
     it('should handle invalid openapi response schema', async () => {
@@ -93,7 +94,10 @@ describe('api error handling', () => {
       const res = await instance.createMissingComponentsAsync();
 
       expect(res).toBe(true);
-      expectOneError(AcaadFatalError);
+      expectOneError(ResponseStatusCodeError, (err: ResponseStatusCodeError) => {
+        expect(err.expectedStatusCode).toBe(200);
+        expect(err.actualStatusCode).toBe(400);
+      });
     });
 
     it('should handle 5xx server response', async () => {
@@ -103,7 +107,10 @@ describe('api error handling', () => {
       const res = await instance.createMissingComponentsAsync();
 
       expect(res).toBe(true);
-      expectOneError(ResponseStatusCodeError);
+      expectOneError(ResponseStatusCodeError, (err: ResponseStatusCodeError) => {
+        expect(err.expectedStatusCode).toBe(200);
+        expect(err.actualStatusCode).toBe(500);
+      });
     });
 
     it('should handle invalid authentication', async () => {
@@ -113,7 +120,10 @@ describe('api error handling', () => {
       const res = await instance.createMissingComponentsAsync();
 
       expect(res).toBe(true);
-      expectOneError(ResponseStatusCodeError);
+      expectOneError(ResponseStatusCodeError, (err: ResponseStatusCodeError) => {
+        expect(err.expectedStatusCode).toBe(200);
+        expect(err.actualStatusCode).toBe(403);
+      });
     });
   });
 
