@@ -1,7 +1,7 @@
 import { IAcaadIntegrationTestContext } from '../types';
 import { createIntegrationTestContext } from '../framework/test-setup';
 import { ComponentManager } from '../../../src';
-import { ComponentType } from '@acaad/abstractions';
+import { ComponentType, ComponentDescriptor } from '@acaad/abstractions';
 import { Option } from 'effect';
 
 describe('outbound events', () => {
@@ -104,5 +104,39 @@ describe('outbound events', () => {
     );
 
     expect(result).toBe(false);
+  });
+
+  it('should drop unmapped component with type query', async () => {
+    const rndServer = intTestContext.getRandomServer();
+    const unmappedComponent = new ComponentDescriptor('does-not-exist');
+
+    const result = await instance.handleOutboundStateChangeAsync(
+      rndServer.getHost(),
+      unmappedComponent,
+      'query',
+      Option.some<boolean>(true)
+    );
+
+    expect(result).toBe(false);
+    expect(intTestContext.logger.logWarning).toHaveBeenCalledWith(
+      `Could not find component by host ${rndServer.getHost().friendlyName} and descriptor ${unmappedComponent.toIdentifier()}. This is either a problem in the connected service or the component is not yet synced.`
+    );
+  });
+
+  it('should drop unmapped component with type action', async () => {
+    const rndServer = intTestContext.getRandomServer();
+    const unmappedComponent = new ComponentDescriptor('does-not-exist');
+
+    const result = await instance.handleOutboundStateChangeAsync(
+      rndServer.getHost(),
+      unmappedComponent,
+      'action',
+      Option.some<boolean>(true)
+    );
+
+    expect(result).toBe(false);
+    expect(intTestContext.logger.logWarning).toHaveBeenCalledWith(
+      `Could not find component by host ${rndServer.getHost().friendlyName} and descriptor ${unmappedComponent.toIdentifier()}. This is either a problem in the connected service or the component is not yet synced.`
+    );
   });
 });

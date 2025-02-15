@@ -4,7 +4,8 @@ export {
   AcaadServerUnreachableError,
   CalloutError,
   ConfigurationError,
-  ResponseSchemaError
+  ResponseSchemaError,
+  ResponseStatusCodeError
 } from './errors';
 
 export {
@@ -40,6 +41,7 @@ export {
   AcaadServerConnectedEvent,
   AcaadServerDisconnectedEvent,
   AcaadUnhandledEventReceivedEvent,
+  ApplicationState,
   ComponentCommandExecutionSucceededSchema,
   ComponentCommandExecutionSucceeded,
   ComponentCommandOutcomeEvent,

@@ -62,6 +62,10 @@ export class AcaadIntegrationTestContext implements IAcaadIntegrationTestContext
       .reduce((prev, curr) => [...prev, ...curr], []);
   }
 
+  async resetApiCollectionAsync(): Promise<void> {
+    await Promise.all(this.serverMocks.map((sm) => sm.apiServer.resetCollectionAsync()));
+  }
+
   async startAndWaitForSignalR(): Promise<void> {
     const checkpoint = this.stateObserver.waitForSignalRClient();
     const start = await this.instance.startAsync();

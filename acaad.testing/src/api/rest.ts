@@ -3,10 +3,10 @@ import { createServer } from '@mocks-server/main';
 import { openApiRoutes } from '@mocks-server/plugin-openapi';
 
 import openApi from './routes/open-api';
-import collections from './collections';
+import collectionFactory from './collections';
 import { getNextPortAsync, getRandomInt, getTestLogger, LogFunc } from '../utility';
 import { IComponentConfiguration, IMockedComponentModel, IPortConfiguration } from './types';
-import { ComponentDescriptor, ComponentType, TraceInfo } from '@acaad/abstractions';
+import { ComponentDescriptor, ComponentType, TraceInfo, ApplicationState } from '@acaad/abstractions';
 
 export class TrackedRequest {
   url: string;
@@ -44,6 +44,12 @@ export interface IAcaadApiServer extends IAcaadServer {
   enableRequestTracking(): void;
   getTrackedRequests(traceId?: string, spanId?: string): TrackedRequest[];
   clearTrackedRequests(): void;
+
+  useCollectionAsync(collectionName: string): Promise<void>;
+  resetCollectionAsync(): Promise<void>;
+
+  pauseAsync(): Promise<void>;
+  resumeAsync(): Promise<void>;
 }
 
 export class AcaadApiServer implements IAcaadApiServer {
@@ -53,8 +59,16 @@ export class AcaadApiServer implements IAcaadApiServer {
   public port: number;
   public adminPort: number;
 
-  private componentModel: IMockedComponentModel;
-  private log: LogFunc;
+  private readonly componentModel: IMockedComponentModel;
+  private readonly log: LogFunc;
+
+  private readonly collections: { id: string }[] = [];
+  private loadedCollections: string[] = [];
+
+  private readonly defaultCollection: string;
+  private collectionOverride: string;
+
+  private state: ApplicationState;
 
   private constructor(
     port: number,
@@ -63,6 +77,7 @@ export class AcaadApiServer implements IAcaadApiServer {
     componentConfiguration: IComponentConfiguration
   ) {
     this.log = getTestLogger('Api');
+    this.collections = collectionFactory();
 
     this.port = port;
     this.adminPort = adminPort;
@@ -72,13 +87,18 @@ export class AcaadApiServer implements IAcaadApiServer {
 
     this.requestTrackingMiddleware = this.requestTrackingMiddleware.bind(this);
 
+    this.defaultCollection = selectedCollection ?? 'generated';
+    this.collectionOverride = this.defaultCollection;
+
+    this.state = 'Initialized';
+
     this.server = createServer({
       server: {
         port: port
       },
       mock: {
         collections: {
-          selected: selectedCollection ?? 'generated'
+          selected: this.defaultCollection
         }
       },
       plugins: {
@@ -89,6 +109,18 @@ export class AcaadApiServer implements IAcaadApiServer {
       // @ts-ignore
       log: global.__ENABLE_TEST_FWK_LOGS__ ? 'info' : 'silent'
     });
+  }
+
+  async pauseAsync(): Promise<void> {
+    this.state = 'Stopping';
+    await this.server.stop();
+    this.state = 'Stopped';
+  }
+  async resumeAsync(): Promise<void> {
+    if (this.state !== 'Running') {
+      await this.server.start();
+      this.state = 'Running';
+    }
   }
 
   private static createComponentModel(
@@ -137,6 +169,8 @@ export class AcaadApiServer implements IAcaadApiServer {
   }
 
   async startAsync(): Promise<void> {
+    this.state = 'Starting';
+
     await this.server.start();
     const { loadRoutes, loadCollections } = this.server.mock.createLoaders();
     const { route, generatedBody, realisticBody } = openApi(this.componentModel);
@@ -179,14 +213,19 @@ export class AcaadApiServer implements IAcaadApiServer {
 
     const defaultRoutes = [`${globalMiddlewareRoute.id}:${middlewareVariantId}`];
 
-    this.mergeRoutesInCollection(collections[1], defaultRoutes, generatedComponentRoutes, '200-status');
+    this.mergeRoutesInCollection(this.collections[1], defaultRoutes, generatedComponentRoutes, '200-status');
 
-    const collCount = collections.length;
-    this.mergeRoutesInCollection(collections[collCount - 1], defaultRoutes, realisticRoutes, '200-status');
+    const collCount = this.collections.length;
+    this.mergeRoutesInCollection(
+      this.collections[collCount - 1],
+      defaultRoutes,
+      realisticRoutes,
+      '200-status'
+    );
 
     const statusRegex = new RegExp('\\d{3}-status');
 
-    collections
+    this.collections
       .filter((coll) => {
         const res = statusRegex.test(coll.id);
         this.log(`Checked collection id: ${coll.id}; Result is: ${res}`);
@@ -197,7 +236,11 @@ export class AcaadApiServer implements IAcaadApiServer {
         this.mergeRoutesInCollection(collection, defaultRoutes, generatedComponentRoutes, variantId)
       );
 
-    loadCollections(collections);
+    loadCollections(this.collections);
+
+    this.collections.forEach((c) => this.loadedCollections.push(c.id));
+
+    this.state = 'Running';
   }
 
   mergeRoutesInCollection(collection: any, defaultRoutes: any, additionalRoutes: any, variantId: string) {
@@ -214,6 +257,24 @@ export class AcaadApiServer implements IAcaadApiServer {
       )
       // @ts-ignore
       .reduce((aggr, curr) => [...aggr, ...curr], [...defaultRoutes, ...collection.routes]);
+  }
+
+  async resetCollectionAsync(): Promise<void> {
+    if (this.collectionOverride === this.defaultCollection) {
+      return;
+    }
+
+    await this.useCollectionAsync(this.defaultCollection);
+    this.collectionOverride = this.defaultCollection;
+  }
+
+  async useCollectionAsync(collectionName: string): Promise<void> {
+    if (!this.loadedCollections.includes(collectionName)) {
+      throw new Error(`${collectionName} is not loaded. Cannot proceed.`);
+    }
+
+    this.collectionOverride = collectionName;
+    return this.server.mock.collections.select(collectionName, { check: true });
   }
 
   async disposeAsync(): Promise<void> {

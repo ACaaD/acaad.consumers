@@ -6,6 +6,8 @@ export { AcaadOutcome, AcaadOutcomeSchema } from './AcaadOutcome';
 
 export { AcaadUnitOfMeasure } from './AcaadUnitOfMeasure';
 
+export { ApplicationState } from './ApplicationState';
+
 export { Component, ComponentTypes, ButtonComponent, SensorComponent, SwitchComponent } from './Component';
 export { ComponentDescriptor } from './ComponentDescriptor';
 export { ComponentType } from './ComponentType';

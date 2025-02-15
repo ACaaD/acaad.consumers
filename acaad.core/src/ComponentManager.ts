@@ -18,7 +18,7 @@ import {
   AcaadServerDisconnectedEvent,
   AcaadUnhandledEventReceivedEvent,
   ComponentDescriptor,
-  ConnectedServiceFunction
+  ApplicationState
 } from '@acaad/abstractions';
 
 import { inject, injectable } from 'tsyringe';
@@ -50,7 +50,7 @@ import {
   Schedule,
   Stream
 } from 'effect';
-import { ApplicationState } from './model/ApplicationState';
+
 import { QueueWrapper } from './QueueWrapper';
 import { onErrorEff, executeCsAdapter } from './utility';
 
@@ -127,9 +127,10 @@ export class ComponentManager {
           Effect.withSpan('acaad:sync:cs:refresh-metadata')
         );
 
-        yield* Stream.runCollect(
+        return yield* Stream.runCollect(
           failed.pipe(
             Stream.map((l) => l.left),
+            Stream.tap((e) => onErrorEff(this._serviceAdapter, e)),
             Stream.groupByKey((e) => e._tag),
             GroupBy.evaluate((tag, errors) =>
               Effect.gen(this, function* () {
@@ -151,6 +152,12 @@ export class ComponentManager {
                   );
                   return Effect.succeed(undefined);
                 }
+
+                const otherErrors = yield* Stream.runCollect(errors);
+
+                this._logger.logWarning(
+                  `The following server(s) did not respond in the expected way: [${Chunk.toArray(otherErrors).join(', ')}]`
+                );
 
                 const errorsChunked = Stream.runCollect(errors);
                 return Effect.fail(
@@ -231,8 +238,9 @@ export class ComponentManager {
     return allMetadata.pipe(
       Stream.groupByKey((m) => `${m.serverMetadata.host.friendlyName}.${m.component.name}`),
       GroupBy.evaluate((key: string, metadata: Stream.Stream<AcaadPopulatedMetadata>) =>
-        Effect.gen(function* () {
+        Effect.gen(this, function* () {
           const m = yield* Stream.runCollect(metadata);
+          this._logger.logTrace(`Generating metadata for component ${key}.`);
           return Component.fromMetadata(m);
         })
       )
@@ -350,7 +358,7 @@ export class ComponentManager {
 
     if (Option.isNone(componentOpt)) {
       this._logger.logWarning(
-        `Could not find component by descriptor ${componentDescriptor.toIdentifier()}. This is either a problem in the connected service or the component is not yet synced.`
+        `Could not find component by host ${host.friendlyName} and descriptor ${componentDescriptor.toIdentifier()}. This is either a problem in the connected service or the component is not yet synced.`
       );
 
       return Promise.resolve(false);
@@ -359,7 +367,7 @@ export class ComponentManager {
     const component = componentOpt.value;
 
     this._logger.logDebug(
-      `Handling outbound state (type=${type}) change for component ${component.name} and value ${value}.`
+      `Handling outbound state (type=${type}) change for component ${host.friendlyName}:${component.name} and value ${value}.`
     );
 
     const metadadataFilter = this.getMetadataFilter(type, value);

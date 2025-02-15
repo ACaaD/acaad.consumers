@@ -77,7 +77,23 @@ export class ServerMocks implements IAcaadApiServer, IAcaadSignalRServer {
     return this.apiServer.getTrackedRequests(traceId, spanId);
   }
 
+  async useCollectionAsync(collectionName: string): Promise<void> {
+    return await this.apiServer.useCollectionAsync(collectionName);
+  }
+
   clearTrackedRequests(): void {
     this.apiServer.enableRequestTracking();
+  }
+
+  async resetCollectionAsync(): Promise<void> {
+    await this.apiServer.resetCollectionAsync();
+  }
+
+  async pauseAsync(): Promise<void> {
+    await this.apiServer.pauseAsync();
+  }
+
+  async resumeAsync(): Promise<void> {
+    return this.apiServer.resumeAsync();
   }
 }

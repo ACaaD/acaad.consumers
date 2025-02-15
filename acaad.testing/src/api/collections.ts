@@ -1,4 +1,4 @@
-const routes = [
+const collectionFactory = () => [
   {
     id: 'base', // collection id
     routes: [] // collection routes
@@ -7,6 +7,16 @@ const routes = [
     id: 'generated',
     from: 'base',
     routes: ['openApi:generated']
+  },
+  {
+    id: 'missing-acaad-metadata',
+    from: 'base',
+    routes: ['openApi:missing-acaad-metadata']
+  },
+  {
+    id: 'empty-response',
+    from: 'base',
+    routes: ['openApi:empty-response']
   },
   {
     id: '400-status',
@@ -30,4 +40,4 @@ const routes = [
   }
 ];
 
-export default routes;
+export default collectionFactory;
