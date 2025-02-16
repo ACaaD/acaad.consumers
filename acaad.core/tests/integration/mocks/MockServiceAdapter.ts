@@ -52,7 +52,11 @@ export function setupConnectedServiceMockInstance(serviceAdapterMock: Mock<IConn
   serviceAdapterMock.onServerDisconnectedAsync.mockResolvedValue();
   serviceAdapterMock.updateComponentStateAsync.mockResolvedValue();
 
-  serviceAdapterMock.shouldSyncMetadataOnServerConnect.mockReturnValue(false);
+  serviceAdapterMock.shouldSyncMetadataOnServerConnect.mockReturnValue(true);
+
+  const shouldSyncMetadataMock = jest.fn();
+  shouldSyncMetadataMock.mockReturnValue(true);
+  serviceAdapterMock.shouldSyncMetadata = shouldSyncMetadataMock;
 
   serviceAdapterMock.getComponentDescriptorByComponent.mockImplementation(
     (c) => new ComponentDescriptor(c.name)

@@ -3,10 +3,11 @@ import { IStateObserver } from '../types';
 import { ExportResult, ExportResultCode } from '@opentelemetry/core';
 import { LogFunc } from '@acaad/testing';
 import { getTestLogger } from '../framework/test-setup';
+import { DurationInput } from 'effect/Duration';
+import { Duration } from 'effect';
 
 export class ObservableSpanExporter implements SpanExporter, IStateObserver {
   private readonly log: LogFunc;
-  private static instance: ObservableSpanExporter = new ObservableSpanExporter();
 
   private trackedSpans: Map<string, (span: ReadableSpan) => void> = new Map<string, () => {}>();
   private trackedTimeouts: Map<string, NodeJS.Timeout> = new Map<string, NodeJS.Timeout>();
@@ -19,7 +20,7 @@ export class ObservableSpanExporter implements SpanExporter, IStateObserver {
   async waitForSignalRClient(): Promise<void> {
     this.log('Setting up wait promise for signalR client.');
     const startMs = Date.now();
-    await this.waitForSpanAsync('acaad:cs:onServerConnected');
+    await this.waitForSpanAsync('acaad:cs:onServerConnected', '500 millis');
     this.log(`SignalR client connected after ${Date.now() - startMs}ms.`);
   }
 
@@ -30,7 +31,8 @@ export class ObservableSpanExporter implements SpanExporter, IStateObserver {
     };
   }
 
-  waitForSpanAsync(spanName: string, timeoutMs: number = 200): Promise<ReadableSpan> {
+  waitForSpanAsync(spanName: string, timeout?: DurationInput): Promise<ReadableSpan> {
+    timeout ??= '200 millis';
     this.log(`Tracking span with name ${spanName}.`);
 
     const startWait = Date.now();
@@ -50,6 +52,7 @@ export class ObservableSpanExporter implements SpanExporter, IStateObserver {
     // TODO: Synchronization + Duplicate handling
     this.trackedSpans.set(spanName, this.resolveWrapped(startWait, spanName, resolveFunc));
 
+    const timeoutMs = Duration.toMillis(timeout);
     const rejectTimeout = setTimeout(
       () => rejectFunc(`Error: Timeout of ${timeoutMs}ms exceeded for span ${spanName}.`),
       timeoutMs
@@ -91,6 +94,6 @@ export class ObservableSpanExporter implements SpanExporter, IStateObserver {
   }
 
   public static Create(): ObservableSpanExporter {
-    return ObservableSpanExporter.instance;
+    return new ObservableSpanExporter();
   }
 }

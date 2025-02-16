@@ -3,7 +3,10 @@ import { ICsLogger } from '@acaad/abstractions';
 
 export class MockCsLogger implements ICsLogger {
   logTrace(...data: any[]): void {
-    this.log('trace', ...data);
+    // @ts-ignore
+    if (global.__ENABLE_TEST_FWK_LOGS__) {
+      this.log('trace', ...data);
+    }
   }
 
   logDebug(...data: any[]): void {

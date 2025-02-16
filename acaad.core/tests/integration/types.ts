@@ -12,9 +12,10 @@ import { Mock } from 'ts-jest-mocker';
 import { DependencyContainer } from 'tsyringe';
 import { ServerMocks, TrackedRequest } from '@acaad/testing';
 import { ReadableSpan } from '@opentelemetry/sdk-trace-base';
+import { DurationInput } from 'effect/Duration';
 
 export interface IStateObserver {
-  waitForSpanAsync(spanName: string, timeoutMs?: number): Promise<ReadableSpan>;
+  waitForSpanAsync(spanName: string, timeout?: DurationInput): Promise<ReadableSpan>;
 
   waitForSignalRClient(): Promise<void>;
 }
