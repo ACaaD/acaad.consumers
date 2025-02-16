@@ -55,7 +55,6 @@ export interface IConnectedServiceAdapterFunctional {
 
   onUnmappedComponentEventAsync?(event: ComponentCommandOutcomeEvent, as: AbortSignal): Promise<void>;
 
-  // TODO: If stuff works, make these functions async and wrap in CM error handling
   shouldSyncMetadataOnServerConnect(): boolean;
 
   getMetadataSyncInterval?(): number | string;
