@@ -17,7 +17,7 @@ import { DurationInput } from 'effect/Duration';
 export interface IStateObserver {
   waitForSpanAsync(spanName: string, timeout?: DurationInput, count?: number): Promise<ReadableSpan>;
 
-  waitForSignalRClient(serverCount?: number): Promise<void>;
+  waitForSignalRClient(serverCount?: number, duration?: DurationInput): Promise<void>;
 }
 
 export interface IAcaadIntegrationTestContext {
@@ -48,7 +48,7 @@ export interface IAcaadIntegrationTestContext {
     timeoutMs?: number
   ): Promise<void>;
 
-  startAndWaitForSignalR(): Promise<void>;
+  startAndWaitForSignalR(duration?: DurationInput): Promise<void>;
 
   getThrowAwayInstance(): ComponentManager;
 

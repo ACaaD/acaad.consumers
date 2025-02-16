@@ -11,6 +11,8 @@ import {
   AcaadHost,
   AcaadEvent
 } from '@acaad/abstractions';
+import { Duration } from 'effect';
+import { DurationInput } from 'effect/Duration';
 
 export class AcaadIntegrationTestContext implements IAcaadIntegrationTestContext {
   private readonly log: LogFunc;
@@ -68,8 +70,8 @@ export class AcaadIntegrationTestContext implements IAcaadIntegrationTestContext
     await Promise.all(this.serverMocks.map((sm) => sm.apiServer.resetCollectionAsync()));
   }
 
-  async startAndWaitForSignalR(): Promise<void> {
-    const checkpoint = this.stateObserver.waitForSignalRClient(this.serverMocks.length);
+  async startAndWaitForSignalR(duration?: DurationInput): Promise<void> {
+    const checkpoint = this.stateObserver.waitForSignalRClient(this.serverMocks.length, duration);
     const start = await this.instance.startAsync();
     expect(start).toBe(true);
 
