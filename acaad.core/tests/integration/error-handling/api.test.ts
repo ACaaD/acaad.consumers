@@ -33,7 +33,7 @@ describe('api error handling', () => {
     serviceAdapter = intTestContext.serviceAdapterMock;
     stateObserver = intTestContext.stateObserver;
 
-    await intTestContext.startAllAsync();
+    await intTestContext.startMockServersAsync();
   });
 
   afterAll(async () => {
