@@ -589,53 +589,49 @@ export class ComponentManager {
     return yield* instrumented;
   });
 
-  private shouldSyncMetadataIntervalBased(lastSyncOpt: number | undefined): Effect.Effect<boolean, never> {
-    return Effect.gen(this, function* () {
-      if (this._serviceAdapter.getMetadataSyncInterval === undefined) {
-        return false;
-      }
+  private shouldSyncMetadataIntervalBased(lastSyncOpt: number | undefined): boolean {
+    if (this._serviceAdapter.getMetadataSyncInterval === undefined) {
+      return false;
+    }
 
-      const durationPrim = this._serviceAdapter.getMetadataSyncInterval();
-      const durationOpt = Duration.decodeUnknown(durationPrim);
+    const durationPrim = this._serviceAdapter.getMetadataSyncInterval();
+    const durationOpt = Duration.decodeUnknown(durationPrim);
 
-      if (Option.isNone(durationOpt)) {
-        this._logger.logError(
-          undefined,
-          undefined,
-          `Could not parse duration '${durationPrim}' provided by service adapter. Ignoring time-based resync.`
-        );
+    if (Option.isNone(durationOpt)) {
+      this._logger.logError(
+        undefined,
+        undefined,
+        `Could not parse duration '${durationPrim}' provided by service adapter. Ignoring time-based resync.`
+      );
 
-        return false;
-      }
+      return false;
+    }
 
-      const duration = durationOpt.value;
-      if (duration === Duration.infinity) {
-        // Never resync on duration 'infinity'
-        return false;
-      }
+    const duration = durationOpt.value;
+    if (duration === Duration.infinity) {
+      // Never resync on duration 'infinity'
+      return false;
+    }
 
-      if (lastSyncOpt === undefined) {
-        return true;
-      }
+    if (lastSyncOpt === undefined) {
+      return true;
+    }
 
-      return Date.now() > lastSyncOpt + Duration.toMillis(duration);
-    });
+    return Date.now() > lastSyncOpt + Duration.toMillis(duration);
   }
 
-  private shouldSyncMetadata(host: AcaadHost): Effect.Effect<boolean, never> {
-    return Effect.gen(this, function* () {
-      if (!this._serviceAdapter.shouldSyncMetadataOnServerConnect()) {
-        return false;
-      }
+  private shouldSyncMetadata(host: AcaadHost): boolean {
+    if (!this._serviceAdapter.shouldSyncMetadataOnServerConnect()) {
+      return false;
+    }
 
-      const lastSyncOpt = this._metadataModel.getLastSyncByServer(host);
+    const lastSyncOpt = this._metadataModel.getLastSyncByServer(host);
 
-      const shouldSyncFromInterval = yield* this.shouldSyncMetadataIntervalBased(lastSyncOpt);
-      const shouldSyncForHost =
-        this._serviceAdapter.shouldSyncMetadata?.call(this._serviceAdapter, host, lastSyncOpt) ?? false;
+    const shouldSyncFromInterval = this.shouldSyncMetadataIntervalBased(lastSyncOpt);
+    const shouldSyncForHost =
+      this._serviceAdapter.shouldSyncMetadata?.call(this._serviceAdapter, host, lastSyncOpt) ?? false;
 
-      return shouldSyncFromInterval || shouldSyncForHost;
-    });
+    return shouldSyncFromInterval || shouldSyncForHost;
   }
 
   private processEventWithSpan(event: AcaadPopulatedEvent) {
