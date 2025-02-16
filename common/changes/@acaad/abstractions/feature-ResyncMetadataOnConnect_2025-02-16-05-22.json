@@ -1,0 +1,10 @@
+{
+  "changes": [
+    {
+      "packageName": "@acaad/abstractions",
+      "comment": "Add (optional) resync controlling",
+      "type": "none"
+    }
+  ],
+  "packageName": "@acaad/abstractions"
+}
