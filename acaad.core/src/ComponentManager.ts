@@ -645,7 +645,7 @@ export class ComponentManager {
       if (event.name === AcaadServerConnectedEvent.Tag) {
         this._logger.logDebug(`Events: Server ${event.host.friendlyName} connected.`);
 
-        if (this._serviceAdapter.shouldSyncMetadataOnServerConnect() && this.shouldSyncMetadata(event.host)) {
+        if (this.shouldSyncMetadata(event.host)) {
           yield* this.syncMetadataEff([event.host]).pipe(
             Effect.withSpan('acaad:sync'),
             Effect.tapError((err) => onErrorEff(this._serviceAdapter, err))
