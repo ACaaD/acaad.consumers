@@ -15,9 +15,9 @@ import { ReadableSpan } from '@opentelemetry/sdk-trace-base';
 import { DurationInput } from 'effect/Duration';
 
 export interface IStateObserver {
-  waitForSpanAsync(spanName: string, timeout?: DurationInput): Promise<ReadableSpan>;
+  waitForSpanAsync(spanName: string, timeout?: DurationInput, count?: number): Promise<ReadableSpan>;
 
-  waitForSignalRClient(): Promise<void>;
+  waitForSignalRClient(serverCount?: number): Promise<void>;
 }
 
 export interface IAcaadIntegrationTestContext {

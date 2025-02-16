@@ -26,9 +26,9 @@ export function sanityCheckGenerator(
 
     const instance = instanceToUse ?? instanceFromContext;
 
-    const componentCreationResult = await instance.createMissingComponentsAsync();
-
-    const signalrCheckpoint = intTestContext.stateObserver.waitForSignalRClient();
+    const signalrCheckpoint = intTestContext.stateObserver.waitForSignalRClient(
+      intTestContext.serverMocks.length
+    );
     await instance.startAsync();
     await signalrCheckpoint;
 
@@ -50,8 +50,10 @@ export function sanityCheckGenerator(
 
     await instance.shutdownAsync();
 
-    expect(componentCreationResult).toBe(true);
     expect(outboundChangeResult).toBe(true);
+    expect(serviceAdapterMock.createServerModelAsync).toHaveBeenCalledTimes(
+      intTestContext.serverMocks.length
+    );
     expect(serviceAdapterMock.updateComponentStateAsync).toHaveBeenCalledTimes(1);
   };
 }

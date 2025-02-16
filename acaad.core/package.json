@@ -58,6 +58,7 @@
     "tslib": "~2.8.1",
     "eslint": "^8.57.0",
     "@types/heft-jest": "~1.0.6",
-    "ts-jest-mocker": "~1.2.0"
+    "ts-jest-mocker": "~1.2.0",
+    "async-sema": "~3.1.1"
   }
 }

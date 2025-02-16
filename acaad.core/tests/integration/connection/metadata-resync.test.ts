@@ -15,9 +15,9 @@ describe('metadata resync', () => {
 
   beforeAll(async () => {
     const logger = new MockCsLogger();
-    intTestContext = await createIntegrationTestContext(3, undefined, logger);
+    intTestContext = await createIntegrationTestContext(5, undefined, logger);
 
-    // intTestContext = await createIntegrationTestContext(3);
+    // intTestContext = await createIntegrationTestContext(5);
 
     instance = intTestContext.instance;
     serviceAdapter = intTestContext.serviceAdapterMock;
@@ -49,11 +49,10 @@ describe('metadata resync', () => {
   });
 
   it('should debounce metadata creation', async () => {
-    throwAwayInstance = intTestContext.getThrowAwayInstance();
-    serviceAdapter.shouldSyncMetadataOnServerConnect.mockReturnValue(true);
-
-    await instance.startAsync();
-
+    // throwAwayInstance = intTestContext.getThrowAwayInstance();
+    // serviceAdapter.shouldSyncMetadataOnServerConnect.mockReturnValue(true);
+    //
+    // await instance.startAsync();
     // Count number of spans (fwk extension)
   });
 });

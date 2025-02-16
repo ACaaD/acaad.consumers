@@ -116,88 +116,90 @@ export class ComponentManager {
     }
   }
 
-  private flowEff = Effect.gen(this, function* () {
-    const serverMetadata: Stream.Stream<Either.Either<AcaadServerMetadata, AcaadError>> =
-      yield* this.queryComponentConfigurations;
+  syncMetadataEff(hosts?: AcaadHost[]) {
+    return Effect.gen(this, function* () {
+      const serverMetadata: Stream.Stream<Either.Either<AcaadServerMetadata, AcaadError>> =
+        yield* this.queryComponentConfigurations(hosts);
 
-    // TODO: Partition by OpenApiDefinition, ResponseSchemaError, ConnectionRefused (or whatever Axios returns)
-    // Then continue processing only OpenApiDefinition.
-    const partition = serverMetadata.pipe(
-      Stream.partition((e) => Either.isRight(e)),
-      Effect.withSpan('acaad:sync:partition')
-    );
+      // TODO: Partition by OpenApiDefinition, ResponseSchemaError, ConnectionRefused (or whatever Axios returns)
+      // Then continue processing only OpenApiDefinition.
+      const partition = serverMetadata.pipe(
+        Stream.partition((e) => Either.isRight(e)),
+        Effect.withSpan('acaad:sync:partition')
+      );
 
-    const res = Effect.scoped(
-      Effect.gen(this, function* () {
-        const [failed, openApiDefinitions] = yield* partition;
+      const res = Effect.scoped(
+        Effect.gen(this, function* () {
+          const [failed, openApiDefinitions] = yield* partition;
 
-        const availableServers = openApiDefinitions.pipe(
-          Stream.map((r) => r.right),
-          Stream.withSpan('acaad:sync:map-right')
-        );
+          const availableServers = openApiDefinitions.pipe(
+            Stream.map((r) => r.right),
+            Stream.withSpan('acaad:sync:map-right')
+          );
 
-        yield* this.reloadComponentMetadataModel(availableServers).pipe(
-          Effect.withSpan('acaad:sync:refresh-metadata')
-        );
+          const groupedByServer = yield* this.reloadComponentMetadataModel(availableServers).pipe(
+            Effect.withSpan('acaad:sync:refresh-metadata')
+          );
 
-        const createRes = yield* this.updateConnectedServiceModel.pipe(
-          Effect.withSpan('acaad:sync:cs:refresh-metadata')
-        );
+          const createRes = yield* this.updateConnectedServiceModel(groupedByServer).pipe(
+            Effect.withSpan('acaad:sync:cs:refresh-metadata')
+          );
 
-        return yield* Stream.runCollect(
-          failed.pipe(
-            Stream.map((l) => l.left),
-            Stream.tap((e) => onErrorEff(this._serviceAdapter, e)),
-            Stream.groupByKey((e) => e._tag),
-            GroupBy.evaluate((tag, errors) =>
-              Effect.gen(this, function* () {
-                // TODO: Improve error handling :)
+          return yield* Stream.runCollect(
+            failed.pipe(
+              Stream.map((l) => l.left),
+              Stream.tap((e) => onErrorEff(this._serviceAdapter, e)),
+              Stream.groupByKey((e) => e._tag),
+              GroupBy.evaluate((tag, errors) =>
+                Effect.gen(this, function* () {
+                  // TODO: Improve error handling :)
 
-                if (tag === AcaadServerUnreachableError.Tag) {
-                  const unreachableErrors = yield* Stream.runCollect(
-                    errors.pipe(
-                      Stream.map((e) => e as AcaadServerUnreachableError),
-                      Stream.map(
-                        (unreachable) =>
-                          `'${unreachable.host.friendlyName}'->${unreachable.host.host}:${unreachable.host.port}`
+                  if (tag === AcaadServerUnreachableError.Tag) {
+                    const unreachableErrors = yield* Stream.runCollect(
+                      errors.pipe(
+                        Stream.map((e) => e as AcaadServerUnreachableError),
+                        Stream.map(
+                          (unreachable) =>
+                            `'${unreachable.host.friendlyName}'->${unreachable.host.host}:${unreachable.host.port}`
+                        )
                       )
-                    )
-                  );
+                    );
+
+                    this._logger.logWarning(
+                      `The following server(s) are unreachable: [${Chunk.toArray(unreachableErrors).join(', ')}]`
+                    );
+                    return Effect.succeed(undefined);
+                  }
+
+                  const otherErrors = yield* Stream.runCollect(errors);
 
                   this._logger.logWarning(
-                    `The following server(s) are unreachable: [${Chunk.toArray(unreachableErrors).join(', ')}]`
+                    `The following server(s) did not respond in the expected way: [${Chunk.toArray(otherErrors).join(', ')}]`
                   );
-                  return Effect.succeed(undefined);
-                }
 
-                const otherErrors = yield* Stream.runCollect(errors);
-
-                this._logger.logWarning(
-                  `The following server(s) did not respond in the expected way: [${Chunk.toArray(otherErrors).join(', ')}]`
-                );
-
-                const errorsChunked = Stream.runCollect(errors);
-                return Effect.fail(
-                  new AcaadError(
-                    errorsChunked,
-                    'One or more unhandled errors occurred. This should never happen.'
-                  )
-                );
-              })
+                  const errorsChunked = Stream.runCollect(errors);
+                  return Effect.fail(
+                    new AcaadError(
+                      errorsChunked,
+                      'One or more unhandled errors occurred. This should never happen.'
+                    )
+                  );
+                })
+              )
             )
-          )
-        ).pipe(Effect.withSpan('acaad:sync:run-collect'));
-      })
-    );
+          ).pipe(Effect.withSpan('acaad:sync:run-collect'));
+        })
+      );
 
-    return yield* res;
-  });
+      return yield* res;
+    });
+  }
 
   public async createMissingComponentsAsync(): Promise<boolean> {
     this._logger.logInformation('Syncing components from ACAAD servers.');
 
     const result = await Effect.runPromiseExit(
-      this.flowEff.pipe(
+      this.syncMetadataEff().pipe(
         Effect.withSpan('acaad:sync'),
         Effect.provide(this._openTelLayer()),
         Effect.tapError((err) => onErrorEff(this._serviceAdapter, err))
@@ -238,16 +240,24 @@ export class ComponentManager {
     });
   }
 
-  readonly queryComponentConfigurations = Effect.gen(this, function* () {
-    const configuredServers: AcaadHost[] = yield* this._connectionManager.getHosts;
-    const concurrency = this._serviceAdapter.getAllowedConcurrency();
+  queryComponentConfigurations(hosts?: AcaadHost[]) {
+    return Effect.gen(this, function* () {
+      let configuredServers: AcaadHost[];
+      if (hosts !== undefined) {
+        configuredServers = hosts;
+      } else {
+        configuredServers = yield* this._connectionManager.getHosts;
+      }
 
-    return Stream.fromIterable(configuredServers).pipe(
-      Stream.mapEffect(this.getServerMetadata, {
-        concurrency
-      })
-    );
-  });
+      const concurrency = this._serviceAdapter.getAllowedConcurrency();
+
+      return Stream.fromIterable(configuredServers).pipe(
+        Stream.mapEffect(this.getServerMetadata, {
+          concurrency
+        })
+      );
+    });
+  }
 
   createComponentHierarchy = (
     allMetadata: Stream.Stream<AcaadPopulatedMetadata>
@@ -264,7 +274,9 @@ export class ComponentManager {
     );
   };
 
-  private reloadComponentMetadataModel(serverMetadata: Stream.Stream<AcaadServerMetadata>) {
+  private reloadComponentMetadataModel(
+    serverMetadata: Stream.Stream<AcaadServerMetadata>
+  ): Effect.Effect<GroupBy.GroupBy<AcaadServerMetadata, Component>> {
     return Effect.gen(this, function* () {
       const tmp = serverMetadata.pipe(
         Stream.tap(this._metadataModel.clearServerMetadata),
@@ -272,42 +284,45 @@ export class ComponentManager {
         this.createComponentHierarchy,
         Stream.filter((cOpt) => Option.isSome(cOpt)),
         Stream.map((cSome) => cSome.value),
-        Stream.groupByKey((c) => c.serverMetadata),
-        GroupBy.evaluate(this._metadataModel.populateServerMetadata)
+        Stream.groupByKey((c) => c.serverMetadata)
       );
 
-      return yield* Stream.runCollect(tmp);
+      return tmp;
     });
   }
 
-  private updateConnectedServiceModel = Effect.gen(this, function* () {
-    const sem = yield* Effect.makeSemaphore(this._serviceAdapter.getAllowedConcurrency());
+  private updateConnectedServiceModel(acaadServerMetadata: GroupBy.GroupBy<AcaadServerMetadata, Component>) {
+    return Effect.gen(this, function* () {
+      const sem = yield* Effect.makeSemaphore(this._serviceAdapter.getAllowedConcurrency());
 
-    const start = Date.now();
-    const stream = this._metadataModel.getComponentsByServer().pipe(
-      GroupBy.evaluate((server, components) =>
-        Effect.gen(this, function* () {
-          yield* this.processServerWithSemaphore(server, sem);
-          const componentResult = yield* this.processComponentsWithSemaphore(
-            server.host.friendlyName,
-            components,
-            sem
-          );
-          this._metadataModel.onServerMetadataSynced(server.host);
-          return componentResult;
-        })
-      )
-    );
+      const start = Date.now();
+      const stream = acaadServerMetadata.pipe(
+        GroupBy.evaluate((server, components) =>
+          Effect.gen(this, function* () {
+            const componentChunk = yield* this._metadataModel.populateServerMetadata(server, components);
 
-    const chunked = yield* Stream.runCollect(stream);
-    const flattened = Chunk.flatMap(chunked, (r) => r);
+            yield* this.processServerWithSemaphore(server, sem);
+            const componentResult = yield* this.processComponentsWithSemaphore(
+              server.host.friendlyName,
+              componentChunk,
+              sem
+            );
+            this._metadataModel.onServerMetadataSynced(server.host);
+            return componentResult;
+          })
+        )
+      );
 
-    this._logger.logInformation(
-      `Processing ${flattened.length} components of ${chunked.length} servers took ${Date.now() - start}ms.`
-    );
+      const chunked = yield* Stream.runCollect(stream);
+      const flattened = Chunk.flatMap(chunked, (r) => r);
 
-    return chunked;
-  });
+      this._logger.logInformation(
+        `Processing ${flattened.length} components of ${chunked.length} servers took ${Date.now() - start}ms.`
+      );
+
+      return chunked;
+    });
+  }
 
   private processServerWithSemaphore(
     server: AcaadServerMetadata,
@@ -333,13 +348,13 @@ export class ComponentManager {
 
   private processComponentsWithSemaphore(
     friendlyName: string,
-    stream: Stream.Stream<Component>,
+    components: Chunk.Chunk<Component>,
     sem: Semaphore
   ) {
     return Effect.gen(this, function* () {
       yield* sem.take(1).pipe(Effect.withSpan('acaad:sem:wait'));
       this._logger.logDebug(`Processing components for server: '${friendlyName}'.`);
-      const res = this.processComponentsByServer(friendlyName, stream);
+      const res = this.processComponentsByServer(friendlyName, components);
       yield* sem.release(1);
 
       return yield* res;
@@ -348,10 +363,12 @@ export class ComponentManager {
 
   private processComponentsByServer(
     friendlyName: string,
-    stream: Stream.Stream<Component>
+    components: Chunk.Chunk<Component>
   ): Effect.Effect<Chunk.Chunk<string>, AcaadError> {
     return Effect.gen(this, function* () {
-      return yield* Stream.runCollect(stream.pipe(Stream.mapEffect(this.processSingleComponent))).pipe(
+      return yield* Stream.runCollect(
+        Stream.fromIterable(components).pipe(Stream.mapEffect(this.processSingleComponent))
+      ).pipe(
         Effect.withSpan('acaad:sync:cs:component-metadata', {
           attributes: {
             server: friendlyName
@@ -639,7 +656,7 @@ export class ComponentManager {
         this._logger.logDebug(`Events: Server ${event.host.friendlyName} connected.`);
 
         if (this._serviceAdapter.shouldSyncMetadataOnServerConnect() && this.shouldSyncMetadata(event.host)) {
-          yield* this.flowEff.pipe(
+          yield* this.syncMetadataEff([event.host]).pipe(
             Effect.withSpan('acaad:sync'),
             Effect.tapError((err) => onErrorEff(this._serviceAdapter, err))
           );

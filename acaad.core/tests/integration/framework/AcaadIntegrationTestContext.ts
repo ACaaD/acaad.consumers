@@ -3,7 +3,7 @@ import { ComponentManager } from '../../../src';
 import { Mock } from 'ts-jest-mocker';
 import { getTestLogger } from './test-setup';
 import { IAcaadIntegrationTestContext, IStateObserver } from '../types';
-import { LogFunc, ServerMocks, getRandomInt, TrackedRequest } from '@acaad/testing';
+import { LogFunc, ServerMocks, getRandomInt, TrackedRequest, delay } from '@acaad/testing';
 import {
   ICsLogger,
   IConnectedServiceAdapter,
@@ -67,7 +67,7 @@ export class AcaadIntegrationTestContext implements IAcaadIntegrationTestContext
   }
 
   async startAndWaitForSignalR(): Promise<void> {
-    const checkpoint = this.stateObserver.waitForSignalRClient();
+    const checkpoint = this.stateObserver.waitForSignalRClient(this.serverMocks.length);
     const start = await this.instance.startAsync();
     expect(start).toBe(true);
 
