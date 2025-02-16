@@ -20,8 +20,13 @@ describe('metadata resync', () => {
     serviceAdapter = intTestContext.serviceAdapterMock;
     stateObserver = intTestContext.stateObserver;
 
+    const startMockMs = Date.now();
     await intTestContext.startMockServersAsync();
+    console.log(`Mock server started in ${Date.now() - startMockMs}ms.`);
+
+    const signalrMs = Date.now();
     await intTestContext.startAndWaitForSignalR();
+    console.log(`SignalR clients connected in ${Date.now() - signalrMs}ms.`);
   }, 15_000);
 
   beforeEach(() => {
