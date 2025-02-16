@@ -10,7 +10,7 @@ import {
   IConnectedServiceAdapter
 } from '@acaad/abstractions';
 import { DependencyInjectionTokens } from './model/DependencyInjectionTokens';
-export interface IComponentModel {
+export interface IMetadataModel {
   clearServerMetadata(server: AcaadServerMetadata): Effect.Effect<void>;
 
   populateServerMetadata(
@@ -25,14 +25,19 @@ export interface IComponentModel {
     host: AcaadHost,
     componentDescriptor: ComponentDescriptor
   ): Option.Option<Component>;
+
+  onServerMetadataSynced(host: AcaadHost): void;
+  getLastSyncByServer(host: AcaadHost): number | undefined;
 }
 
 // noinspection JSPotentiallyInvalidUsageOfClassThis
 @injectable()
-export class ComponentModel implements IComponentModel {
+export class MetadataModel implements IMetadataModel {
   private _serviceAdapter: IConnectedServiceAdapter;
   private _meta = new Map<AcaadServerMetadata, Chunk.Chunk<Component>>();
   private _componentByDescriptor = new Map<AcaadServerMetadata, Map<ComponentDescriptor, Component>>();
+
+  private _lastSyncByServer: Map<string, number> = new Map<string, number>();
 
   public constructor(
     @inject(DependencyInjectionTokens.ConnectedServiceAdapter) serviceAdapter: IConnectedServiceAdapter
@@ -42,6 +47,14 @@ export class ComponentModel implements IComponentModel {
     this.clearServerMetadata = this.clearServerMetadata.bind(this);
     this.populateServerMetadata = this.populateServerMetadata.bind(this);
     this.getComponentsByServer = this.getComponentsByServer.bind(this);
+  }
+
+  onServerMetadataSynced(host: AcaadHost): void {
+    this._lastSyncByServer.set(host.friendlyName, Date.now());
+  }
+
+  getLastSyncByServer(host: AcaadHost): number | undefined {
+    return this._lastSyncByServer.get(host.friendlyName);
   }
 
   public clearServerMetadata(server: AcaadServerMetadata): Effect.Effect<boolean> {

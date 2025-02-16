@@ -10,6 +10,7 @@ import {
 
 import { Option } from 'effect/Option';
 import { AcaadError } from '../errors';
+import { Duration } from 'effect';
 
 export type ChangeType = 'action' | 'query';
 
@@ -53,6 +54,13 @@ export interface IConnectedServiceAdapterFunctional {
   onUnhandledEventAsync?(unhandledEvent: AcaadUnhandledEventReceivedEvent, as: AbortSignal): Promise<void>;
 
   onUnmappedComponentEventAsync?(event: ComponentCommandOutcomeEvent, as: AbortSignal): Promise<void>;
+
+  // TODO: If stuff works, make these functions async and wrap in CM error handling
+  shouldSyncMetadataOnServerConnect(): boolean;
+
+  getMetadataSyncInterval?(): number | string;
+
+  shouldSyncMetadata?(host: AcaadHost, lastSync: number | undefined): boolean;
 }
 
 export interface ICsErrorHandler {

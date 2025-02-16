@@ -52,6 +52,8 @@ export function setupConnectedServiceMockInstance(serviceAdapterMock: Mock<IConn
   serviceAdapterMock.onServerDisconnectedAsync.mockResolvedValue();
   serviceAdapterMock.updateComponentStateAsync.mockResolvedValue();
 
+  serviceAdapterMock.shouldSyncMetadataOnServerConnect.mockReturnValue(false);
+
   serviceAdapterMock.getComponentDescriptorByComponent.mockImplementation(
     (c) => new ComponentDescriptor(c.name)
   );
@@ -63,7 +65,11 @@ export function setupConnectedServiceMockInstance(serviceAdapterMock: Mock<IConn
 
   const onErrorMock = jest.fn();
   onErrorMock.mockImplementation((args) => {
-    console.error(args);
+    // @ts-ignore
+    if (global.__ENABLE_TEST_FWK_LOGS__) {
+      console.error(args);
+    }
+
     return Promise.resolve();
   });
   serviceAdapterMock.onErrorAsync = onErrorMock;

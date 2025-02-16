@@ -28,7 +28,7 @@ import {
 } from '@opentelemetry/sdk-trace-base';
 import { SpanExporter } from '@opentelemetry/sdk-trace-base/build/src/export/SpanExporter';
 
-import { ComponentModel } from './ComponentModel';
+import { MetadataModel } from './MetadataModel';
 import { Configuration } from '@effect/opentelemetry/src/NodeSdk';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-grpc';
 import { QueueWrapper } from './QueueWrapper';
@@ -55,8 +55,8 @@ function batchExporterFactory(container: DependencyContainer): SpanProcessor {
     options: { lifecycle: Lifecycle.ResolutionScoped }
   },
   {
-    token: DependencyInjectionTokens.ComponentModel,
-    useClass: ComponentModel,
+    token: DependencyInjectionTokens.MetadataModel,
+    useClass: MetadataModel,
     options: { lifecycle: Lifecycle.ResolutionScoped }
   },
   { token: DependencyInjectionTokens.TokenCache, useClass: InMemoryTokenCache },
