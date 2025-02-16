@@ -154,7 +154,7 @@ describe('metadata resync', () => {
     expect(serviceAdapter.createServerModelAsync).toHaveBeenCalledTimes(0);
   });
 
-  it.only('should not sync on infinity interval', async () => {
+  it('should not sync on infinity interval', async () => {
     serviceAdapter.shouldSyncMetadataOnServerConnect.mockReturnValue(true);
     (serviceAdapter.getMetadataSyncInterval as jest.Mock).mockReturnValue(infinity);
     serviceAdapter.shouldSyncMetadata = undefined;
