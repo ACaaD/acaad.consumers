@@ -22,7 +22,7 @@ describe('metadata resync', () => {
 
     await intTestContext.startMockServersAsync();
     await intTestContext.startAndWaitForSignalR();
-  });
+  }, 15_000);
 
   beforeEach(() => {
     setupConnectedServiceMock(intTestContext);

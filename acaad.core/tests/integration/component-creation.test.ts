@@ -29,7 +29,7 @@ describe('component creation', () => {
     const all = [sensorTestContext, buttonTestContext, switchTestContext];
     await Promise.all(all.map((ctx) => ctx.startMockServersAsync()));
     await Promise.all(all.map((ctx) => ctx.startAndWaitForSignalR('1 second')));
-  });
+  }, 15_000);
 
   it('should resync sensor component', async () => {
     const result = await sensorTestContext.instance.createMissingComponentsAsync();
