@@ -26,26 +26,26 @@ describe('component creation', () => {
       })
     ]);
 
-    await Promise.all(
-      [sensorTestContext, buttonTestContext, switchTestContext].map((ctx) => ctx.startAllAsync())
-    );
+    const all = [sensorTestContext, buttonTestContext, switchTestContext];
+    await Promise.all(all.map((ctx) => ctx.startMockServersAsync()));
+    await Promise.all(all.map((ctx) => ctx.startAndWaitForSignalR()));
   });
 
-  it('should sync sensor component', async () => {
+  it('should resync sensor component', async () => {
     const result = await sensorTestContext.instance.createMissingComponentsAsync();
     expect(result).toBe(true);
 
     expect(sensorTestContext.serviceAdapterMock.createComponentModelAsync).toHaveBeenCalledTimes(1);
   });
 
-  it('should sync switch component', async () => {
+  it('should resync switch component', async () => {
     const result = await buttonTestContext.instance.createMissingComponentsAsync();
     expect(result).toBe(true);
 
     expect(buttonTestContext.serviceAdapterMock.createComponentModelAsync).toHaveBeenCalledTimes(1);
   });
 
-  it('should sync button component', async () => {
+  it('should resync button component', async () => {
     const result = await switchTestContext.instance.createMissingComponentsAsync();
     expect(result).toBe(true);
 
