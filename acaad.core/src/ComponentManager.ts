@@ -137,9 +137,7 @@ export class ComponentManager {
             Stream.withSpan('acaad:sync:map-right')
           );
 
-          const groupedByServer = yield* this.reloadComponentMetadataModel(availableServers).pipe(
-            Effect.withSpan('acaad:sync:refresh-metadata')
-          );
+          const groupedByServer = this.createMetadataByServer(availableServers);
 
           const createRes = yield* this.updateConnectedServiceModel(groupedByServer).pipe(
             Effect.withSpan('acaad:sync:cs:refresh-metadata')
@@ -274,21 +272,17 @@ export class ComponentManager {
     );
   };
 
-  private reloadComponentMetadataModel(
+  private createMetadataByServer(
     serverMetadata: Stream.Stream<AcaadServerMetadata>
-  ): Effect.Effect<GroupBy.GroupBy<AcaadServerMetadata, Component>> {
-    return Effect.gen(this, function* () {
-      const tmp = serverMetadata.pipe(
-        Stream.tap(this._metadataModel.clearServerMetadata),
-        Stream.flatMap(getAcaadMetadata),
-        this.createComponentHierarchy,
-        Stream.filter((cOpt) => Option.isSome(cOpt)),
-        Stream.map((cSome) => cSome.value),
-        Stream.groupByKey((c) => c.serverMetadata)
-      );
-
-      return tmp;
-    });
+  ): GroupBy.GroupBy<AcaadServerMetadata, Component> {
+    return serverMetadata.pipe(
+      Stream.tap(this._metadataModel.clearServerMetadata),
+      Stream.flatMap(getAcaadMetadata),
+      this.createComponentHierarchy,
+      Stream.filter((cOpt) => Option.isSome(cOpt)),
+      Stream.map((cSome) => cSome.value),
+      Stream.groupByKey((c) => c.serverMetadata)
+    );
   }
 
   private updateConnectedServiceModel(acaadServerMetadata: GroupBy.GroupBy<AcaadServerMetadata, Component>) {
