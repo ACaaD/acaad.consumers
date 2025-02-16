@@ -4,6 +4,7 @@ import { Mock } from 'ts-jest-mocker';
 import { IConnectedServiceAdapter, AcaadServerConnectedEvent } from '@acaad/abstractions';
 import { setupConnectedServiceMock } from '../mocks/MockServiceAdapter';
 import { createIntegrationTestContext } from '../framework/test-setup';
+import { infinity } from 'effect/Duration';
 
 describe('metadata resync', () => {
   let intTestContext: IAcaadIntegrationTestContext;
@@ -121,6 +122,46 @@ describe('metadata resync', () => {
     await startRandomServerAndWaitAsync(intTestContext);
 
     expect(serviceAdapter.createServerModelAsync).toHaveBeenCalledTimes(1);
+  });
+
+  it('should ignore non-parseable duration', async () => {
+    serviceAdapter.shouldSyncMetadataOnServerConnect.mockReturnValue(true);
+    (serviceAdapter.shouldSyncMetadata as jest.Mock).mockReturnValue(false);
+    (serviceAdapter.getMetadataSyncInterval as jest.Mock).mockReturnValue('this-is-not-a-duration');
+
+    await startRandomServerAndWaitAsync(intTestContext);
+
+    expect(serviceAdapter.createServerModelAsync).toHaveBeenCalledTimes(0);
+  });
+
+  it('should not sync if per-host callback is undefined', async () => {
+    serviceAdapter.shouldSyncMetadataOnServerConnect.mockReturnValue(true);
+    (serviceAdapter.getMetadataSyncInterval as jest.Mock).mockReturnValue('5 hours');
+    serviceAdapter.shouldSyncMetadata = undefined;
+
+    await startRandomServerAndWaitAsync(intTestContext);
+
+    expect(serviceAdapter.createServerModelAsync).toHaveBeenCalledTimes(0);
+  });
+
+  it('should not sync if interval callback is undefined', async () => {
+    serviceAdapter.shouldSyncMetadataOnServerConnect.mockReturnValue(true);
+    (serviceAdapter.shouldSyncMetadata as jest.Mock).mockReturnValue(false);
+    serviceAdapter.getMetadataSyncInterval = undefined;
+
+    await startRandomServerAndWaitAsync(intTestContext);
+
+    expect(serviceAdapter.createServerModelAsync).toHaveBeenCalledTimes(0);
+  });
+
+  it.only('should not sync on infinity interval', async () => {
+    serviceAdapter.shouldSyncMetadataOnServerConnect.mockReturnValue(true);
+    (serviceAdapter.getMetadataSyncInterval as jest.Mock).mockReturnValue(infinity);
+    serviceAdapter.shouldSyncMetadata = undefined;
+
+    await startRandomServerAndWaitAsync(intTestContext);
+
+    expect(serviceAdapter.createServerModelAsync).toHaveBeenCalledTimes(0);
   });
 
   it('should debounce metadata creation', async () => {
