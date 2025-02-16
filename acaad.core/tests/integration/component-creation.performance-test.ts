@@ -2,7 +2,6 @@ import { IAcaadIntegrationTestContext } from './types';
 import { createPerformanceTestContext } from './framework/test-setup';
 
 const TIMEOUT = 120 * 1_000;
-jest.setTimeout(TIMEOUT);
 
 describe('component creation', () => {
   const SERVER_COUNT = 5;
@@ -18,19 +17,23 @@ describe('component creation', () => {
       buttonCount: COMPONENT_COUNT_PER_SERVER,
       suppressComponentEndpoints: true
     });
-    await intTestContext.startAllAsync();
+    await intTestContext.startMockServersAsync();
   }, TIMEOUT);
 
   afterAll(async () => {
     await intTestContext.disposeAsync();
   }, TIMEOUT);
 
-  it(`should sync ${EXPECTED_COMPONENT_COUNT} components`, async () => {
-    const { instance, serviceAdapterMock } = intTestContext;
+  it(
+    `should sync ${EXPECTED_COMPONENT_COUNT} components`,
+    async () => {
+      const { instance, serviceAdapterMock } = intTestContext;
 
-    const success = await instance.createMissingComponentsAsync();
+      await intTestContext.startAndWaitForSignalR('1 minute');
 
-    expect(serviceAdapterMock.createServerModelAsync).toHaveBeenCalledTimes(SERVER_COUNT);
-    expect(serviceAdapterMock.createComponentModelAsync).toHaveBeenCalledTimes(EXPECTED_COMPONENT_COUNT);
-  });
+      expect(serviceAdapterMock.createServerModelAsync).toHaveBeenCalledTimes(SERVER_COUNT);
+      expect(serviceAdapterMock.createComponentModelAsync).toHaveBeenCalledTimes(EXPECTED_COMPONENT_COUNT);
+    },
+    TIMEOUT
+  );
 });
