@@ -18,9 +18,6 @@ describe('inbound events', () => {
     stateObserver = intTestContext.stateObserver;
 
     await intTestContext.startAllAsync();
-    await instance.createMissingComponentsAsync();
-
-    await stateObserver.waitForSignalRClient();
   });
 
   afterAll(async () => {
