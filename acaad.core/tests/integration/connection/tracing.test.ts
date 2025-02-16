@@ -17,8 +17,8 @@ describe('tracing', () => {
     stateObserver = intTestContext.stateObserver;
 
     intTestContext.enableRequestTracking();
-    await intTestContext.startAllAsync();
-    await instance.createMissingComponentsAsync();
+    await intTestContext.startMockServersAsync();
+    await intTestContext.startAndWaitForSignalR();
   });
 
   afterEach(async () => {

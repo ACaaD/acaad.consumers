@@ -15,7 +15,6 @@ describe('outbound events', () => {
     instance = intTestContext.instance;
 
     await intTestContext.startAllAsync();
-    await instance.createMissingComponentsAsync();
   });
 
   afterAll(async () => {

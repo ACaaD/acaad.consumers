@@ -72,8 +72,6 @@ export class AcaadIntegrationTestContext implements IAcaadIntegrationTestContext
     expect(start).toBe(true);
 
     await checkpoint;
-
-    await this.instance.createMissingComponentsAsync();
   }
 
   getThrowAwayInstance(): ComponentManager {
@@ -139,9 +137,7 @@ export class AcaadIntegrationTestContext implements IAcaadIntegrationTestContext
 
   public async startAllAsync(): Promise<void> {
     await this.startMockServersAsync();
-    const start = await this.instance.startAsync();
-
-    expect(start).toBe(true);
+    await this.startAndWaitForSignalR();
   }
 
   public async resumeAllAsync(): Promise<void> {
