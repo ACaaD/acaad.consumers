@@ -58,6 +58,10 @@ export function setupConnectedServiceMockInstance(serviceAdapterMock: Mock<IConn
   shouldSyncMetadataMock.mockReturnValue(true);
   serviceAdapterMock.shouldSyncMetadata = shouldSyncMetadataMock;
 
+  const getMetadataSyncIntervalMock = jest.fn();
+  getMetadataSyncIntervalMock.mockReturnValue('5 minutes');
+  serviceAdapterMock.getMetadataSyncInterval = getMetadataSyncIntervalMock;
+
   serviceAdapterMock.getComponentDescriptorByComponent.mockImplementation(
     (c) => new ComponentDescriptor(c.name)
   );

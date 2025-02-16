@@ -69,7 +69,7 @@ export class ComponentManager {
   private _metadataModel: IMetadataModel;
 
   private _logger: ICsLogger;
-  private _eventQueue: Queue.Queue<AcaadPopulatedEvent>;
+  public _eventQueue: Queue.Queue<AcaadPopulatedEvent>;
   private _openTelLayer: () => Layer.Layer<Resource<Configuration>>;
 
   public constructor(
@@ -732,9 +732,5 @@ export class ComponentManager {
         this._logger.logInformation(`Successfully stopped component manager.`);
       }
     });
-  }
-
-  async forceReconnectAndSync(): Promise<number> {
-    return 0;
   }
 }

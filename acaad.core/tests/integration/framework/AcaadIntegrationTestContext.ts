@@ -47,6 +47,8 @@ export class AcaadIntegrationTestContext implements IAcaadIntegrationTestContext
     this.stateObserver = stateObserver;
 
     this.loggerMock = loggerMock;
+
+    this.getThrowAwayInstance = this.getThrowAwayInstance.bind(this);
   }
 
   enableRequestTracking(): void {
