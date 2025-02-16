@@ -16,7 +16,7 @@ export interface IMetadataModel {
   populateServerMetadata(
     server: AcaadServerMetadata,
     components: Stream.Stream<Component>
-  ): Effect.Effect<void>;
+  ): Effect.Effect<Chunk.Chunk<Component>>;
 
   getComponentsByServer(): GroupBy.GroupBy<AcaadServerMetadata, Component>;
 
@@ -106,7 +106,7 @@ export class MetadataModel implements IMetadataModel {
   public populateServerMetadata(
     server: AcaadServerMetadata,
     components: Stream.Stream<Component>
-  ): Effect.Effect<void> {
+  ): Effect.Effect<Chunk.Chunk<Component>> {
     return Effect.gen(this, function* () {
       const chunk = yield* Stream.runCollect(components);
 
@@ -119,6 +119,8 @@ export class MetadataModel implements IMetadataModel {
 
       this._meta.set(server, chunk);
       this._componentByDescriptor.set(server, componentByDescriptor);
+
+      return chunk;
     });
   }
 
