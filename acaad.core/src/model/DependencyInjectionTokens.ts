@@ -1,6 +1,6 @@
 export const DependencyInjectionTokens = {
   ConnectionManager: 'connection-manager',
-  ComponentModel: 'component-model',
+  MetadataModel: 'metadata-model',
   TokenCache: 'token-cache',
 
   ConnectedServiceAdapter: 'connected-service-adapter',

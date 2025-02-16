@@ -4,7 +4,6 @@ import { createIntegrationTestContext } from '../framework/test-setup';
 import { getRequestsFromSpan } from '../shared-flows';
 import { Option } from 'effect';
 import { ComponentType, ChangeType } from '@acaad/abstractions';
-import { MockCsLogger } from '../mocks/MockCsLogger';
 
 describe('tracing', () => {
   let intTestContext: IAcaadIntegrationTestContext;

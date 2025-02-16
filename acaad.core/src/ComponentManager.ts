@@ -31,7 +31,7 @@ import { Semaphore } from 'effect/Effect';
 import { equals } from 'effect/Equal';
 import { RuntimeFiber } from 'effect/Fiber';
 
-import { IComponentModel } from './ComponentModel';
+import { IMetadataModel } from './MetadataModel';
 import { Resource } from 'effect/Resource';
 import { Configuration } from '@effect/opentelemetry/src/NodeSdk';
 
@@ -39,6 +39,7 @@ import {
   Cause,
   Chunk,
   Data,
+  Duration,
   Effect,
   Either,
   Exit,
@@ -53,7 +54,7 @@ import {
 } from 'effect';
 
 import { QueueWrapper } from './QueueWrapper';
-import { onErrorEff, executeCsAdapter } from './utility';
+import { onErrorEff, executeCsAdapter, nameof } from './utility';
 
 class MetadataByComponent extends Data.Class<{ component: Component; metadata: AcaadMetadata[] }> {}
 
@@ -65,7 +66,7 @@ export class ComponentManager {
   private _serviceAdapter: IConnectedServiceAdapter;
   private _abortController: AbortController;
   private _connectionManager: ConnectionManager;
-  private _componentModel: IComponentModel;
+  private _metadataModel: IMetadataModel;
 
   private _logger: ICsLogger;
   private _eventQueue: Queue.Queue<AcaadPopulatedEvent>;
@@ -76,7 +77,7 @@ export class ComponentManager {
     @inject(DependencyInjectionTokens.ConnectionManager) connectionManager: ConnectionManager,
     @inject(DependencyInjectionTokens.Logger) logger: ICsLogger,
     @inject(DependencyInjectionTokens.EventQueue) eventQueueWrapper: QueueWrapper,
-    @inject(DependencyInjectionTokens.ComponentModel) componentModel: IComponentModel,
+    @inject(DependencyInjectionTokens.MetadataModel) metadataModel: IMetadataModel,
     @inject(DependencyInjectionTokens.OpenTelLayer) openTelLayer: () => Layer.Layer<Resource<Configuration>>
   ) {
     this._appState = 'Initialized';
@@ -84,7 +85,7 @@ export class ComponentManager {
 
     this._connectionManager = connectionManager;
     this._serviceAdapter = serviceAdapter;
-    this._componentModel = componentModel;
+    this._metadataModel = metadataModel;
 
     this._logger = logger;
     this._eventQueue = eventQueueWrapper.getQueue();
@@ -94,10 +95,25 @@ export class ComponentManager {
     this.processComponentsByServer = this.processComponentsByServer.bind(this);
     this.getServerMetadata = this.getServerMetadata.bind(this);
     this.processSingleComponent = this.processSingleComponent.bind(this);
+
+    this.checkConnectedServiceAdapter();
   }
 
   public getState(): ApplicationState {
     return this._appState;
+  }
+
+  private checkConnectedServiceAdapter() {
+    if (this._serviceAdapter.shouldSyncMetadataOnServerConnect()) {
+      if (
+        this._serviceAdapter.shouldSyncMetadata === undefined &&
+        this._serviceAdapter.getMetadataSyncInterval === undefined
+      ) {
+        throw new Error(
+          `Programming error: If '${nameof<IConnectedServiceAdapter>('shouldSyncMetadataOnServerConnect')}' returns true, either '${nameof<IConnectedServiceAdapter>('getMetadataSyncInterval')}' or '${nameof<IConnectedServiceAdapter>('shouldSyncMetadata')}' MUST be implemented.`
+        );
+      }
+    }
   }
 
   private flowEff = Effect.gen(this, function* () {
@@ -251,13 +267,13 @@ export class ComponentManager {
   private reloadComponentMetadataModel(serverMetadata: Stream.Stream<AcaadServerMetadata>) {
     return Effect.gen(this, function* () {
       const tmp = serverMetadata.pipe(
-        Stream.tap(this._componentModel.clearServerMetadata),
+        Stream.tap(this._metadataModel.clearServerMetadata),
         Stream.flatMap(getAcaadMetadata),
         this.createComponentHierarchy,
         Stream.filter((cOpt) => Option.isSome(cOpt)),
         Stream.map((cSome) => cSome.value),
         Stream.groupByKey((c) => c.serverMetadata),
-        GroupBy.evaluate(this._componentModel.populateServerMetadata)
+        GroupBy.evaluate(this._metadataModel.populateServerMetadata)
       );
 
       return yield* Stream.runCollect(tmp);
@@ -268,11 +284,17 @@ export class ComponentManager {
     const sem = yield* Effect.makeSemaphore(this._serviceAdapter.getAllowedConcurrency());
 
     const start = Date.now();
-    const stream = this._componentModel.getComponentsByServer().pipe(
+    const stream = this._metadataModel.getComponentsByServer().pipe(
       GroupBy.evaluate((server, components) =>
         Effect.gen(this, function* () {
           yield* this.processServerWithSemaphore(server, sem);
-          return yield* this.processComponentsWithSemaphore(server.host.friendlyName, components, sem);
+          const componentResult = yield* this.processComponentsWithSemaphore(
+            server.host.friendlyName,
+            components,
+            sem
+          );
+          this._metadataModel.onServerMetadataSynced(server.host);
+          return componentResult;
         })
       )
     );
@@ -355,7 +377,7 @@ export class ComponentManager {
     type: ChangeType,
     value: Option.Option<unknown>
   ): Promise<boolean> {
-    const componentOpt = this._componentModel.getComponentByDescriptor(host, componentDescriptor);
+    const componentOpt = this._metadataModel.getComponentByDescriptor(host, componentDescriptor);
 
     if (Option.isNone(componentOpt)) {
       this._logger.logWarning(
@@ -423,7 +445,7 @@ export class ComponentManager {
         `Received event '${event.name}::${event.component.name}' from host ${event.host.friendlyName}`
       );
 
-      const component = this._componentModel.getComponentByMetadata(event.host, event.component);
+      const component = this._metadataModel.getComponentByMetadata(event.host, event.component);
 
       if (Option.isSome(component)) {
         const cd = this._serviceAdapter.getComponentDescriptorByComponent(component.value);
@@ -556,6 +578,55 @@ export class ComponentManager {
     return yield* instrumented;
   });
 
+  private shouldSyncMetadataIntervalBased(lastSyncOpt: number | undefined): Effect.Effect<boolean, never> {
+    return Effect.gen(this, function* () {
+      if (this._serviceAdapter.getMetadataSyncInterval === undefined) {
+        return false;
+      }
+
+      const durationPrim = this._serviceAdapter.getMetadataSyncInterval();
+      const durationOpt = Duration.decodeUnknown(durationPrim);
+
+      if (Option.isNone(durationOpt)) {
+        this._logger.logError(
+          undefined,
+          undefined,
+          `Could not parse duration '${durationPrim}' provided by service adapter. Ignoring time-based resync.`
+        );
+
+        return false;
+      }
+
+      const duration = durationOpt.value;
+      if (duration === Duration.infinity) {
+        // Never resync on duration 'infinity'
+        return false;
+      }
+
+      if (lastSyncOpt === undefined) {
+        return true;
+      }
+
+      return Date.now() > lastSyncOpt + Duration.toMillis(duration);
+    });
+  }
+
+  private shouldSyncMetadata(host: AcaadHost): Effect.Effect<boolean, never> {
+    return Effect.gen(this, function* () {
+      if (!this._serviceAdapter.shouldSyncMetadataOnServerConnect()) {
+        return false;
+      }
+
+      const lastSyncOpt = this._metadataModel.getLastSyncByServer(host);
+
+      const shouldSyncFromInterval = yield* this.shouldSyncMetadataIntervalBased(lastSyncOpt);
+      const shouldSyncForHost =
+        this._serviceAdapter.shouldSyncMetadata?.call(this._serviceAdapter, host, lastSyncOpt) ?? false;
+
+      return shouldSyncFromInterval || shouldSyncForHost;
+    });
+  }
+
   private processEventWithSpan(event: AcaadPopulatedEvent) {
     return Effect.gen(this, function* () {
       yield* Effect.annotateCurrentSpan('event:name', event.name);
@@ -567,9 +638,18 @@ export class ComponentManager {
       if (event.name === AcaadServerConnectedEvent.Tag) {
         this._logger.logDebug(`Events: Server ${event.host.friendlyName} connected.`);
 
-        return yield* executeCsAdapter(this._serviceAdapter, 'onServerConnectedAsync', (ad, as) =>
+        if (this._serviceAdapter.shouldSyncMetadataOnServerConnect() && this.shouldSyncMetadata(event.host)) {
+          yield* this.flowEff.pipe(
+            Effect.withSpan('acaad:sync'),
+            Effect.tapError((err) => onErrorEff(this._serviceAdapter, err))
+          );
+        }
+
+        const result = yield* executeCsAdapter(this._serviceAdapter, 'onServerConnectedAsync', (ad, as) =>
           ad.onServerConnectedAsync(event.host, as)
         ).pipe(Effect.withSpan('acaad:cs:onServerConnected'));
+
+        return result;
       }
 
       if (event.name === AcaadServerDisconnectedEvent.Tag) {

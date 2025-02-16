@@ -27,3 +27,5 @@ export function onErrorEff(serviceAdapter: IConnectedServiceAdapter, err: AcaadE
       )
   });
 }
+
+export const nameof = <T>(name: keyof T) => name;
