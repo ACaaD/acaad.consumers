@@ -74,8 +74,9 @@ export class ContractTestRunner {
     > = Stream.cross(axiosInstances, tests);
 
     const runStream = baseStream.pipe(
-      Stream.mapEffect(([axios, { tester, test }]) => this.executeTest(axios, tester, test)),
-      Stream.either,
+      Stream.mapEffect(([axios, { tester, test }]) =>
+        this.executeTest(axios, tester, test).pipe(Effect.either)
+      ),
       Stream.map(Either.getOrElse<ContractTestFailure, ContractTestOutcome>((fail) => fail)),
       Stream.map((item) => item as ContractTestOutcome)
     );
