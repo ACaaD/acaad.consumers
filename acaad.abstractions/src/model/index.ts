@@ -1,6 +1,7 @@
 /* TOP LEVEL */
 export { AcaadComponentMetadata } from './AcaadComponentMetadata';
 export { AcaadDataMetadata } from './AcaadDataMetadata';
+export { AcaadInfoMetadataSchema, AcaadInfoMetadata } from './AcaadInfoMetadata';
 export { AcaadMetadata, AcaadMetadataSchema } from './AcaadMetadata';
 export { AcaadOutcome, AcaadOutcomeSchema } from './AcaadOutcome';
 

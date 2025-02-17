@@ -62,7 +62,9 @@ export {
   OperationObjectSchema,
   OperationObject,
   PathItemObjectSchema,
-  PathItemObject
+  PathItemObject,
+  AcaadInfoMetadataSchema,
+  AcaadInfoMetadata
 } from './model';
 
 export { isNullOrUndefined } from './utils/Checks';
