@@ -32,7 +32,7 @@ export {
 } from './events';
 
 /* FACTORIES */
-export { EventFactory, AnyAcaadEventSchema } from './factories';
+export { EventFactory, AnyAcaadEventSchema, OpenApiDefinitionFactory } from './factories';
 
 /* OPEN API */
 export {

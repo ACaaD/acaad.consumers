@@ -47,6 +47,7 @@ export {
   ComponentCommandOutcomeEvent,
   ComponentCommandOutcomeEventSchema,
   EventFactory,
+  OpenApiDefinitionFactory,
   AnyAcaadEventSchema,
   OpenApiDefinitionSchema,
   AcaadServerMetadata,
