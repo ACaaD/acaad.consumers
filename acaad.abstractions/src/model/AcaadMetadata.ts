@@ -1,5 +1,5 @@
 import { AcaadComponentMetadata } from './AcaadComponentMetadata';
-import { Schema } from 'effect';
+import { Effect, Schema } from 'effect';
 import { Option } from 'effect';
 import { isNullOrUndefined } from '../utils/Checks';
 
@@ -14,6 +14,8 @@ export type AcaadResultTypeDefinition = typeof AcaadResultTypeSchema.Type;
 
 export const AcaadCardinalitySchema = Schema.Union(Schema.Literal('Single'), Schema.Literal('Multiple'));
 
+export type AcaadCardinalityDefinition = typeof AcaadCardinalitySchema.Type;
+
 export const AcaadUnitOfMeasureSchema = Schema.String;
 
 export const AcaadMetadataSchema = Schema.Struct({
@@ -24,6 +26,12 @@ export const AcaadMetadataSchema = Schema.Struct({
   idempotent: Schema.UndefinedOr(Schema.Boolean),
   forValue: Schema.UndefinedOr(Schema.Unknown),
 
+  onIff: Schema.Any.pipe(Schema.asserts),
+
+  // onIff: Schema.Any.pipe(Schema.validate(val => {
+  //   return Effect.succeed(val);
+  // })),
+
   type: AcaadResultTypeSchema.pipe(
     Schema.optional,
     Schema.withDefaults({
@@ -31,8 +39,14 @@ export const AcaadMetadataSchema = Schema.Struct({
       decoding: () => 'String' as AcaadResultTypeDefinition
     })
   ),
-  cardinality: Schema.UndefinedOr(AcaadCardinalitySchema),
-  unitOfMeasure: Schema.UndefinedOr(AcaadUnitOfMeasureSchema)
+  cardinality: AcaadCardinalitySchema.pipe(
+    Schema.optional,
+    Schema.withDefaults({
+      constructor: () => 'Single' as AcaadCardinalityDefinition,
+      decoding: () => 'Single' as AcaadCardinalityDefinition
+    })
+  ),
+  unitOfMeasure: AcaadUnitOfMeasureSchema.pipe(Schema.optional)
 });
 
 export class AcaadMetadata {
