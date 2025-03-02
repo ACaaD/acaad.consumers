@@ -26,7 +26,7 @@ export const AcaadMetadataSchema = Schema.Struct({
   idempotent: Schema.UndefinedOr(Schema.Boolean),
   forValue: Schema.UndefinedOr(Schema.Unknown),
 
-  onIff: Schema.Any.pipe(Schema.asserts),
+  onIff: Schema.UndefinedOr(Schema.Unknown),
 
   // onIff: Schema.Any.pipe(Schema.validate(val => {
   //   return Effect.succeed(val);
