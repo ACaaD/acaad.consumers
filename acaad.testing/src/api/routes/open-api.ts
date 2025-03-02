@@ -1,4 +1,4 @@
-import { IComponentConfiguration, IMockedComponentModel } from '../types';
+import { IComponentConfiguration, IMockedComponentModel, MockedComponentDescriptor } from '../types';
 import {
   ComponentDescriptor,
   InfoObjectDefinition as AcaadInfoObjectAbstr,
@@ -98,7 +98,7 @@ function getButtonComponent(cd: ComponentDescriptor): PathItemObject {
   };
 }
 
-function getSwitchComponent(cd: ComponentDescriptor): PathItemObject {
+function getSwitchComponent(cd: MockedComponentDescriptor): PathItemObject {
   const path = `/components/${cd.toIdentifier()}`;
 
   return {
@@ -111,7 +111,7 @@ function getSwitchComponent(cd: ComponentDescriptor): PathItemObject {
             name: `${cd.toIdentifier()}`,
             type: 'switch'
           },
-          onIff: true,
+          onIff: cd.onIff ?? true,
           queryable: true
         }
       }
@@ -125,7 +125,7 @@ function getSwitchComponent(cd: ComponentDescriptor): PathItemObject {
             name: `${cd.toIdentifier()}`,
             type: 'switch'
           },
-          onIff: true,
+          onIff: cd.onIff ?? true,
           actionable: true,
           forValue: true
         }
@@ -140,7 +140,7 @@ function getSwitchComponent(cd: ComponentDescriptor): PathItemObject {
             name: `${cd.toIdentifier()}`,
             type: 'switch'
           },
-          onIff: true,
+          onIff: cd.onIff ?? true,
           actionable: true,
           forValue: false
         }
