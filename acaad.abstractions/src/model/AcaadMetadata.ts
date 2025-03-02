@@ -26,11 +26,8 @@ export const AcaadMetadataSchema = Schema.Struct({
   idempotent: Schema.UndefinedOr(Schema.Boolean),
   forValue: Schema.UndefinedOr(Schema.Unknown),
 
+  /* TODO: Check if it is possible to cross-verify if onIff matches the value type below */
   onIff: Schema.UndefinedOr(Schema.Unknown),
-
-  // onIff: Schema.Any.pipe(Schema.validate(val => {
-  //   return Effect.succeed(val);
-  // })),
 
   type: AcaadResultTypeSchema.pipe(
     Schema.optional,
@@ -54,28 +51,49 @@ export class AcaadMetadata {
   public method: string;
 
   public component: AcaadComponentMetadata;
+
+  public type: AcaadResultTypeDefinition;
+  public cardinality: AcaadCardinalityDefinition;
+
   public actionable?: boolean;
   public queryable?: boolean;
   public idempotent?: boolean;
   public forValue: Option.Option<unknown>;
 
+  public onIff: Option.Option<unknown>;
+  public unitOfMeasure: Option.Option<string>;
+
   public constructor(
     path: string,
     method: string,
     component: AcaadComponentMetadata,
+    type: AcaadResultTypeDefinition,
+    cardinality: AcaadCardinalityDefinition,
     idempotent?: boolean,
     actionable?: boolean,
     queryable?: boolean,
-    forValue?: unknown
+    forValue?: unknown,
+    onIff?: unknown,
+    unitOfMeasure?: string
   ) {
     this.path = path;
     this.method = method;
 
     this.component = component;
+
+    this.type = type;
+    this.cardinality = cardinality;
+
     this.idempotent = idempotent ?? false;
     this.actionable = actionable ?? false;
     this.queryable = queryable ?? false;
+
     this.forValue = isNullOrUndefined(forValue) ? Option.none<unknown>() : Option.some(forValue);
+    this.onIff = isNullOrUndefined(onIff) ? Option.none<unknown>() : Option.some(onIff);
+
+    this.unitOfMeasure = isNullOrUndefined(unitOfMeasure)
+      ? Option.none<string>()
+      : Option.some(unitOfMeasure!);
   }
 
   public static fromSchema(
@@ -87,10 +105,14 @@ export class AcaadMetadata {
       path,
       method,
       schema.component,
+      schema.type,
+      schema.cardinality,
       schema.idempotent,
       schema.actionable,
       schema.queryable,
-      schema.forValue
+      schema.forValue,
+      schema.onIff,
+      schema.unitOfMeasure
     );
   }
 
