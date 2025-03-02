@@ -58,6 +58,7 @@ export {
   SchemaDefinition,
   AcaadHostMapping,
   InfoObjectSchema,
+  InfoObjectDefinition,
   InfoObject,
   OperationObjectSchema,
   OperationObject,
