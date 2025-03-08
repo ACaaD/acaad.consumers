@@ -1,0 +1,10 @@
+{
+  "changes": [
+    {
+      "packageName": "iobroker.acaad",
+      "comment": "Adjustments for new core release",
+      "type": "none"
+    }
+  ],
+  "packageName": "iobroker.acaad"
+}
