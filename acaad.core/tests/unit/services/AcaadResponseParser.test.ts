@@ -162,13 +162,13 @@ describe('AcaadResponseParser', () => {
 
   it.each([
     {
-      outcomeRaw: 'test-string',
+      outcomeRaw: '\"test-string\"',
       cardinality: 'Single',
       type: 'String',
       expectedResult: 'test-string'
     },
     {
-      outcomeRaw: '',
+      outcomeRaw: '\"\"',
       cardinality: 'Single',
       type: 'String',
       expectedResult: ''
@@ -186,19 +186,19 @@ describe('AcaadResponseParser', () => {
       expectedResult: false
     },
     {
-      outcomeRaw: 'tRUe',
+      outcomeRaw: '\"tRUe\"',
       cardinality: 'Single',
       type: 'Boolean',
       expectedResult: true
     },
     {
-      outcomeRaw: 'faLSE',
+      outcomeRaw: '\"faLSE\"',
       cardinality: 'Single',
       type: 'Boolean',
       expectedResult: false
     },
     {
-      outcomeRaw: 'test-string',
+      outcomeRaw: '\"test-string\"',
       cardinality: 'Single',
       type: 'Boolean',
       expectedError: new OutcomeNotParseableError('Boolean', 'Single', 'test-string')
@@ -210,7 +210,7 @@ describe('AcaadResponseParser', () => {
       expectedResult: 1337
     },
     {
-      outcomeRaw: 'test-string',
+      outcomeRaw: '\"test-string\"',
       cardinality: 'Single',
       type: 'Long',
       expectedError: new OutcomeNotParseableError('Long', 'Single', 'test-string')
@@ -228,7 +228,7 @@ describe('AcaadResponseParser', () => {
       expectedResult: 1337.4711
     },
     {
-      outcomeRaw: 'test-string',
+      outcomeRaw: '\"test-string\"',
       cardinality: 'Single',
       type: 'Decimal',
       expectedError: new OutcomeNotParseableError('Decimal', 'Single', 'test-string')
