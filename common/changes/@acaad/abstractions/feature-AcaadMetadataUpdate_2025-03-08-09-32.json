@@ -1,0 +1,10 @@
+{
+  "changes": [
+    {
+      "packageName": "@acaad/abstractions",
+      "comment": "Refactoring",
+      "type": "none"
+    }
+  ],
+  "packageName": "@acaad/abstractions"
+}
