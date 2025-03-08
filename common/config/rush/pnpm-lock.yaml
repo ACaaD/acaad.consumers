@@ -269,11 +269,11 @@ importers:
   ../../ioBroker.acaad:
     dependencies:
       '@acaad/abstractions':
-        specifier: ~0.1.0-alpha.1
-        version: 0.1.0-alpha.1
+        specifier: ~0.1.0-alpha.2
+        version: 0.1.0-alpha.2
       '@acaad/core':
-        specifier: ~0.1.0-alpha.1
-        version: 0.1.0-alpha.1
+        specifier: ~0.1.0-alpha.2
+        version: 0.1.0-alpha.2
       '@iobroker/adapter-core':
         specifier: ~3.2.3
         version: 3.2.3(@iobroker/types@7.0.6)
@@ -291,11 +291,11 @@ importers:
         version: 4.8.0
     devDependencies:
       '@acaad/testing':
-        specifier: 0.1.0-alpha.1
-        version: 0.1.0-alpha.1
+        specifier: 0.1.0-alpha.2
+        version: 0.1.0-alpha.2
       '@acaad/toolchain':
-        specifier: 0.1.0-alpha.1
-        version: 0.1.0-alpha.1
+        specifier: 0.1.0-alpha.2
+        version: 0.1.0-alpha.2
       '@fakehost/signalr':
         specifier: ~1.0.0-beta.3
         version: 1.0.0-beta.3
@@ -377,15 +377,15 @@ importers:
 
 packages:
 
-  /@acaad/abstractions@0.1.0-alpha.1:
-    resolution: {integrity: sha512-A66eypzXz5Pi4g5+URJH/RA6EPIHY/y7lIE+Y1/F3dYBuW/4A271/k1T01kKNboDC6eF7wLxPPxi7M+cX0Tuqg==}
+  /@acaad/abstractions@0.1.0-alpha.2:
+    resolution: {integrity: sha512-17T3gdLM8zRhyOJd/VEEAKZ5Ge4RtYd8zeV1APIZEAgSxItrCuMRCi1UzRfYvmJWLYe2qFUwUvxEnV+cZxDABg==}
     dependencies:
       effect: 3.12.10
 
-  /@acaad/core@0.1.0-alpha.1:
-    resolution: {integrity: sha512-q+Gloa6oUnOc39yttNu7s5FOsLOCOpptm09hXrbFThIXNGmsaR0Kbix/D2w6FrhYa7DqkhPK37im2bUOR3I96Q==}
+  /@acaad/core@0.1.0-alpha.2:
+    resolution: {integrity: sha512-ykcR10Ye1ZrKyRk0qmzyJYEzH5bPVGfU09iA2Yccg0lS7us8qv0g8OwlaxKjGW7dyhbQNoEDnSh52cy2FUdimg==}
     dependencies:
-      '@acaad/abstractions': 0.1.0-alpha.1
+      '@acaad/abstractions': 0.1.0-alpha.2
       '@effect/opentelemetry': 0.43.0(@opentelemetry/api@1.9.0)(@opentelemetry/resources@1.30.1)(@opentelemetry/sdk-logs@0.57.1)(@opentelemetry/sdk-metrics@1.30.1)(@opentelemetry/sdk-trace-base@1.30.1)(@opentelemetry/sdk-trace-node@1.30.1)(@opentelemetry/sdk-trace-web@1.30.1)(@opentelemetry/semantic-conventions@1.29.0)(effect@3.12.10)
       '@microsoft/signalr': 8.0.7
       '@opentelemetry/api': 1.9.0
@@ -410,10 +410,10 @@ packages:
       - utf-8-validate
     dev: false
 
-  /@acaad/testing@0.1.0-alpha.1:
-    resolution: {integrity: sha512-X3D2a2y5FC46zZ+rurSzWe9OvjS1FFxj9HSPSWXZDuQOGAlX0vpZkvoapXW0fwSL2IE0mGHs2BW+nEbuS7G2WQ==}
+  /@acaad/testing@0.1.0-alpha.2:
+    resolution: {integrity: sha512-2ty4ze9oNLCc+Lc88hDmHdeVGF/jV+sQEeoA0wadaaJ1EyiEBiCucbrNANJCAevYPyYm1BVVw3/LAzcMKoz/1g==}
     dependencies:
-      '@acaad/abstractions': 0.1.0-alpha.1
+      '@acaad/abstractions': 0.1.0-alpha.2
       '@fakehost/signalr': 1.0.0-beta.3
       '@microsoft/signalr': 8.0.7
       '@mocks-server/core': 4.0.2
@@ -430,8 +430,8 @@ packages:
       - utf-8-validate
     dev: true
 
-  /@acaad/toolchain@0.1.0-alpha.1:
-    resolution: {integrity: sha512-IET97cCVg+kzbRCugdS7KKlOjhwOEUIC37jZeVafEsc6b0qQxTT77h1H3FXHFBXUAVDPYA8DuMjYej/WVB5Fcg==}
+  /@acaad/toolchain@0.1.0-alpha.2:
+    resolution: {integrity: sha512-JkCq0ETwIAc3M2j5dazCYY3JcvemgSdvQ4GGOSXS8CGqPUk1LUxNlTex+MuVOI654Lo2GiIfjc5/lFY+PP4tyQ==}
     dev: true
 
   /@ampproject/remapping@2.3.0:
