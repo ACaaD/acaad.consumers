@@ -1,5 +1,5 @@
 import { AcaadError } from './AcaadError';
-import { AcaadCardinalityDefinition, AcaadResultTypeDefinition } from '../model/AcaadMetadata';
+import { AcaadCardinalityDefinition, AcaadResultTypeDefinition } from '../model';
 
 export class OutcomeNotParseableError extends AcaadError {
   _tag: string = 'OutcomeNotParseableError';
@@ -7,10 +7,12 @@ export class OutcomeNotParseableError extends AcaadError {
   constructor(
     expectedType: AcaadResultTypeDefinition,
     expectedCardinality: AcaadCardinalityDefinition,
-    outcomeRaw: unknown
+    outcomeRaw: unknown,
+    message?: string
   ) {
     super(
-      `Could not parse received outcome. Expected type ${expectedType} and cardinality ${expectedCardinality}, but received: '${outcomeRaw}'.`
+      message ??
+        `Could not parse received outcome. Expected type ${expectedType} and cardinality ${expectedCardinality}, but received: '${outcomeRaw}'.`
     );
   }
 }
