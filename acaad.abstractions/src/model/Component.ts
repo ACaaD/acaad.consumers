@@ -38,6 +38,11 @@ export class Component extends Data.Class<{
         return none();
     }
   }
+
+  getMetadata(): AcaadPopulatedMetadata {
+    // Oh well
+    return Chunk.toArray(this.metadata)[0];
+  }
 }
 
 export class ButtonComponent extends Component {

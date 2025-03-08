@@ -1,8 +1,10 @@
 import { AcaadOutcome } from './AcaadOutcome';
-import { Option } from 'effect';
+import { AcaadMetadata } from './AcaadMetadata';
 
 export interface InboundStateUpdate {
   originalOutcome: AcaadOutcome;
 
-  determinedTargetState: Option.Option<unknown>;
+  determinedTargetState: unknown;
+
+  metadata: AcaadMetadata;
 }

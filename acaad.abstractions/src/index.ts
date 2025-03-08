@@ -4,6 +4,7 @@ export {
   AcaadServerUnreachableError,
   CalloutError,
   ConfigurationError,
+  OutcomeNotParseableError,
   ResponseSchemaError,
   ResponseStatusCodeError
 } from './errors';
@@ -21,6 +22,7 @@ export {
 export {
   AcaadComponentMetadata,
   AcaadDataMetadata,
+  AcaadOutcomeMetadata,
   AcaadMetadata,
   AcaadMetadataSchema,
   AcaadOutcome,
@@ -47,6 +49,7 @@ export {
   ComponentCommandOutcomeEvent,
   ComponentCommandOutcomeEventSchema,
   EventFactory,
+  InboundStateUpdate,
   OpenApiDefinitionFactory,
   AnyAcaadEventSchema,
   OpenApiDefinitionSchema,
