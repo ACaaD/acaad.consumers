@@ -1,0 +1,10 @@
+{
+  "changes": [
+    {
+      "packageName": "@acaad/core",
+      "comment": "Release version 0.1.0-alpha.1",
+      "type": "none"
+    }
+  ],
+  "packageName": "@acaad/core"
+}
