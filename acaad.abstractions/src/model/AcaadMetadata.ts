@@ -46,7 +46,15 @@ export const AcaadMetadataSchema = Schema.Struct({
   unitOfMeasure: AcaadUnitOfMeasureSchema.pipe(Schema.optional)
 });
 
-export class AcaadMetadata {
+export interface AcaadOutcomeMetadata {
+  type: AcaadResultTypeDefinition;
+  cardinality: AcaadCardinalityDefinition;
+
+  onIff: Option.Option<unknown>;
+  unitOfMeasure: Option.Option<string>;
+}
+
+export class AcaadMetadata implements AcaadOutcomeMetadata {
   public path: string;
   public method: string;
 

@@ -66,7 +66,8 @@ describe('inbound events', () => {
 
     const expectedStateUpdate: InboundStateUpdate = {
       originalOutcome: event.outcome,
-      determinedTargetState: Option.none() // TODO: Provide value for sensor as well!
+      determinedTargetState: event.outcome.outcomeRaw,
+      metadata: expect.anything()
     };
 
     expect(serviceAdapterMock.updateComponentStateAsync).toHaveBeenCalledWith(
@@ -92,7 +93,8 @@ describe('inbound events', () => {
 
     const expectedStateUpdate: InboundStateUpdate = {
       originalOutcome: event.outcome,
-      determinedTargetState: Option.some(true)
+      determinedTargetState: true,
+      metadata: expect.anything()
     };
 
     expect(serviceAdapterMock.updateComponentStateAsync).toHaveBeenCalledWith(
@@ -118,7 +120,8 @@ describe('inbound events', () => {
 
     const expectedStateUpdate: InboundStateUpdate = {
       originalOutcome: event.outcome,
-      determinedTargetState: Option.some(false)
+      determinedTargetState: false,
+      metadata: expect.anything()
     };
 
     expect(serviceAdapterMock.updateComponentStateAsync).toHaveBeenCalledWith(

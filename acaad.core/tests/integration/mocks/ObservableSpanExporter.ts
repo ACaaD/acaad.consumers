@@ -24,7 +24,7 @@ export class ObservableSpanExporter implements SpanExporter, IStateObserver {
     const startMs = Date.now();
     await this.waitForSpanAsync(
       'acaad:cs:onServerConnected',
-      duration ?? 500 * (serverCount ?? 1),
+      duration ?? 1_000 * (serverCount ?? 1),
       serverCount
     );
     this.log(`SignalR client connected after ${Date.now() - startMs}ms.`);

@@ -18,7 +18,13 @@ import {
   AcaadServerDisconnectedEvent,
   AcaadUnhandledEventReceivedEvent,
   ComponentDescriptor,
-  ApplicationState
+  ApplicationState,
+  InboundStateUpdate,
+  AcaadOutcome,
+  ComponentType,
+  OutcomeNotParseableError,
+  ConfigurationError,
+  AcaadOutcomeMetadata
 } from '@acaad/abstractions';
 
 import { inject, injectable } from 'tsyringe';
@@ -55,6 +61,7 @@ import {
 
 import { QueueWrapper } from './QueueWrapper';
 import { onErrorEff, executeCsAdapter, nameof } from './utility';
+import { isUndefined } from 'effect/Predicate';
 
 class MetadataByComponent extends Data.Class<{ component: Component; metadata: AcaadMetadata[] }> {}
 
@@ -443,6 +450,122 @@ export class ComponentManager {
     return Exit.isSuccess(result);
   }
 
+  parseSingleValue(metadata: AcaadOutcomeMetadata, value: unknown): Effect.Effect<unknown, AcaadError> {
+    switch (metadata.type) {
+      case 'String':
+        return Effect.succeed(value);
+      case 'Boolean':
+        return Effect.succeed(Boolean(value).valueOf());
+      case 'Long':
+        const maybeLong = Number(value);
+        if (isNaN(maybeLong)) {
+          this._logger.logWarning(
+            `Expected value of type ${metadata.type}, but the received value '${value}' is violating the contract.`
+          );
+          return Effect.fail(new OutcomeNotParseableError(metadata.type, metadata.cardinality, value));
+        }
+        return Effect.succeed(Math.round(maybeLong));
+      case 'Decimal':
+        const maybeDecimal = Number(value);
+        if (isNaN(maybeDecimal)) {
+          this._logger.logWarning(
+            `Expected value of type ${metadata.type}, but the received value '${value}' is violating the contract.`
+          );
+          return Effect.fail(new OutcomeNotParseableError(metadata.type, metadata.cardinality, value));
+        }
+        return Effect.succeed(maybeDecimal);
+    }
+  }
+
+  parseOutcomeEff(
+    componentDescriptor: ComponentDescriptor,
+    metadata: AcaadOutcomeMetadata,
+    outcome: AcaadOutcome
+  ): Effect.Effect<unknown, AcaadError> {
+    if (isUndefined(outcome.outcomeRaw)) {
+      this._logger.logWarning(
+        `Unexpected empty outcome (raw) value for component ${componentDescriptor.toIdentifier()}. Ignoring event. This should never happen.`
+      );
+
+      return Effect.fail(
+        new OutcomeNotParseableError(metadata.type, metadata.cardinality, outcome.outcomeRaw)
+      );
+    }
+
+    if (metadata.cardinality === 'Single') {
+      return this.parseSingleValue(metadata, outcome.outcomeRaw);
+    } else if (metadata.cardinality === 'Multiple') {
+      const fromJsonArray = JSON.parse(outcome.outcomeRaw);
+      if (!Array.isArray(fromJsonArray)) {
+        this._logger.logWarning(
+          `Cardinality is populated as 'Multiple' but event is not a json array for component ${componentDescriptor.toIdentifier()}. Ignoring event.`
+        );
+
+        return Effect.fail(
+          new OutcomeNotParseableError(metadata.type, metadata.cardinality, outcome.outcomeRaw)
+        );
+      }
+
+      const res = Stream.fromIterable(fromJsonArray).pipe(
+        Stream.mapEffect((val) => this.parseSingleValue(metadata, val).pipe(Effect.option)),
+        Stream.filter(Option.isSome),
+        Stream.map(Option.some)
+      );
+
+      return Stream.runCollect(res);
+    } else {
+      this._logger.logError(
+        undefined,
+        undefined,
+        `Unknown cardinality ${metadata.cardinality}. Cannot process component ${componentDescriptor.toIdentifier()}.`
+      );
+
+      return Effect.fail(
+        new OutcomeNotParseableError(metadata.type, metadata.cardinality, outcome.outcomeRaw)
+      );
+    }
+  }
+
+  getSwitchTargetState(
+    componentDescriptor: ComponentDescriptor,
+    metadata: AcaadMetadata,
+    parsedOutcome: unknown
+  ) {
+    const onIff = metadata.onIff;
+
+    if (Option.isNone(onIff)) {
+      return Effect.fail(
+        new ConfigurationError(
+          `The switch component ${componentDescriptor.name} does not have the property 'onIff' populated. This violates the API contract and is a bug. Presumably the component will not work as intended.`
+        )
+      );
+    }
+
+    return Effect.succeed(onIff.value === parsedOutcome);
+  }
+
+  getInboundStateUpdate(
+    componentDescriptor: ComponentDescriptor,
+    componentType: ComponentType,
+    metadata: AcaadMetadata,
+    event: ComponentCommandOutcomeEvent
+  ): Effect.Effect<InboundStateUpdate, AcaadError> {
+    return Effect.gen(this, function* () {
+      const parsedOutcome = yield* this.parseOutcomeEff(componentDescriptor, metadata, event.outcome);
+
+      const inboundStateUpdate: InboundStateUpdate = {
+        originalOutcome: event.outcome,
+        metadata: metadata,
+        determinedTargetState:
+          componentType !== ComponentType.Switch
+            ? parsedOutcome
+            : yield* this.getSwitchTargetState(componentDescriptor, metadata, parsedOutcome)
+      };
+
+      return inboundStateUpdate;
+    });
+  }
+
   handleInboundStateChangeAsync(event: AcaadPopulatedEvent): Effect.Effect<void, AcaadError> {
     const isComponentCommandOutcomeEvent = (e: AcaadEvent): e is ComponentCommandOutcomeEvent =>
       e.name === 'ComponentCommandOutcomeEvent';
@@ -460,13 +583,15 @@ export class ComponentManager {
 
       if (Option.isSome(component)) {
         const cd = this._serviceAdapter.getComponentDescriptorByComponent(component.value);
+        const inboundStateUpdate = yield* this.getInboundStateUpdate(
+          cd,
+          component.value.type,
+          component.value.getMetadata(),
+          event
+        );
 
         yield* executeCsAdapter(this._serviceAdapter, 'updateComponentStateAsync', (ad, as) =>
-          ad.updateComponentStateAsync(
-            cd,
-            { originalOutcome: event.outcome, determinedTargetState: Option.none<unknown>() },
-            as
-          )
+          ad.updateComponentStateAsync(cd, inboundStateUpdate, as)
         ).pipe(Effect.withSpan('acaad:cs:updateComponentState'));
       } else {
         this._logger.logWarning(
