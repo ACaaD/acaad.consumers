@@ -1,0 +1,10 @@
+{
+  "changes": [
+    {
+      "packageName": "@acaad/core",
+      "comment": "Fixed issue in single-value parsing",
+      "type": "none"
+    }
+  ],
+  "packageName": "@acaad/core"
+}
