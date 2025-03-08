@@ -1,6 +1,6 @@
 {
   "name": "@acaad/abstractions",
-  "version": "0.0.2-4",
+  "version": "0.1.0-alpha.1",
   "description": "Abstractions for Any Computer as a Device (ACaaD)",
   "files": [
     "./dist"
