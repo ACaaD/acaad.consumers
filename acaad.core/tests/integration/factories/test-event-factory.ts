@@ -12,7 +12,7 @@ export class TestEventFactory {
       componentName,
       new AcaadOutcome({
         success: true,
-        outcomeRaw: outcomeRaw
+        outcomeRaw: JSON.stringify(outcomeRaw)
       })
     );
   }
@@ -30,7 +30,9 @@ export class TestEventFactory {
       componentDescriptor.toIdentifier(),
       new AcaadOutcome({
         success: true,
-        outcomeRaw: targetState ? componentDescriptor.onIff.toString() : 'not-the-on-iff-value'
+        outcomeRaw: JSON.stringify(
+          targetState ? componentDescriptor.onIff.toString() : 'not-the-on-iff-value'
+        )
       })
     );
   }
