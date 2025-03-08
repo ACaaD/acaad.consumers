@@ -4,6 +4,7 @@ export {
   AcaadServerUnreachableError,
   CalloutError,
   ConfigurationError,
+  OutcomeNotJsonError,
   OutcomeNotParseableError,
   ResponseSchemaError,
   ResponseStatusCodeError
