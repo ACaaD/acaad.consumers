@@ -1,6 +1,6 @@
 {
   "name": "@acaad/core",
-  "version": "0.0.2-3",
+  "version": "0.0.2-4",
   "description": "acaad",
   "main": "dist/cjs/src/index.js",
   "module": "./dist/esnext/src/index.js",
