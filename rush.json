@@ -358,7 +358,12 @@
       "packageName": "iobroker.acaad",
       "projectFolder": "ioBroker.acaad",
       "reviewCategory": "production",
-      //      "decoupledLocalDependencies": ["@acaad/toolchain", "@acaad/core"],
+      "decoupledLocalDependencies": [
+        "@acaad/toolchain",
+        "@acaad/abstractions",
+        "@acaad/core",
+        "@acaad/testing"
+      ],
       "versionPolicyName": "acaad.public",
       "shouldPublish": true
     }

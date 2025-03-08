@@ -81,7 +81,9 @@ export class AcaadResponseParser implements IResponseParser {
     outcome: AcaadOutcome
   ): Effect.Effect<unknown, AcaadError> {
     return Effect.gen(this, function* () {
-      return yield* this.parseSingleValue(metadata, outcome.outcomeRaw);
+      const jsonParsed = yield* this.tryParseJsonEff(metadata, outcome.outcomeRaw!);
+
+      return yield* this.parseSingleValue(metadata, jsonParsed);
     });
   }
 

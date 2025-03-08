@@ -54,7 +54,12 @@ describe('inbound events', () => {
     const rndServer = intTestContext.getRandomServer();
     const rndCd = rndServer.getRandomComponent(ComponentType.Sensor);
 
-    const event = TestEventFactory.createComponentOutcomeEvent(rndCd.toIdentifier());
+    const expectedOutcomeRaw = 'the-original-outcome';
+    const event = TestEventFactory.createComponentOutcomeEvent(
+      rndCd.toIdentifier(),
+      undefined,
+      expectedOutcomeRaw
+    );
 
     const checkpoint = stateObserver.waitForSpanAsync('acaad:cs:updateComponentState');
 
@@ -66,7 +71,7 @@ describe('inbound events', () => {
 
     const expectedStateUpdate: InboundStateUpdate = {
       originalOutcome: event.outcome,
-      determinedTargetState: event.outcome.outcomeRaw,
+      determinedTargetState: expectedOutcomeRaw,
       metadata: expect.anything()
     };
 

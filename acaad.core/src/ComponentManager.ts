@@ -738,7 +738,7 @@ export class ComponentManager {
         ).pipe(Effect.withSpan('acaad:cs:onUnhandledEvent'));
       }
 
-      this._logger.logWarning(`Discarded valid, but unhandled event: '${event.name}'`);
+      this._logger.logTrace(`Discarded valid, but unhandled event: '${event.name}'`);
       return yield* Effect.void;
     });
   }
