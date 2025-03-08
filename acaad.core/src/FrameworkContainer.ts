@@ -1,7 +1,7 @@
 // This must be executed before any access to the actual container.
 import 'reflect-metadata';
 
-import { AcaadPopulatedEvent, IConnectedServiceContext } from '@acaad/abstractions';
+import { IConnectedServiceContext } from '@acaad/abstractions';
 
 import {
   ClassProvider,
@@ -17,7 +17,7 @@ import { ComponentManager } from './ComponentManager';
 import { ConnectionManager } from './ConnectionManager';
 import { DependencyInjectionTokens } from './model/DependencyInjectionTokens';
 import { InMemoryTokenCache } from './services/InMemoryTokenCache';
-import { Effect, Layer, Queue } from 'effect';
+import { Layer } from 'effect';
 import { NodeSdk } from '@effect/opentelemetry';
 import {
   BatchSpanProcessor,
@@ -32,6 +32,7 @@ import { MetadataModel } from './MetadataModel';
 import { Configuration } from '@effect/opentelemetry/src/NodeSdk';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-grpc';
 import { QueueWrapper } from './QueueWrapper';
+import { AcaadResponseParser } from './services/AcaadResponseParser';
 
 function noopExporterFactory(container: DependencyContainer): SpanProcessor {
   return new NoopSpanProcessor();
@@ -57,6 +58,11 @@ function batchExporterFactory(container: DependencyContainer): SpanProcessor {
   {
     token: DependencyInjectionTokens.MetadataModel,
     useClass: MetadataModel,
+    options: { lifecycle: Lifecycle.ResolutionScoped }
+  },
+  {
+    token: DependencyInjectionTokens.ResponseParser,
+    useClass: AcaadResponseParser,
     options: { lifecycle: Lifecycle.ResolutionScoped }
   },
   { token: DependencyInjectionTokens.TokenCache, useClass: InMemoryTokenCache },
