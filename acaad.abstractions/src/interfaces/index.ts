@@ -8,3 +8,5 @@ export {
 export { IConnectedServiceContext, ICsLogger } from './IConnectedServiceContext';
 
 export { ITokenCache } from './ITokenCache';
+
+export { IResponseParser } from './IResponseParser';

@@ -2,7 +2,13 @@
 export { AcaadComponentMetadata } from './AcaadComponentMetadata';
 export { AcaadDataMetadata } from './AcaadDataMetadata';
 export { AcaadInfoMetadataSchema, AcaadInfoMetadata } from './AcaadInfoMetadata';
-export { AcaadOutcomeMetadata, AcaadMetadata, AcaadMetadataSchema } from './AcaadMetadata';
+export {
+  AcaadOutcomeMetadata,
+  AcaadMetadata,
+  AcaadMetadataSchema,
+  AcaadCardinalityDefinition,
+  AcaadResultTypeDefinition
+} from './AcaadMetadata';
 export { AcaadOutcome, AcaadOutcomeSchema } from './AcaadOutcome';
 
 export { AcaadUnitOfMeasure } from './AcaadUnitOfMeasure';

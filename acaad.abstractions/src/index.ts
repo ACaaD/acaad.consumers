@@ -16,7 +16,8 @@ export {
   OutboundStateChangeCallback,
   ChangeType,
   ITokenCache,
-  ConnectedServiceFunction
+  ConnectedServiceFunction,
+  IResponseParser
 } from './interfaces';
 
 export {
@@ -28,6 +29,8 @@ export {
   AcaadOutcome,
   AcaadOutcomeSchema,
   AcaadUnitOfMeasure,
+  AcaadCardinalityDefinition,
+  AcaadResultTypeDefinition,
   Component,
   ComponentTypes,
   ButtonComponent,

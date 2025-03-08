@@ -20,11 +20,9 @@ import {
   ComponentDescriptor,
   ApplicationState,
   InboundStateUpdate,
-  AcaadOutcome,
   ComponentType,
-  OutcomeNotParseableError,
   ConfigurationError,
-  AcaadOutcomeMetadata
+  IResponseParser
 } from '@acaad/abstractions';
 
 import { inject, injectable } from 'tsyringe';
@@ -61,7 +59,6 @@ import {
 
 import { QueueWrapper } from './QueueWrapper';
 import { onErrorEff, executeCsAdapter, nameof } from './utility';
-import { isUndefined } from 'effect/Predicate';
 
 class MetadataByComponent extends Data.Class<{ component: Component; metadata: AcaadMetadata[] }> {}
 
@@ -73,6 +70,7 @@ export class ComponentManager {
   private _serviceAdapter: IConnectedServiceAdapter;
   private _abortController: AbortController;
   private _connectionManager: ConnectionManager;
+  private _responseParser: IResponseParser;
   private _metadataModel: IMetadataModel;
 
   private _logger: ICsLogger;
@@ -82,6 +80,7 @@ export class ComponentManager {
   public constructor(
     @inject(DependencyInjectionTokens.ConnectedServiceAdapter) serviceAdapter: IConnectedServiceAdapter,
     @inject(DependencyInjectionTokens.ConnectionManager) connectionManager: ConnectionManager,
+    @inject(DependencyInjectionTokens.ResponseParser) responseParser: IResponseParser,
     @inject(DependencyInjectionTokens.Logger) logger: ICsLogger,
     @inject(DependencyInjectionTokens.EventQueue) eventQueueWrapper: QueueWrapper,
     @inject(DependencyInjectionTokens.MetadataModel) metadataModel: IMetadataModel,
@@ -91,6 +90,7 @@ export class ComponentManager {
     this._abortController = new AbortController();
 
     this._connectionManager = connectionManager;
+    this._responseParser = responseParser;
     this._serviceAdapter = serviceAdapter;
     this._metadataModel = metadataModel;
 
@@ -450,82 +450,6 @@ export class ComponentManager {
     return Exit.isSuccess(result);
   }
 
-  parseSingleValue(metadata: AcaadOutcomeMetadata, value: unknown): Effect.Effect<unknown, AcaadError> {
-    switch (metadata.type) {
-      case 'String':
-        return Effect.succeed(value);
-      case 'Boolean':
-        return Effect.succeed(Boolean(value).valueOf());
-      case 'Long':
-        const maybeLong = Number(value);
-        if (isNaN(maybeLong)) {
-          this._logger.logWarning(
-            `Expected value of type ${metadata.type}, but the received value '${value}' is violating the contract.`
-          );
-          return Effect.fail(new OutcomeNotParseableError(metadata.type, metadata.cardinality, value));
-        }
-        return Effect.succeed(Math.round(maybeLong));
-      case 'Decimal':
-        const maybeDecimal = Number(value);
-        if (isNaN(maybeDecimal)) {
-          this._logger.logWarning(
-            `Expected value of type ${metadata.type}, but the received value '${value}' is violating the contract.`
-          );
-          return Effect.fail(new OutcomeNotParseableError(metadata.type, metadata.cardinality, value));
-        }
-        return Effect.succeed(maybeDecimal);
-    }
-  }
-
-  parseOutcomeEff(
-    componentDescriptor: ComponentDescriptor,
-    metadata: AcaadOutcomeMetadata,
-    outcome: AcaadOutcome
-  ): Effect.Effect<unknown, AcaadError> {
-    if (isUndefined(outcome.outcomeRaw)) {
-      this._logger.logWarning(
-        `Unexpected empty outcome (raw) value for component ${componentDescriptor.toIdentifier()}. Ignoring event. This should never happen.`
-      );
-
-      return Effect.fail(
-        new OutcomeNotParseableError(metadata.type, metadata.cardinality, outcome.outcomeRaw)
-      );
-    }
-
-    if (metadata.cardinality === 'Single') {
-      return this.parseSingleValue(metadata, outcome.outcomeRaw);
-    } else if (metadata.cardinality === 'Multiple') {
-      const fromJsonArray = JSON.parse(outcome.outcomeRaw);
-      if (!Array.isArray(fromJsonArray)) {
-        this._logger.logWarning(
-          `Cardinality is populated as 'Multiple' but event is not a json array for component ${componentDescriptor.toIdentifier()}. Ignoring event.`
-        );
-
-        return Effect.fail(
-          new OutcomeNotParseableError(metadata.type, metadata.cardinality, outcome.outcomeRaw)
-        );
-      }
-
-      const res = Stream.fromIterable(fromJsonArray).pipe(
-        Stream.mapEffect((val) => this.parseSingleValue(metadata, val).pipe(Effect.option)),
-        Stream.filter(Option.isSome),
-        Stream.map(Option.some)
-      );
-
-      return Stream.runCollect(res);
-    } else {
-      this._logger.logError(
-        undefined,
-        undefined,
-        `Unknown cardinality ${metadata.cardinality}. Cannot process component ${componentDescriptor.toIdentifier()}.`
-      );
-
-      return Effect.fail(
-        new OutcomeNotParseableError(metadata.type, metadata.cardinality, outcome.outcomeRaw)
-      );
-    }
-  }
-
   getSwitchTargetState(
     componentDescriptor: ComponentDescriptor,
     metadata: AcaadMetadata,
@@ -551,7 +475,11 @@ export class ComponentManager {
     event: ComponentCommandOutcomeEvent
   ): Effect.Effect<InboundStateUpdate, AcaadError> {
     return Effect.gen(this, function* () {
-      const parsedOutcome = yield* this.parseOutcomeEff(componentDescriptor, metadata, event.outcome);
+      const parsedOutcome = yield* this._responseParser.parseOutcomeEff(
+        componentDescriptor,
+        metadata,
+        event.outcome
+      );
 
       const inboundStateUpdate: InboundStateUpdate = {
         originalOutcome: event.outcome,
